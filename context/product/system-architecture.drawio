@@ -1,0 +1,242 @@
+<mxfile host="app.diagrams.net" modified="2024-01-01T00:00:00.000Z" agent="Claude" version="1.0">
+  <diagram name="System Architecture" id="system-arch">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Recruitment Workflow POC - System Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="500" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- External Services Group -->
+        <mxCell id="external-group" value="External Services" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="280" height="340" as="geometry" />
+        </mxCell>
+
+        <!-- Lever -->
+        <mxCell id="lever" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://lever.co/wp-content/uploads/2021/08/lever-logo.svg;" vertex="1" parent="1">
+          <mxGeometry x="70" y="120" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lever-box" value="Lever (ATS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="110" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lever-desc" value="• Candidate profiles&#xa;• Job requirements&#xa;• Evaluation notes" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="110" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Metaview -->
+        <mxCell id="metaview-box" value="Metaview" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="190" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="metaview-desc" value="• Interview transcripts&#xa;• Manual export only&#xa;• No direct API" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="190" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Slack -->
+        <mxCell id="slack-box" value="Slack" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="270" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="slack-desc" value="• Transcript upload bot&#xa;• Notifications&#xa;• HM alerts" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="270" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Claude -->
+        <mxCell id="claude-box" value="Claude AI&#xa;(Bedrock)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="350" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="claude-desc" value="• CV analysis&#xa;• Transcript processing&#xa;• Recommendations" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="350" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- AWS Cloud Group -->
+        <mxCell id="aws-group" value="AWS Cloud (us-east-1)" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="700" height="500" as="geometry" />
+        </mxCell>
+
+        <!-- VPC -->
+        <mxCell id="vpc" value="VPC" style="swimlane;startSize=20;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="120" width="660" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- n8n on ECS -->
+        <mxCell id="ecs-group" value="ECS Fargate" style="swimlane;startSize=20;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="160" width="280" height="220" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n8n-box" value="n8n&#xa;Workflow Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="440" y="200" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n8n-workflows" value="Workflows:&#xa;• transcript-intake&#xa;• cv-analysis&#xa;• screening-eval&#xa;• technical-eval&#xa;• recommendation&#xa;• lever-sync" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="440" y="270" width="200" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- RDS -->
+        <mxCell id="rds-box" value="RDS&#xa;PostgreSQL" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="180" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="rds-desc" value="• Evaluation history&#xa;• Candidate artifacts&#xa;• Audit trail" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="830" y="180" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- S3 -->
+        <mxCell id="s3-box" value="S3&#xa;Watched Folder" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="290" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="s3-desc" value="• Transcript uploads&#xa;• CV storage&#xa;• Triggers n8n" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="830" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- CloudWatch -->
+        <mxCell id="cloudwatch-box" value="CloudWatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="430" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cloudwatch-desc" value="Logs &amp; Metrics" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="480" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Bedrock -->
+        <mxCell id="bedrock-box" value="Amazon&#xa;Bedrock" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="430" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="bedrock-desc" value="Claude API" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="560" y="480" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Users Group -->
+        <mxCell id="users-group" value="Users" style="swimlane;startSize=25;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="450" width="280" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hr-user" value="HR Recruiter" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="490" width="40" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hm-user" value="Hiring Manager" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="180" y="490" width="40" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows: External to AWS -->
+        <mxCell id="arrow-lever-n8n" value="API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;strokeWidth=2;startArrow=classic;startFill=1;" edge="1" parent="1" source="lever-box" target="n8n-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="140" />
+              <mxPoint x="320" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-slack-n8n" value="Webhook" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="slack-box" target="n8n-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="300" />
+              <mxPoint x="330" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-claude-bedrock" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;strokeWidth=2;dashed=1;" edge="1" parent="1" source="claude-box" target="bedrock-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="440" />
+              <mxPoint x="110" y="600" />
+              <mxPoint x="620" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrows: Internal AWS -->
+        <mxCell id="arrow-n8n-rds" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;strokeWidth=2;startArrow=classic;startFill=1;" edge="1" parent="1" source="n8n-box" target="rds-box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="arrow-s3-n8n" value="Trigger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="s3-box" target="n8n-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="690" y="330" />
+              <mxPoint x="690" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-n8n-bedrock" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" parent="1" source="n8n-box" target="bedrock-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="540" y="400" />
+              <mxPoint x="620" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-n8n-cloudwatch" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;strokeWidth=2;dashed=1;" edge="1" parent="1" source="n8n-box" target="cloudwatch-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="400" />
+              <mxPoint x="460" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- User arrows -->
+        <mxCell id="arrow-hr-slack" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="hr-user" target="slack-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="440" />
+              <mxPoint x="100" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-hm-slack" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" parent="1" source="hm-user" target="slack-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="440" />
+              <mxPoint x="200" y="440" />
+              <mxPoint x="110" y="440" />
+              <mxPoint x="110" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="arrow-hr-s3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;strokeWidth=2;dashed=1;" edge="1" parent="1" source="hr-user" target="s3-box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="620" />
+              <mxPoint x="770" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Data Flow Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="720" y="430" width="320" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="Data Flow" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="435" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow1" value="1. User uploads transcript → Slack or S3" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="460" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow2" value="2. n8n triggered → pulls candidate data from Lever" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="480" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow3" value="3. n8n sends transcript + context → Bedrock (Claude)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="500" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow4" value="4. Claude returns evaluation → stored in RDS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="520" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow5" value="5. n8n pushes summary → Lever candidate profile" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="540" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="flow6" value="6. n8n notifies HM → Slack" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="730" y="560" width="300" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
