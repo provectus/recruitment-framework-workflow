@@ -66,9 +66,7 @@ Hiring Managers and Engineering Managers at Provectus who evaluate candidates ba
 ### 3.1. What's In-Scope for this Version
 
 - CV parsing and analysis against role requirements
-- Transcript processing with two input methods:
-  - Watched folder (Google Drive/Dropbox) — HR or HM drops transcript file
-  - Slack bot — paste or upload transcript in dedicated channel
+- Transcript and CV upload via web SPA (React + TypeScript)
 - Weighted decision rubric with transparent reasoning
 - Candidate feedback generation (for rejections)
 - Lever integration (read candidate data, push notes/summaries)
@@ -78,7 +76,6 @@ Hiring Managers and Engineering Managers at Provectus who evaluate candidates ba
 ### 3.2. What's Out-of-Scope (Non-Goals)
 
 - Automated Metaview integration (known platform constraint)
-- Full web UI or dashboard
 - Multi-company/tenant support
 - Automated candidate communication (sending emails directly)
 - Calendar/scheduling integration
