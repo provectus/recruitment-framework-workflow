@@ -42,8 +42,8 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    def get_session_override():
-        return session
+    async def get_session_override():
+        yield session
 
     app.dependency_overrides[get_session] = get_session_override
 

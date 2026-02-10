@@ -26,7 +26,7 @@ _Technical prerequisites that must be in place before product features can be bu
 _The core foundation — a working web application where recruiters can log in, manage candidates, upload documents, and trigger initial analysis._
 
 - [ ] **Web Application (SPA)**
-  - [ ] **Authentication:** Google OAuth 2.0 login for recruiters and hiring managers
+  - [x] **Authentication:** Google OAuth 2.0 login for recruiters and hiring managers
   - [ ] **Candidate List:** View candidates synced from Lever with evaluation status and progress tracking
   - [ ] **Interview Library:** Dedicated page listing all Barley-recorded recruitment interviews with candidate name, position, date, and interviewer — browse, search, and access recordings and transcripts in one place
   - [ ] **Recording & Transcript Viewer:** Click into any interview to access recording playback and full transcript, replacing scattered Slack chat threads
