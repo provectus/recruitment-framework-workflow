@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="backend", lifespan=lifespan)
+app = FastAPI(title="Tap API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

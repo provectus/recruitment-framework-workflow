@@ -6,6 +6,10 @@ class DevLoginRequest(BaseModel):
     name: str
 
 
+class StatusResponse(BaseModel):
+    status: str
+
+
 class UserResponse(BaseModel):
     id: int
     email: str
