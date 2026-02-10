@@ -1,75 +1,105 @@
-# React + TypeScript + Vite
+# Tap — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React SPA for **Tap**, Provectus's internal recruitment workflow automation tool. Provides the web interface for uploading CVs/transcripts, reviewing AI-generated candidate evaluations, and managing recruitment workflows.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + TypeScript |
+| Build | Vite 7, React Compiler (Babel plugin) |
+| Routing | TanStack Router (file-based, auto code-splitting) |
+| Styling | Tailwind CSS v4, shadcn/ui (new-york style) |
+| Icons | Lucide React |
+| Auth | Google OAuth 2.0 (corporate Workspace), token-based sessions |
+| Package Manager | bun |
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
 
-Note: This will impact Vite dev & build performances.
+## Getting Started
 
-## Expanding the ESLint configuration
+### Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Bun](https://bun.sh/) (latest)
+- Backend API running at `http://localhost:8000` (see `app/backend/`)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Setup
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+bun install
+bun run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The dev server starts at `http://localhost:5173` with HMR. API requests to `/api/*` are proxied to the backend at `localhost:8000`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Commands
+
+```bash
+bun install                          # Install dependencies
+bun run dev                          # Dev server with HMR
+bun run build                        # Type-check + production build
+bun run lint                         # ESLint
+bun run preview                      # Preview production build
+bunx shadcn@latest add <component>   # Add a shadcn/ui component
 ```
+
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── ui/              # shadcn/ui components (button, alert, avatar, etc.)
+│   └── user-menu.tsx    # Authenticated user dropdown
+├── lib/
+│   ├── auth-api.ts      # API calls: login, logout, token refresh, user fetch
+│   ├── auth-context.tsx  # AuthProvider + useAuth hook
+│   └── utils.ts         # cn() utility (clsx + tailwind-merge)
+├── routes/
+│   ├── __root.tsx        # Root layout (header, nav, outlet)
+│   ├── _authenticated.tsx # Auth guard — redirects to /login if unauthenticated
+│   ├── _authenticated/
+│   │   └── index.tsx     # Home page (authenticated)
+│   ├── login.tsx         # Google OAuth login page
+│   └── auth/             # Auth callback routes
+├── index.css             # Tailwind imports + CSS variables
+├── main.tsx              # App entrypoint: router + AuthProvider setup
+└── routeTree.gen.ts      # Auto-generated (do not edit)
+```
+
+
+## Architecture
+
+### Routing
+
+File-based routing via TanStack Router. Add new routes as files under `src/routes/`. The route tree (`routeTree.gen.ts`) is auto-generated by the Vite plugin — do not edit it manually.
+
+Protected routes live under `_authenticated/`. The `_authenticated.tsx` layout route checks `context.auth.isAuthenticated` and redirects to `/login` if needed.
+
+### Authentication
+
+Google OAuth 2.0 flow:
+1. User clicks "Sign in with Google" → redirects to `/api/auth/login`
+2. Backend handles the OAuth flow and sets session cookies
+3. Frontend calls `/api/auth/me` to fetch the current user
+4. Token refresh is handled transparently via `fetchWithRefresh()` in `auth-api.ts`
+
+Auth state is managed by `AuthProvider` and consumed via the `useAuth()` hook. The router receives auth context so route guards can check authentication before loading.
+
+### API Proxy
+
+In development, Vite proxies `/api/*` requests to `http://localhost:8000`, stripping the `/api` prefix. This avoids CORS issues during local development.
+
+### Styling
+
+Tailwind CSS v4 with CSS variables for theming. shadcn/ui components are configured with the `new-york` style and slate base color. Use `cn()` from `@/lib/utils` to merge class names.
+
+
+## Conventions
+
+- **Path alias:** `@/` maps to `src/` (configured in `vite.config.ts` and `tsconfig.json`)
+- **Package manager:** Always use `bun`, not npm or yarn
+- **Components:** Use shadcn/ui for UI primitives; add new ones with `bunx shadcn@latest add <name>`
+- **Route files:** Follow TanStack Router file conventions — the filename determines the URL path
+- **Auto-generated files:** `routeTree.gen.ts` is managed by the TanStack Router Vite plugin; never edit manually
