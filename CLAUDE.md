@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Barley** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
+**Tap** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
 
 See `context/product/` for product definition, architecture, roadmap, and POC plans.
 
