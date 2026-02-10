@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import secrets
+from typing import Any
 from urllib.parse import urlencode
 
 import httpx
@@ -9,7 +10,7 @@ from jose import jwt
 
 from app.config import settings
 
-_jwks_cache: dict | None = None
+_jwks_cache: dict[str, Any] | None = None
 
 
 async def build_cognito_auth_url(
@@ -29,7 +30,7 @@ async def build_cognito_auth_url(
     return f"https://{settings.cognito_domain}/oauth2/authorize?{urlencode(params)}"
 
 
-async def exchange_code_for_tokens(code: str) -> dict:
+async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
     data = {
         "grant_type": "authorization_code",
         "code": code,
@@ -47,10 +48,11 @@ async def exchange_code_for_tokens(code: str) -> dict:
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
-async def get_jwks() -> dict:
+async def get_jwks() -> dict[str, Any]:
     global _jwks_cache
     if _jwks_cache is not None:
         return _jwks_cache
@@ -62,7 +64,7 @@ async def get_jwks() -> dict:
         return _jwks_cache
 
 
-async def validate_cognito_id_token(id_token: str) -> dict:
+async def validate_cognito_id_token(id_token: str) -> dict[str, Any]:
     unverified_header = jwt.get_unverified_header(id_token)
     kid = unverified_header.get("kid")
 
@@ -106,7 +108,7 @@ def compute_secret_hash(username: str) -> str:
     return base64.b64encode(dig).decode()
 
 
-async def refresh_tokens(refresh_token: str) -> dict:
+async def refresh_tokens(refresh_token: str) -> dict[str, Any]:
     data = {
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
@@ -123,4 +125,5 @@ async def refresh_tokens(refresh_token: str) -> dict:
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
