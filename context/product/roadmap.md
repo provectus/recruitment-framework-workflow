@@ -28,12 +28,19 @@ _The core foundation — a working web application where recruiters can log in, 
 - [ ] **Web Application (SPA)**
   - [ ] **Authentication:** Google OAuth 2.0 login for recruiters and hiring managers
   - [ ] **Candidate List:** View candidates synced from Lever with evaluation status and progress tracking
-  - [ ] **Document Upload:** Drag-and-drop upload of transcripts and CVs, associated with a candidate and position
+  - [ ] **Interview Library:** Dedicated page listing all Barley-recorded recruitment interviews with candidate name, position, date, and interviewer — browse, search, and access recordings and transcripts in one place
+  - [ ] **Recording & Transcript Viewer:** Click into any interview to access recording playback and full transcript, replacing scattered Slack chat threads
+  - [ ] **CV Upload:** Drag-and-drop upload of CVs, associated with a candidate and position
   - [ ] **Position/Job Selector:** Browse and select open positions (pulled from Lever)
 
 - [ ] **Backend API**
   - [ ] **Core API:** FastAPI service handling auth, uploads, candidate data, and evaluation orchestration
   - [ ] **n8n Integration:** Webhook triggers from API to n8n for kicking off evaluation workflows
+
+- [ ] **Barley Integration**
+  - [ ] **S3 Transcript Sync:** Read interview transcripts and recordings from Barley's S3 storage (exact bucket structure and access pattern TBD — sync with Barley team required)
+  - [ ] **Recruitment Filter:** Filter Barley data to recruitment interviews only — exclude non-recruitment company calls
+  - [ ] **Candidate & Position Linking:** Associate each Barley interview with the correct candidate and position in our system
 
 - [ ] **Lever Integration (Read)**
   - [ ] **Candidate Data Pull:** Connect to Lever API to retrieve candidate profiles, resumes, and job requirements
@@ -50,7 +57,7 @@ _The core foundation — a working web application where recruiters can log in, 
 _Build the core evaluation and decision-support capabilities, from screening through to final recommendation._
 
 - [ ] **Screening Summary**
-  - [ ] **Transcript Processing:** Ingest HR screening transcripts and extract structured insights
+  - [ ] **Transcript Processing:** Ingest HR screening transcripts from Barley and extract structured insights
   - [ ] **HM-Ready Summary:** Generate concise summary highlighting key points for Hiring Manager review
 
 - [ ] **HM Review & Decision Gate**
@@ -59,7 +66,7 @@ _Build the core evaluation and decision-support capabilities, from screening thr
   - [ ] **Rejection Triggers Feedback Flow:** When rejected at this stage, trigger candidate feedback generation
 
 - [ ] **Technical Evaluation**
-  - [ ] **Technical Transcript Analysis:** Process technical interview transcripts against competency areas
+  - [ ] **Technical Transcript Analysis:** Process technical interview transcripts (from Barley) against competency areas
   - [ ] **Decision Rubric Engine:** Apply weighted scoring framework with transparent reasoning for each criterion
 
 - [ ] **Recommendation Generation**
