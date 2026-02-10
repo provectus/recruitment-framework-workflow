@@ -1,0 +1,29 @@
+# Terraform Variables Example for Tap Infrastructure
+# Copy this file to terraform.tfvars and fill in actual values
+# IMPORTANT: Never commit terraform.tfvars to version control (already in .gitignore)
+
+# AWS region where resources will be deployed
+region = "us-east-1"
+
+# Project name used as prefix for resource naming and tagging
+project_name = "tap"
+
+# Environment name (poc, dev, staging, prod)
+environment = "poc"
+
+# Custom domain for the application (e.g., tap.provectus.com)
+# Required DNS records will need to be created after terraform apply:
+# - api.your-domain.com → ALB
+# - your-domain.com → CloudFront
+# - ACM validation CNAME records (output by Terraform)
+domain = "your-domain.com"
+
+# GitHub repository in format org/repo for OIDC trust policy
+# Used for GitHub Actions CI/CD pipeline authentication
+github_repo = "your-org/your-repo"
+
+# Google OAuth 2.0 credentials (from Google Cloud Console)
+# Create at: https://console.cloud.google.com/ → APIs & Services → Credentials
+# Authorized redirect URI: https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
+google_client_id     = "your-google-client-id.apps.googleusercontent.com"
+google_client_secret = "your-google-client-secret"
