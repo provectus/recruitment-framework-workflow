@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea
+.vscode
+*.sw?
+
+# Logs
+*.log
+
+# Playwright MCP
+.playwright-mcp
+
+# Claude local settings
+.claude/settings.local.json
