@@ -1,9 +1,22 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
+import { client } from "@/shared/api/client.gen";
+import { useAuth } from "@/features/auth";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
+
+client.setConfig({
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
+});
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 5 * 60 * 1000, retry: 1 },
+  },
+});
 
 const router = createRouter({
   routeTree,
@@ -26,9 +39,10 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <AuthProvider>
+      <QueryClientProvider client={queryClient}>
         <InnerApp />
-      </AuthProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </StrictMode>,
   );
 }

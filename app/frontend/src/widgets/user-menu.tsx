@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,13 +6,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth-context";
-import { logout } from "@/lib/auth-api";
+} from "@/shared/ui/dropdown-menu";
+import { useAuth } from "@/features/auth";
+import { useLogout } from "@/features/auth";
 import { LogOut } from "lucide-react";
 
 export function UserMenu() {
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const logout = useLogout();
 
   if (!user) return null;
 
@@ -22,12 +23,6 @@ export function UserMenu() {
     .join("")
     .toUpperCase()
     .slice(0, 2);
-
-  const handleLogout = async () => {
-    await logout();
-    setUser(null);
-    window.location.href = "/login";
-  };
 
   return (
     <DropdownMenu>
@@ -52,7 +47,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={() => logout.mutate({})}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>
