@@ -5,10 +5,6 @@ on:
     branches: [main]
     paths:
       - 'app/backend/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'app/backend/**'
 
 permissions:
   id-token: write
@@ -44,13 +40,18 @@ jobs:
           uv run ruff check .
           uv run ruff format --check .
 
+      - name: Type check
+        run: uv run mypy app/
+
+      - name: Security scan
+        run: uv run bandit -r app/ -c pyproject.toml
+
       - name: Test
         run: uv run pytest
 
   deploy:
     name: Build & Deploy
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
