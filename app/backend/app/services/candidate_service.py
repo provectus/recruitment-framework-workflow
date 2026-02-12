@@ -74,13 +74,9 @@ async def list_candidates(
     total_count = count_result.one()[0]
 
     sort_attr = getattr(Candidate, sort_column)
-    order_clause = (
-        sort_attr.asc() if order_direction == "asc" else sort_attr.desc()
-    )
+    order_clause = sort_attr.asc() if order_direction == "asc" else sort_attr.desc()
 
-    stmt = (
-        stmt.where(*filters).order_by(order_clause).offset(offset).limit(limit)
-    )
+    stmt = stmt.where(*filters).order_by(order_clause).offset(offset).limit(limit)
     result = await session.exec(stmt)
     candidates = list(result.scalars().all())
 
@@ -151,6 +147,40 @@ async def get_candidate(session: AsyncSession, candidate_id: int) -> Candidate |
     if candidate is None or candidate.is_archived:
         return None
     return candidate
+
+
+async def get_candidate_detail(session: AsyncSession, candidate_id: int) -> dict | None:
+    """Fetch candidate with their positions for detail view."""
+    candidate = await get_candidate(session, candidate_id)
+    if candidate is None:
+        return None
+
+    positions_stmt = (
+        select(CandidatePosition, Position)
+        .join(Position, CandidatePosition.position_id == Position.id)
+        .where(CandidatePosition.candidate_id == candidate_id)
+    )
+    positions_result = await session.exec(positions_stmt)
+    positions_rows = positions_result.all()
+
+    positions = [
+        {
+            "position_id": row.Position.id,
+            "position_title": row.Position.title,
+            "stage": row.CandidatePosition.stage,
+        }
+        for row in positions_rows
+    ]
+
+    return {
+        "id": candidate.id,
+        "full_name": candidate.full_name,
+        "email": candidate.email,
+        "is_archived": candidate.is_archived,
+        "positions": positions,
+        "created_at": candidate.created_at.isoformat(),
+        "updated_at": candidate.updated_at.isoformat(),
+    }
 
 
 async def update_candidate(

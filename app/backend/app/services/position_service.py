@@ -111,6 +111,51 @@ async def get_position(session: AsyncSession, position_id: int) -> Position | No
     return position
 
 
+async def get_position_detail(session: AsyncSession, position_id: int) -> dict | None:
+    """Fetch position with team, hiring manager, and candidates for detail view."""
+    position = await get_position(session, position_id)
+    if position is None:
+        return None
+
+    team = await session.get(Team, position.team_id)
+    hiring_manager = await session.get(User, position.hiring_manager_id)
+
+    from app.models.candidate import Candidate
+
+    candidates_stmt = (
+        select(CandidatePosition, Candidate)
+        .join(Candidate, CandidatePosition.candidate_id == Candidate.id)
+        .where(CandidatePosition.position_id == position_id)
+    )
+    candidates_result = await session.exec(candidates_stmt)
+    candidates_rows = candidates_result.all()
+
+    candidates = [
+        {
+            "candidate_id": row.Candidate.id,
+            "candidate_name": row.Candidate.full_name,
+            "candidate_email": row.Candidate.email,
+            "stage": row.CandidatePosition.stage,
+        }
+        for row in candidates_rows
+    ]
+
+    return {
+        "id": position.id,
+        "title": position.title,
+        "requirements": position.requirements,
+        "status": position.status,
+        "team_id": position.team_id,
+        "team_name": team.name,
+        "hiring_manager_id": position.hiring_manager_id,
+        "hiring_manager_name": hiring_manager.full_name,
+        "is_archived": position.is_archived,
+        "candidates": candidates,
+        "created_at": position.created_at.isoformat(),
+        "updated_at": position.updated_at.isoformat(),
+    }
+
+
 async def update_position(
     session: AsyncSession,
     position_id: int,

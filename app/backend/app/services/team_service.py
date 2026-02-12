@@ -37,7 +37,7 @@ async def delete_team(session: AsyncSession, team_id: int) -> None:
 
     position_statement = select(Position).where(Position.team_id == team_id)
     position_result = await session.exec(position_statement)
-    position = position_result.one_or_none()
+    position = position_result.first()
 
     if position:
         raise ValueError(f"Team with id {team_id} is in use by positions")

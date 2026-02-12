@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
-from app.models.candidate_position import CandidatePosition
-from app.models.position import Position
 from app.models.user import User
 from app.schemas.candidates import (
     CandidateCreate,
@@ -87,38 +84,23 @@ async def get_candidate(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> CandidateDetailResponse:
-    candidate = await candidate_service.get_candidate(session, candidate_id)
-    if candidate is None:
+    detail = await candidate_service.get_candidate_detail(session, candidate_id)
+    if detail is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found",
         )
 
-    positions_stmt = (
-        select(CandidatePosition, Position)
-        .join(Position, CandidatePosition.position_id == Position.id)
-        .where(CandidatePosition.candidate_id == candidate_id)
-    )
-    positions_result = await session.exec(positions_stmt)
-    positions_rows = positions_result.all()
-
-    positions = [
-        PositionStageItem(
-            position_id=row.Position.id,
-            position_title=row.Position.title,
-            stage=row.CandidatePosition.stage,
-        )
-        for row in positions_rows
-    ]
+    positions = [PositionStageItem(**pos) for pos in detail["positions"]]
 
     return CandidateDetailResponse(
-        id=candidate.id,
-        full_name=candidate.full_name,
-        email=candidate.email,
-        is_archived=candidate.is_archived,
+        id=detail["id"],
+        full_name=detail["full_name"],
+        email=detail["email"],
+        is_archived=detail["is_archived"],
         positions=positions,
-        created_at=candidate.created_at.isoformat(),
-        updated_at=candidate.updated_at.isoformat(),
+        created_at=detail["created_at"],
+        updated_at=detail["updated_at"],
     )
 
 

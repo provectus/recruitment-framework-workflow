@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
-from app.models.candidate import Candidate
-from app.models.candidate_position import CandidatePosition
-from app.models.team import Team
 from app.models.user import User
 from app.schemas.positions import (
     CandidateStageItem,
@@ -79,47 +75,28 @@ async def get_position(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PositionDetailResponse:
-    position = await position_service.get_position(session, position_id)
-    if position is None:
+    detail = await position_service.get_position_detail(session, position_id)
+    if detail is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Position not found",
         )
 
-    team = await session.get(Team, position.team_id)
-    hiring_manager = await session.get(User, position.hiring_manager_id)
-
-    candidates_stmt = (
-        select(CandidatePosition, Candidate)
-        .join(Candidate, CandidatePosition.candidate_id == Candidate.id)
-        .where(CandidatePosition.position_id == position_id)
-    )
-    candidates_result = await session.exec(candidates_stmt)
-    candidates_rows = candidates_result.all()
-
-    candidates = [
-        CandidateStageItem(
-            candidate_id=row.Candidate.id,
-            candidate_name=row.Candidate.full_name,
-            candidate_email=row.Candidate.email,
-            stage=row.CandidatePosition.stage,
-        )
-        for row in candidates_rows
-    ]
+    candidates = [CandidateStageItem(**cand) for cand in detail["candidates"]]
 
     return PositionDetailResponse(
-        id=position.id,
-        title=position.title,
-        requirements=position.requirements,
-        status=position.status,
-        team_id=position.team_id,
-        team_name=team.name,
-        hiring_manager_id=position.hiring_manager_id,
-        hiring_manager_name=hiring_manager.full_name,
-        is_archived=position.is_archived,
+        id=detail["id"],
+        title=detail["title"],
+        requirements=detail["requirements"],
+        status=detail["status"],
+        team_id=detail["team_id"],
+        team_name=detail["team_name"],
+        hiring_manager_id=detail["hiring_manager_id"],
+        hiring_manager_name=detail["hiring_manager_name"],
+        is_archived=detail["is_archived"],
         candidates=candidates,
-        created_at=position.created_at.isoformat(),
-        updated_at=position.updated_at.isoformat(),
+        created_at=detail["created_at"],
+        updated_at=detail["updated_at"],
     )
 
 

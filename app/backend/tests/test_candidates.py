@@ -1439,9 +1439,7 @@ async def test_filter_candidates_by_position(
     assert data["items"][0]["full_name"] == "Alice"
 
 
-async def test_combined_search_and_filter(
-    client: AsyncClient, session: AsyncSession
-):
+async def test_combined_search_and_filter(client: AsyncClient, session: AsyncSession):
     resp1 = await client.post(
         "/api/candidates",
         json={"full_name": "Alice Johnson", "email": "alice@example.com"},
