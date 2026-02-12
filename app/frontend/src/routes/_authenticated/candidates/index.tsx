@@ -2,11 +2,21 @@
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Loader2, Users } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  Users,
+  Search,
+  X,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { useCandidates, useCreateCandidate } from "@/features/candidates";
+import { usePositions } from "@/features/positions";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -34,6 +44,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shared/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
 
@@ -48,11 +65,36 @@ const candidateSchema = z.object({
 
 type CandidateFormData = z.infer<typeof candidateSchema>;
 
+const STAGE_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "screening", label: "Screening" },
+  { value: "technical", label: "Technical" },
+  { value: "offer", label: "Offer" },
+  { value: "hired", label: "Hired" },
+  { value: "rejected", label: "Rejected" },
+];
+
+type SortColumn = "full_name" | "email" | "updated_at";
+type SortOrder = "asc" | "desc";
+
 function CandidatesPage() {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState<string | null>(null);
+  const [positionFilter, setPositionFilter] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<SortColumn>("updated_at");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const { data: candidates, isLoading } = useCandidates();
+  const { data: candidates, isLoading } = useCandidates({
+    search: search || null,
+    stage: stageFilter,
+    position_id: positionFilter,
+    sort_by: sortBy,
+    sort_order: sortOrder,
+  });
+
+  const { data: positions } = usePositions();
   const createCandidate = useCreateCandidate();
 
   const form = useForm<CandidateFormData>({
@@ -62,6 +104,34 @@ function CandidatesPage() {
       email: "",
     },
   });
+
+  const hasActiveFilters = search || stageFilter || positionFilter;
+
+  const clearFilters = () => {
+    setSearch("");
+    setStageFilter(null);
+    setPositionFilter(null);
+    setSortBy("updated_at");
+    setSortOrder("desc");
+  };
+
+  const toggleSort = (column: SortColumn) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortBy !== column) return <ArrowUpDown className="ml-1 h-3 w-3" />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
+  };
 
   const onSubmit = async (data: CandidateFormData) => {
     try {
@@ -98,7 +168,7 @@ function CandidatesPage() {
         return "secondary";
       case "screening":
         return "default";
-      case "interview":
+      case "technical":
         return "default";
       case "offer":
         return "default";
@@ -183,6 +253,60 @@ function CandidatesPage() {
         </Dialog>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select
+          value={stageFilter ?? "all"}
+          onValueChange={(val) =>
+            setStageFilter(val === "all" ? null : val)
+          }
+        >
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Stages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stages</SelectItem>
+            {STAGE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={positionFilter?.toString() ?? "all"}
+          onValueChange={(val) =>
+            setPositionFilter(val === "all" ? null : Number(val))
+          }
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="All Positions" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Positions</SelectItem>
+            {positions?.items.map((pos) => (
+              <SelectItem key={pos.id} value={pos.id.toString()}>
+                {pos.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="mr-1 h-4 w-4" />
+            Clear filters
+          </Button>
+        )}
+      </div>
+
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
@@ -194,10 +318,37 @@ function CandidatesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="flex items-center font-medium hover:text-foreground"
+                    onClick={() => toggleSort("full_name")}
+                  >
+                    Name
+                    <SortIcon column="full_name" />
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="flex items-center font-medium hover:text-foreground"
+                    onClick={() => toggleSort("email")}
+                  >
+                    Email
+                    <SortIcon column="email" />
+                  </button>
+                </TableHead>
                 <TableHead>Positions</TableHead>
-                <TableHead>Last Updated</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="flex items-center font-medium hover:text-foreground"
+                    onClick={() => toggleSort("updated_at")}
+                  >
+                    Last Updated
+                    <SortIcon column="updated_at" />
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -248,14 +399,31 @@ function CandidatesPage() {
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Users className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No candidates yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Add your first candidate to start tracking applications.
-          </p>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Candidate
-          </Button>
+          {hasActiveFilters ? (
+            <>
+              <h3 className="text-lg font-semibold mb-2">No matches found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search or filters.
+              </p>
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Clear filters
+              </Button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-semibold mb-2">
+                No candidates yet
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Add your first candidate to start tracking applications.
+              </p>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Candidate
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>
