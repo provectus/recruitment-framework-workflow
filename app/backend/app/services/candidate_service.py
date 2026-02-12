@@ -240,7 +240,7 @@ async def add_to_position(
     candidate_position = CandidatePosition(
         candidate_id=candidate_id,
         position_id=position_id,
-        stage=PipelineStage.new.value,
+        stage=PipelineStage.new,
     )
     session.add(candidate_position)
 

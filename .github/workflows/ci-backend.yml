@@ -62,6 +62,8 @@ jobs:
 
       - name: Regenerate OpenAPI spec
         run: uv run python scripts/export_openapi.py
+        env:
+          PYTHONPATH: .
 
       - name: Check spec is up-to-date
         run: |

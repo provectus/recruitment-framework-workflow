@@ -76,6 +76,23 @@ const STAGE_OPTIONS = [
 type SortColumn = "full_name" | "email" | "updated_at";
 type SortOrder = "asc" | "desc";
 
+function SortIcon({
+  column,
+  sortBy,
+  sortOrder,
+}: {
+  column: SortColumn;
+  sortBy: SortColumn;
+  sortOrder: SortOrder;
+}) {
+  if (sortBy !== column) return <ArrowUpDown className="ml-1 h-3 w-3" />;
+  return sortOrder === "asc" ? (
+    <ArrowUp className="ml-1 h-3 w-3" />
+  ) : (
+    <ArrowDown className="ml-1 h-3 w-3" />
+  );
+}
+
 function CandidatesPage() {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -121,15 +138,6 @@ function CandidatesPage() {
       setSortBy(column);
       setSortOrder("asc");
     }
-  };
-
-  const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortBy !== column) return <ArrowUpDown className="ml-1 h-3 w-3" />;
-    return sortOrder === "asc" ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
-    );
   };
 
   const onSubmit = async (data: CandidateFormData) => {
@@ -303,7 +311,7 @@ function CandidatesPage() {
                     onClick={() => toggleSort("full_name")}
                   >
                     Name
-                    <SortIcon column="full_name" />
+                    <SortIcon column="full_name" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </TableHead>
                 <TableHead>
@@ -313,7 +321,7 @@ function CandidatesPage() {
                     onClick={() => toggleSort("email")}
                   >
                     Email
-                    <SortIcon column="email" />
+                    <SortIcon column="email" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </TableHead>
                 <TableHead>Positions</TableHead>
@@ -324,7 +332,7 @@ function CandidatesPage() {
                     onClick={() => toggleSort("updated_at")}
                   >
                     Last Updated
-                    <SortIcon column="updated_at" />
+                    <SortIcon column="updated_at" sortBy={sortBy} sortOrder={sortOrder} />
                   </button>
                 </TableHead>
               </TableRow>

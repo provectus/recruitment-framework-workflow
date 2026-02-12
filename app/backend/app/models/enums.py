@@ -1,13 +1,13 @@
 import enum
 
 
-class PositionStatus(str, enum.Enum):
+class PositionStatus(enum.StrEnum):
     open = "open"
     on_hold = "on_hold"
     closed = "closed"
 
 
-class PipelineStage(str, enum.Enum):
+class PipelineStage(enum.StrEnum):
     new = "new"
     screening = "screening"
     technical = "technical"
