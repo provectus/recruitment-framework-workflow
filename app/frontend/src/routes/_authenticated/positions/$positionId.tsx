@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Archive } from "lucide-react";
@@ -50,6 +48,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { getStageVariant, getStatusVariant, formatStage, formatStatus } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/positions/$positionId")({
   component: PositionDetailPage,
@@ -125,59 +124,6 @@ function PositionDetailPage() {
     } catch (err) {
       console.error("Failed to update position:", err);
     }
-  };
-
-  const getStatusVariant = (
-    status: string
-  ): "default" | "secondary" | "outline" | "destructive" => {
-    switch (status.toLowerCase()) {
-      case "open":
-        return "default";
-      case "on_hold":
-        return "secondary";
-      case "closed":
-        return "outline";
-      default:
-        return "default";
-    }
-  };
-
-  const getStageVariant = (
-    stage: string
-  ): "default" | "secondary" | "outline" | "destructive" => {
-    switch (stage.toLowerCase()) {
-      case "new":
-        return "default";
-      case "screening":
-        return "secondary";
-      case "technical":
-        return "outline";
-      case "offer":
-        return "default";
-      case "hired":
-        return "default";
-      case "rejected":
-        return "destructive";
-      default:
-        return "default";
-    }
-  };
-
-  const formatStatus = (status: string): string => {
-    switch (status.toLowerCase()) {
-      case "open":
-        return "Open";
-      case "on_hold":
-        return "On Hold";
-      case "closed":
-        return "Closed";
-      default:
-        return status;
-    }
-  };
-
-  const formatStage = (stage: string): string => {
-    return stage.charAt(0).toUpperCase() + stage.slice(1).toLowerCase();
   };
 
   if (isLoading) {

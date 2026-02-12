@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Archive, Trash2 } from "lucide-react";
@@ -44,6 +42,7 @@ import {
 } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { getStageVariant } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/candidates/$candidateId")({
   component: CandidateDetailPage,
@@ -134,27 +133,6 @@ function CandidateDetailPage() {
       } else {
         console.error("Failed to update candidate:", err);
       }
-    }
-  };
-
-  const getStageVariant = (
-    stage: string
-  ): "default" | "secondary" | "outline" | "destructive" => {
-    switch (stage.toLowerCase()) {
-      case "new":
-        return "default";
-      case "screening":
-        return "secondary";
-      case "technical":
-        return "outline";
-      case "offer":
-        return "default";
-      case "hired":
-        return "default";
-      case "rejected":
-        return "destructive";
-      default:
-        return "default";
     }
   };
 

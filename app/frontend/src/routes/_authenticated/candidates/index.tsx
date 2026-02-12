@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -53,6 +51,7 @@ import {
 } from "@/shared/ui/select";
 import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { getStageVariant } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/candidates/")({
   component: CandidatesPage,
@@ -157,27 +156,6 @@ function CandidatesPage() {
       } else {
         console.error("Failed to create candidate:", error);
       }
-    }
-  };
-
-  const getStageVariant = (
-    stage: string
-  ): "default" | "secondary" | "outline" | "destructive" => {
-    switch (stage.toLowerCase()) {
-      case "new":
-        return "secondary";
-      case "screening":
-        return "default";
-      case "technical":
-        return "default";
-      case "offer":
-        return "default";
-      case "hired":
-        return "default";
-      case "rejected":
-        return "outline";
-      default:
-        return "secondary";
     }
   };
 

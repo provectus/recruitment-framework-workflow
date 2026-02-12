@@ -1,5 +1,3 @@
-"use client";
-
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Loader2, Briefcase, X } from "lucide-react";
@@ -45,6 +43,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { getStatusVariant } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/positions/")({
   component: PositionsPage,
@@ -96,21 +95,6 @@ function PositionsPage() {
       form.reset();
     } catch (error) {
       console.error("Failed to create position:", error);
-    }
-  };
-
-  const getStatusVariant = (
-    status: string
-  ): "default" | "secondary" | "outline" | "destructive" => {
-    switch (status.toLowerCase()) {
-      case "open":
-        return "default";
-      case "on hold":
-        return "secondary";
-      case "closed":
-        return "outline";
-      default:
-        return "default";
     }
   };
 
