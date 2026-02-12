@@ -46,9 +46,9 @@ resource "aws_db_instance" "this" {
   backup_window           = "03:00-04:00"
   maintenance_window      = "sun:04:00-sun:05:00"
 
-  skip_final_snapshot   = true
-  deletion_protection   = false
-  apply_immediately     = true
+  skip_final_snapshot   = var.environment != "prod"
+  deletion_protection   = var.environment == "prod"
+  apply_immediately     = var.environment != "prod"
   copy_tags_to_snapshot = true
 
   tags = {

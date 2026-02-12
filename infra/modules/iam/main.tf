@@ -78,7 +78,22 @@ resource "aws_iam_role_policy" "ecs_execution" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = [
+          var.db_secret_arn,
+          var.cognito_client_secret_arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = [
+          var.cognito_user_pool_id_ssm_arn,
+          var.cognito_client_id_ssm_arn,
+          var.cognito_domain_ssm_arn
+        ]
       }
     ]
   })
@@ -166,7 +181,22 @@ resource "aws_iam_role_policy" "ecs_task_secrets" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = [
+          var.db_secret_arn,
+          var.cognito_client_secret_arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = [
+          var.cognito_user_pool_id_ssm_arn,
+          var.cognito_client_id_ssm_arn,
+          var.cognito_domain_ssm_arn
+        ]
       }
     ]
   })
@@ -246,14 +276,24 @@ resource "aws_iam_role_policy" "github_actions_ecs" {
       {
         Effect = "Allow"
         Action = [
+          "ecs:DescribeTaskDefinition",
+          "ecs:RegisterTaskDefinition"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "ecs:UpdateService",
           "ecs:DescribeServices",
-          "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition",
           "ecs:ListTasks",
           "ecs:DescribeTasks"
         ]
-        Resource = "*"
+        Resource = [
+          var.ecs_cluster_arn,
+          var.ecs_service_arn,
+          "${var.ecs_cluster_arn}/*"
+        ]
       },
       {
         Effect = "Allow"
@@ -308,7 +348,7 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
         Action = [
           "cloudfront:CreateInvalidation"
         ]
-        Resource = "*"
+        Resource = var.cloudfront_distribution_arn
       }
     ]
   })

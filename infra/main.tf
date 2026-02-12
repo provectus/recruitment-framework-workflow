@@ -82,11 +82,19 @@ module "cloudfront" {
 module "iam" {
   source = "./modules/iam"
 
-  project_name     = var.project_name
-  environment      = var.environment
-  github_repo      = var.github_repo
-  files_bucket_arn = module.s3.files_bucket_arn
-  spa_bucket_arn   = module.s3.spa_bucket_arn
+  project_name                 = var.project_name
+  environment                  = var.environment
+  github_repo                  = var.github_repo
+  files_bucket_arn             = module.s3.files_bucket_arn
+  spa_bucket_arn               = module.s3.spa_bucket_arn
+  db_secret_arn                = module.rds.db_master_secret_arn
+  cognito_client_secret_arn    = module.cognito.client_secret_arn
+  cognito_user_pool_id_ssm_arn = module.cognito.ssm_user_pool_id_arn
+  cognito_client_id_ssm_arn    = module.cognito.ssm_client_id_arn
+  cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
+  ecs_cluster_arn              = module.ecs.cluster_arn
+  ecs_service_arn              = module.ecs.service_arn
+  cloudfront_distribution_arn  = module.cloudfront.distribution_arn
 }
 
 # Cognito Module - User Pool with Google OAuth federation

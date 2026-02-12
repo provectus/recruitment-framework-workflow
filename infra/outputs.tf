@@ -121,17 +121,6 @@ output "ecr_repository_url" {
   value       = module.iam.ecr_repository_url
 }
 
-# Auth outputs
-# output "cognito_user_pool_id" {
-#   description = "ID of the Cognito user pool"
-#   value       = module.cognito.user_pool_id
-# }
-
-# output "cognito_domain" {
-#   description = "Full Cognito Hosted UI domain URL"
-#   value       = module.cognito.user_pool_domain
-# }
-
 # Monitoring outputs
 output "sns_topic_arn" {
   description = "ARN of the SNS topic for alarm notifications"
