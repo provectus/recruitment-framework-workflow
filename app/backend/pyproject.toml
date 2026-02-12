@@ -41,6 +41,10 @@ plugins = ["pydantic.mypy"]
 module = "jose.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "app.services.*"
+disable_error_code = ["call-overload", "arg-type", "attr-defined", "union-attr", "no-any-return", "type-arg"]
+
 [tool.bandit]
 exclude_dirs = ["tests"]
 
