@@ -1,7 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Button } from "@/shared/ui/button";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useDevLogin } from "@/features/auth";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -69,7 +71,60 @@ function Login() {
           </svg>
           Sign in with Google
         </Button>
+
+        {import.meta.env.DEV && <DevLoginForm redirectTo={redirectTo} />}
       </div>
     </div>
+  );
+}
+
+function DevLoginForm({ redirectTo }: { redirectTo?: string }) {
+  const [email, setEmail] = useState("dev@provectus.com");
+  const [name, setName] = useState("Dev User");
+  const navigate = useNavigate();
+  const devLogin = useDevLogin();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    devLogin.mutate(
+      { body: { email, name } },
+      { onSuccess: () => navigate({ to: redirectTo ?? "/" }) },
+    );
+  };
+
+  return (
+    <>
+      <div className="flex w-full items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">DEV ONLY</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+          className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          required
+          className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <Button type="submit" variant="outline" disabled={devLogin.isPending}>
+          {devLogin.isPending ? "Signing in..." : "Dev Login"}
+        </Button>
+        {devLogin.isError && (
+          <p className="text-sm text-destructive">
+            {devLogin.error.message}
+          </p>
+        )}
+      </form>
+    </>
   );
 }

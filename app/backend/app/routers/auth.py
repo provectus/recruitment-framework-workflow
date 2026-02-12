@@ -12,7 +12,7 @@ from app.config import settings
 from app.database import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.auth import DevLoginRequest, UserResponse
+from app.schemas.auth import DevLoginRequest, StatusResponse, UserResponse
 from app.services import auth_service, user_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -68,7 +68,7 @@ async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse
     )
 
 
-@router.get("/login")
+@router.get("/login", include_in_schema=False)
 async def login(redirect: str | None = Query(default=None)) -> RedirectResponse:
     state = secrets.token_urlsafe(32)
 
@@ -94,7 +94,7 @@ async def login(redirect: str | None = Query(default=None)) -> RedirectResponse:
     return redirect_response
 
 
-@router.get("/callback")
+@router.get("/callback", include_in_schema=False)
 async def callback(
     request: Request,
     code: str = Query(),
@@ -176,8 +176,8 @@ async def callback(
     return redirect_response
 
 
-@router.post("/refresh")
-async def refresh(request: Request, response: Response) -> dict:
+@router.post("/refresh", response_model=StatusResponse)
+async def refresh(request: Request, response: Response) -> StatusResponse:
     refresh_token_value = request.cookies.get("refresh_token")
     if not refresh_token_value:
         raise HTTPException(
@@ -210,16 +210,12 @@ async def refresh(request: Request, response: Response) -> dict:
         domain=settings.cookie_domain,
     )
 
-    return {"status": "ok"}
+    return StatusResponse(status="ok")
 
 
-@router.post("/logout")
-async def logout(response: Response) -> dict:
-    response.delete_cookie(
-        key="access_token", path="/", domain=settings.cookie_domain
-    )
+@router.post("/logout", response_model=StatusResponse)
+async def logout(response: Response) -> StatusResponse:
+    response.delete_cookie(key="access_token", path="/", domain=settings.cookie_domain)
     response.delete_cookie(key="id_token", path="/", domain=settings.cookie_domain)
-    response.delete_cookie(
-        key="refresh_token", path="/", domain=settings.cookie_domain
-    )
-    return {"status": "ok"}
+    response.delete_cookie(key="refresh_token", path="/", domain=settings.cookie_domain)
+    return StatusResponse(status="ok")

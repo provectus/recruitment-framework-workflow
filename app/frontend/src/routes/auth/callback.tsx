@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { useQueryClient } from "@tanstack/react-query";
+import { currentUserQueryKey } from "@/features/auth";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/auth/callback")({
@@ -12,13 +13,13 @@ export const Route = createFileRoute("/auth/callback")({
 function AuthCallback() {
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
-  const { refetch } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    refetch().then(() => {
-      navigate({ to: redirect || "/" });
-    });
-  }, [refetch, navigate, redirect]);
+    queryClient
+      .refetchQueries({ queryKey: currentUserQueryKey() })
+      .then(() => navigate({ to: redirect || "/" }));
+  }, [queryClient, navigate, redirect]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

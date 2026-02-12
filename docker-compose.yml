@@ -30,7 +30,7 @@ services:
     env_file:
       - ./app/backend/.env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5437/tap
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tap
 
 volumes:
   postgres_data:

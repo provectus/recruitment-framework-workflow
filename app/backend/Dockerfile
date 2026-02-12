@@ -15,24 +15,17 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY . .
+RUN chmod +x entrypoint.sh
 
 # Development stage
 FROM base AS dev
-
-# Install dev dependencies
 RUN uv sync --frozen
-
-# Expose port
 EXPOSE 8000
-
-# Run development server with hot reload
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uv", "run", "fastapi", "dev", "--host", "0.0.0.0"]
 
 # Production stage
 FROM base AS prod
-
-# Expose port
 EXPOSE 8000
-
-# Run production server
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uv", "run", "fastapi", "run", "--host", "0.0.0.0"]
