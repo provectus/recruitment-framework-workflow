@@ -1,6 +1,7 @@
 from sqlalchemy import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.exceptions import NotFoundException, ValidationError
 from app.models.candidate_position import CandidatePosition
 from app.models.enums import PositionStatus
 from app.models.position import Position
@@ -82,21 +83,21 @@ async def create_position(
     team = team_result.one_or_none()
 
     if not team:
-        raise ValueError("Team not found")
+        raise NotFoundException("Team not found")
 
     user_stmt = select(User).where(User.id == hiring_manager_id)
     user_result = await session.exec(user_stmt)
     user = user_result.one_or_none()
 
     if not user:
-        raise ValueError("Hiring manager not found")
+        raise NotFoundException("Hiring manager not found")
 
     position = Position(
         title=title,
         requirements=requirements,
         team_id=team_id,
         hiring_manager_id=hiring_manager_id,
-        status="open",
+        status=PositionStatus.open,
     )
     session.add(position)
     await session.commit()
@@ -167,27 +168,27 @@ async def update_position(
 ) -> Position:
     position = await session.get(Position, position_id)
     if position is None or position.is_archived:
-        raise ValueError("Position not found")
+        raise NotFoundException("Position not found")
 
     if team_id is not None:
         team_stmt = select(Team).where(Team.id == team_id)
         team_result = await session.exec(team_stmt)
         team = team_result.one_or_none()
         if not team:
-            raise ValueError("Team not found")
+            raise NotFoundException("Team not found")
 
     if hiring_manager_id is not None:
         user_stmt = select(User).where(User.id == hiring_manager_id)
         user_result = await session.exec(user_stmt)
         user = user_result.one_or_none()
         if not user:
-            raise ValueError("Hiring manager not found")
+            raise NotFoundException("Hiring manager not found")
 
     if status is not None:
         try:
             PositionStatus(status)
         except ValueError:
-            raise ValueError(f"Invalid status: {status}") from None
+            raise ValidationError(f"Invalid status: {status}") from None
 
     if title is not None:
         position.title = title
@@ -209,7 +210,7 @@ async def update_position(
 async def archive_position(session: AsyncSession, position_id: int) -> Position:
     position = await session.get(Position, position_id)
     if position is None or position.is_archived:
-        raise ValueError("Position not found")
+        raise NotFoundException("Position not found")
     position.is_archived = True
     session.add(position)
     await session.commit()

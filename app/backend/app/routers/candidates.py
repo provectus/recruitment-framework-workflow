@@ -3,6 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
+from app.exceptions import ConflictError, NotFoundException, ValidationError
 from app.models.user import User
 from app.schemas.candidates import (
     CandidateCreate,
@@ -16,7 +17,8 @@ from app.schemas.candidates import (
     PositionStageItem,
     StageUpdate,
 )
-from app.services import candidate_service
+from app.schemas.documents import DocumentResponse
+from app.services import candidate_service, document_service
 
 router = APIRouter(prefix="/api/candidates", tags=["candidates"])
 
@@ -71,10 +73,10 @@ async def create_candidate(
             email=candidate.email,
             is_archived=candidate.is_archived,
         )
-    except ValueError as e:
+    except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(e),
+            detail=e.detail,
         ) from e
 
 
@@ -124,16 +126,15 @@ async def update_candidate(
             email=candidate.email,
             is_archived=candidate.is_archived,
         )
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
+    except NotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
+    except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=error_msg,
+            detail=e.detail,
         ) from e
 
 
@@ -162,19 +163,16 @@ async def add_to_position(
             created_at=candidate_position.created_at.isoformat(),
             updated_at=candidate_position.updated_at.isoformat(),
         )
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
-        if "already associated" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=error_msg,
-            ) from e
-        raise
+    except NotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
+    except ConflictError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=e.detail,
+        ) from e
 
 
 @router.delete(
@@ -192,14 +190,11 @@ async def remove_from_position(
             candidate_id,
             position_id,
         )
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
-        raise
+    except NotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
 
 
 @router.patch(
@@ -228,16 +223,15 @@ async def update_stage(
             created_at=candidate_position.created_at.isoformat(),
             updated_at=candidate_position.updated_at.isoformat(),
         )
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
+    except NotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
+    except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=error_msg,
+            detail=e.detail,
         ) from e
 
 
@@ -255,8 +249,27 @@ async def archive_candidate(
             email=candidate.email,
             is_archived=candidate.is_archived,
         )
-    except ValueError as e:
+    except NotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
+            detail=e.detail,
         ) from e
+
+
+@router.get("/{candidate_id}/documents", response_model=list[DocumentResponse])
+async def list_candidate_documents(
+    candidate_id: int,
+    position_id: int | None = Query(default=None),
+    type: str | None = Query(default=None),
+    candidate_position_id: int | None = Query(default=None),
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> list[DocumentResponse]:
+    documents = await document_service.list_candidate_documents(
+        session,
+        candidate_id,
+        position_id,
+        type,
+        candidate_position_id,
+    )
+    return [DocumentResponse(**doc) for doc in documents]

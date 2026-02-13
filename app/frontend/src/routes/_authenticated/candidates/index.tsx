@@ -51,7 +51,15 @@ import {
 } from "@/shared/ui/select";
 import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { getStageVariant } from "@/shared/lib/stage-utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/shared/ui/pagination";
+import { getStageVariant, STAGE_OPTIONS } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/candidates/")({
   component: CandidatesPage,
@@ -63,15 +71,6 @@ const candidateSchema = z.object({
 });
 
 type CandidateFormData = z.infer<typeof candidateSchema>;
-
-const STAGE_OPTIONS = [
-  { value: "new", label: "New" },
-  { value: "screening", label: "Screening" },
-  { value: "technical", label: "Technical" },
-  { value: "offer", label: "Offer" },
-  { value: "hired", label: "Hired" },
-  { value: "rejected", label: "Rejected" },
-];
 
 type SortColumn = "full_name" | "email" | "updated_at";
 type SortOrder = "asc" | "desc";
@@ -101,8 +100,12 @@ function CandidatesPage() {
   const [positionFilter, setPositionFilter] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortColumn>("updated_at");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
   const { data: candidates, isLoading } = useCandidates({
+    offset: (page - 1) * limit,
+    limit,
     search: search || null,
     stage: stageFilter,
     position_id: positionFilter,
@@ -129,6 +132,7 @@ function CandidatesPage() {
     setPositionFilter(null);
     setSortBy("updated_at");
     setSortOrder("desc");
+    setPage(1);
   };
 
   const toggleSort = (column: SortColumn) => {
@@ -245,15 +249,16 @@ function CandidatesPage() {
           <Input
             placeholder="Search by name or email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="pl-9"
           />
         </div>
         <Select
           value={stageFilter ?? "all"}
-          onValueChange={(val) =>
-            setStageFilter(val === "all" ? null : val)
-          }
+          onValueChange={(val) => {
+            setStageFilter(val === "all" ? null : val);
+            setPage(1);
+          }}
         >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="All Stages" />
@@ -269,9 +274,10 @@ function CandidatesPage() {
         </Select>
         <Select
           value={positionFilter?.toString() ?? "all"}
-          onValueChange={(val) =>
-            setPositionFilter(val === "all" ? null : Number(val))
-          }
+          onValueChange={(val) => {
+            setPositionFilter(val === "all" ? null : Number(val));
+            setPage(1);
+          }}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="All Positions" />
@@ -300,6 +306,7 @@ function CandidatesPage() {
           ))}
         </div>
       ) : candidates && candidates.items.length > 0 ? (
+        <>
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -382,6 +389,49 @@ function CandidatesPage() {
             </TableBody>
           </Table>
         </div>
+        {candidates.total > limit && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-disabled={page === 1}
+                  className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {Array.from(
+                { length: Math.ceil(candidates.total / limit) },
+                (_, i) => i + 1,
+              ).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    isActive={p === page}
+                    onClick={() => setPage(p)}
+                    className="cursor-pointer"
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setPage((p) =>
+                      Math.min(Math.ceil(candidates.total / limit), p + 1),
+                    )
+                  }
+                  aria-disabled={page >= Math.ceil(candidates.total / limit)}
+                  className={
+                    page >= Math.ceil(candidates.total / limit)
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Users className="h-12 w-12 text-muted-foreground mb-4" />

@@ -3,6 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
+from app.exceptions import ConflictError, NotFoundException
 from app.models.user import User
 from app.schemas.teams import TeamCreate, TeamResponse
 from app.services import team_service
@@ -28,10 +29,10 @@ async def create_team(
     try:
         team = await team_service.create_team(session, body.name)
         return TeamResponse(id=team.id, name=team.name)
-    except ValueError as e:
+    except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=str(e),
+            detail=e.detail,
         ) from e
 
 
@@ -43,14 +44,13 @@ async def delete_team(
 ) -> None:
     try:
         await team_service.delete_team(session, team_id)
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
+    except NotFoundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
+    except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=error_msg,
+            detail=e.detail,
         ) from e

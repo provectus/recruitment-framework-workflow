@@ -2,6 +2,7 @@ from sqlalchemy import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.exceptions import ConflictError, NotFoundException
 from app.models.position import Position
 from app.models.team import Team
 
@@ -18,7 +19,7 @@ async def create_team(session: AsyncSession, name: str) -> Team:
     existing_team = result.one_or_none()
 
     if existing_team:
-        raise ValueError(f"Team with name '{name}' already exists")
+        raise ConflictError(f"Team with name '{name}' already exists")
 
     team = Team(name=name)
     session.add(team)
@@ -33,14 +34,14 @@ async def delete_team(session: AsyncSession, team_id: int) -> None:
     team = result.one_or_none()
 
     if not team:
-        raise ValueError(f"Team with id {team_id} not found")
+        raise NotFoundException(f"Team with id {team_id} not found")
 
     position_statement = select(Position).where(Position.team_id == team_id)
     position_result = await session.exec(position_statement)
     position = position_result.first()
 
     if position:
-        raise ValueError(f"Team with id {team_id} is in use by positions")
+        raise ConflictError(f"Team with id {team_id} is in use by positions")
 
     await session.delete(team)
     await session.commit()

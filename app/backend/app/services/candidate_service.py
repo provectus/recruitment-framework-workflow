@@ -2,10 +2,17 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.exceptions import ConflictError, NotFoundException, ValidationError
 from app.models.candidate import Candidate
 from app.models.candidate_position import CandidatePosition
 from app.models.enums import PipelineStage
 from app.models.position import Position
+
+
+def _escape_like(value: str) -> str:
+    """Escape special LIKE/ILIKE characters so they match literally."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 
 VALID_TRANSITIONS: dict[str, list[str]] = {
     "new": ["screening", "rejected"],
@@ -56,10 +63,11 @@ async def list_candidates(
     filters = [Candidate.is_archived.is_(False)]
 
     if search:
+        safe_search = _escape_like(search)
         filters.append(
             or_(
-                Candidate.full_name.ilike(f"%{search}%"),
-                Candidate.email.ilike(f"%{search}%"),
+                Candidate.full_name.ilike(f"%{safe_search}%"),
+                Candidate.email.ilike(f"%{safe_search}%"),
             )
         )
 
@@ -100,9 +108,11 @@ async def list_candidates(
             positions_by_candidate[candidate_id] = []
         positions_by_candidate[candidate_id].append(
             {
+                "candidate_position_id": row[0].id,
                 "position_id": row[1].id,
                 "position_title": row[1].title,
                 "stage": row[0].stage,
+                "valid_next_stages": get_valid_next_stages(row[0].stage),
             }
         )
 
@@ -130,7 +140,7 @@ async def create_candidate(
     existing = result.one_or_none()
 
     if existing:
-        raise ValueError("A candidate with this email already exists.")
+        raise ConflictError("A candidate with this email already exists.")
 
     candidate = Candidate(
         full_name=full_name,
@@ -165,9 +175,11 @@ async def get_candidate_detail(session: AsyncSession, candidate_id: int) -> dict
 
     positions = [
         {
+            "candidate_position_id": row.CandidatePosition.id,
             "position_id": row.Position.id,
             "position_title": row.Position.title,
             "stage": row.CandidatePosition.stage,
+            "valid_next_stages": get_valid_next_stages(row.CandidatePosition.stage),
         }
         for row in positions_rows
     ]
@@ -191,7 +203,7 @@ async def update_candidate(
 ) -> Candidate:
     candidate = await session.get(Candidate, candidate_id)
     if candidate is None or candidate.is_archived:
-        raise ValueError("Candidate not found")
+        raise NotFoundException("Candidate not found")
 
     if email is not None:
         stmt = select(Candidate).where(
@@ -201,7 +213,7 @@ async def update_candidate(
         result = await session.exec(stmt)
         existing = result.one_or_none()
         if existing:
-            raise ValueError("A candidate with this email already exists.")
+            raise ConflictError("A candidate with this email already exists.")
 
     if full_name is not None:
         candidate.full_name = full_name
@@ -221,11 +233,11 @@ async def add_to_position(
 ) -> CandidatePosition:
     candidate = await session.get(Candidate, candidate_id)
     if candidate is None or candidate.is_archived:
-        raise ValueError("Candidate not found")
+        raise NotFoundException("Candidate not found")
 
     position = await session.get(Position, position_id)
     if position is None or position.is_archived:
-        raise ValueError("Position not found")
+        raise NotFoundException("Position not found")
 
     stmt = select(CandidatePosition).where(
         CandidatePosition.candidate_id == candidate_id,
@@ -235,7 +247,7 @@ async def add_to_position(
     existing = result.one_or_none()
 
     if existing:
-        raise ValueError("Candidate is already associated with this position.")
+        raise ConflictError("Candidate is already associated with this position.")
 
     candidate_position = CandidatePosition(
         candidate_id=candidate_id,
@@ -249,7 +261,9 @@ async def add_to_position(
         await session.refresh(candidate_position)
     except IntegrityError as e:
         await session.rollback()
-        raise ValueError("Candidate is already associated with this position.") from e
+        raise ConflictError(
+            "Candidate is already associated with this position."
+        ) from e
 
     return candidate_position
 
@@ -267,7 +281,7 @@ async def remove_from_position(
     candidate_position = result.scalars().first()
 
     if candidate_position is None:
-        raise ValueError("Association not found")
+        raise NotFoundException("Association not found")
 
     await session.delete(candidate_position)
     await session.commit()
@@ -290,7 +304,7 @@ async def update_stage(
     """
     valid_stages = {stage.value for stage in PipelineStage}
     if new_stage not in valid_stages:
-        raise ValueError("Invalid stage")
+        raise ValidationError("Invalid stage")
 
     stmt = select(CandidatePosition).where(
         CandidatePosition.candidate_id == candidate_id,
@@ -300,10 +314,10 @@ async def update_stage(
     candidate_position = result.scalars().first()
 
     if candidate_position is None:
-        raise ValueError("Association not found")
+        raise NotFoundException("Association not found")
 
     if not validate_stage_transition(candidate_position.stage, new_stage):
-        raise ValueError(
+        raise ValidationError(
             f"Invalid stage transition from {candidate_position.stage} to {new_stage}"
         )
 
@@ -317,7 +331,7 @@ async def update_stage(
 async def archive_candidate(session: AsyncSession, candidate_id: int) -> Candidate:
     candidate = await session.get(Candidate, candidate_id)
     if candidate is None or candidate.is_archived:
-        raise ValueError("Candidate not found")
+        raise NotFoundException("Candidate not found")
     candidate.is_archived = True
     session.add(candidate)
     await session.commit()

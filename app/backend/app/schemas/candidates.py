@@ -14,9 +14,11 @@ class CandidateResponse(BaseModel):
 
 
 class PositionStageItem(BaseModel):
+    candidate_position_id: int
     position_id: int
     position_title: str
     stage: str
+    valid_next_stages: list[str]
 
 
 class CandidateListItem(BaseModel):

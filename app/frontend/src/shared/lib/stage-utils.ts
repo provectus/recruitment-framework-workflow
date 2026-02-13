@@ -7,6 +7,10 @@ export const STAGE_LABELS: Record<string, string> = {
   rejected: "Rejected",
 };
 
+export const STAGE_OPTIONS = Object.entries(STAGE_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
+
 export function getStageVariant(
   stage: string
 ): "default" | "secondary" | "outline" | "destructive" {

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus, Loader2, Briefcase, X } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -43,6 +43,14 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { Skeleton } from "@/shared/ui/skeleton";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/shared/ui/pagination";
 import { getStatusVariant } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/positions/")({
@@ -59,11 +67,16 @@ const positionSchema = z.object({
 type PositionFormData = z.infer<typeof positionSchema>;
 
 function PositionsPage() {
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [teamFilter, setTeamFilter] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
   const { data: positions, isLoading } = usePositions({
+    offset: (page - 1) * limit,
+    limit,
     status: statusFilter || undefined,
     team_id: teamFilter ? Number(teamFilter) : undefined,
   });
@@ -76,6 +89,7 @@ function PositionsPage() {
   const clearFilters = () => {
     setStatusFilter("");
     setTeamFilter("");
+    setPage(1);
   };
 
   const form = useForm<PositionFormData>({
@@ -236,7 +250,7 @@ function PositionsPage() {
       <div className="flex items-center gap-3 mb-6">
         <Select
           value={statusFilter || "all"}
-          onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}
+          onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All statuses" />
@@ -251,7 +265,7 @@ function PositionsPage() {
 
         <Select
           value={teamFilter || "all"}
-          onValueChange={(v) => setTeamFilter(v === "all" ? "" : v)}
+          onValueChange={(v) => { setTeamFilter(v === "all" ? "" : v); setPage(1); }}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All teams" />
@@ -286,6 +300,7 @@ function PositionsPage() {
           ))}
         </div>
       ) : positions && positions.items.length > 0 ? (
+        <>
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -299,32 +314,75 @@ function PositionsPage() {
             </TableHeader>
             <TableBody>
               {positions.items.map((position) => (
-                <Link
+                <TableRow
                   key={position.id}
-                  to="/positions/$positionId"
-                  params={{ positionId: String(position.id) }}
-                  className="contents"
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate({
+                    to: "/positions/$positionId",
+                    params: { positionId: String(position.id) },
+                  })}
                 >
-                  <TableRow className="cursor-pointer hover:bg-muted/50">
-                    <TableCell className="font-medium">
-                      {position.title}
-                    </TableCell>
-                    <TableCell>{position.team_name}</TableCell>
-                    <TableCell>{position.hiring_manager_name}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(position.status)}>
-                        {position.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {position.candidate_count}
-                    </TableCell>
-                  </TableRow>
-                </Link>
+                  <TableCell className="font-medium">
+                    {position.title}
+                  </TableCell>
+                  <TableCell>{position.team_name}</TableCell>
+                  <TableCell>{position.hiring_manager_name}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(position.status)}>
+                      {position.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {position.candidate_count}
+                  </TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+        {positions.total > limit && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-disabled={page === 1}
+                  className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              {Array.from(
+                { length: Math.ceil(positions.total / limit) },
+                (_, i) => i + 1,
+              ).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    isActive={p === page}
+                    onClick={() => setPage(p)}
+                    className="cursor-pointer"
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setPage((p) =>
+                      Math.min(Math.ceil(positions.total / limit), p + 1),
+                    )
+                  }
+                  aria-disabled={page >= Math.ceil(positions.total / limit)}
+                  className={
+                    page >= Math.ceil(positions.total / limit)
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />

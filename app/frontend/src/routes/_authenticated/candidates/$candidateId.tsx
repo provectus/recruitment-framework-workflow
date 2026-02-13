@@ -1,14 +1,19 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, Archive, Trash2 } from "lucide-react";
+import { Loader2, Archive } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
-import { useCandidate, useUpdateCandidate, useAddToPosition, useRemoveFromPosition, useUpdateStage, useArchiveCandidate, STAGE_LABELS, getValidNextStages } from "@/features/candidates";
+import { useCandidate, useUpdateCandidate, useArchiveCandidate } from "@/features/candidates";
 import { usePositions } from "@/features/positions";
+import { useDocuments } from "@/features/documents";
 import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { CvUploadDialog } from "@/widgets/documents/cv-upload-dialog";
+import { TranscriptUploadDialog } from "@/widgets/documents/transcript-upload-dialog";
+import { DocumentList } from "@/widgets/documents/document-list";
+import { DocumentViewer, CvVersionHistory } from "@/widgets/documents";
+import { CandidatePositionsTable, AddToPositionDialog } from "@/widgets/candidates";
 import {
   Dialog,
   DialogContent,
@@ -17,21 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
 import {
   Form,
   FormControl,
@@ -42,7 +32,6 @@ import {
 } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { getStageVariant } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/candidates/$candidateId")({
   component: CandidateDetailPage,
@@ -62,20 +51,24 @@ function CandidateDetailPage() {
   const { data: candidate, isLoading, error } = useCandidate(candidateIdNum);
   const { data: positionsData } = usePositions();
   const updateCandidate = useUpdateCandidate(candidateIdNum);
-  const addToPosition = useAddToPosition(candidateIdNum);
-  const removeFromPosition = useRemoveFromPosition(candidateIdNum);
-  const updateStageMutation = useUpdateStage(candidateIdNum);
   const archiveCandidate = useArchiveCandidate(candidateIdNum);
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedPositionId, setSelectedPositionId] = useState<string>("");
-  const [addError, setAddError] = useState<string>("");
-
-  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
-  const [positionToRemove, setPositionToRemove] = useState<{ id: number; title: string } | null>(null);
-
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const [updatingStage, setUpdatingStage] = useState<number | null>(null);
+
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadCandidatePositionId, setUploadCandidatePositionId] = useState<number | null>(null);
+
+  const [transcriptDialogOpen, setTranscriptDialogOpen] = useState(false);
+  const [transcriptCandidatePositionId, setTranscriptCandidatePositionId] = useState<number | null>(null);
+
+  const [viewerDocumentId, setViewerDocumentId] = useState<number | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [versionHistoryCandidatePositionId, setVersionHistoryCandidatePositionId] = useState<number | null>(null);
+
+  const { refetch: refetchDocuments } = useDocuments(candidateIdNum);
 
   const form = useForm<CandidateFormData>({
     resolver: zodResolver(candidateSchema),
@@ -136,63 +129,14 @@ function CandidateDetailPage() {
     }
   };
 
-  const handleAddToPosition = async () => {
-    if (!selectedPositionId) return;
-
-    setAddError("");
-    try {
-      await addToPosition.mutateAsync({
-        path: { candidate_id: candidateIdNum },
-        body: { position_id: Number(selectedPositionId) },
-      });
-      setAddDialogOpen(false);
-      setSelectedPositionId("");
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status?: number } };
-        if (axiosError.response?.status === 409) {
-          setAddError("Candidate is already associated with this position.");
-        } else {
-          setAddError("Failed to add candidate to position.");
-        }
-      } else {
-        setAddError("Failed to add candidate to position.");
-      }
-    }
+  const handleUploadClick = (candidatePositionId: number) => {
+    setUploadCandidatePositionId(candidatePositionId);
+    setUploadDialogOpen(true);
   };
 
-  const handleRemoveClick = (positionId: number, positionTitle: string) => {
-    setPositionToRemove({ id: positionId, title: positionTitle });
-    setRemoveDialogOpen(true);
-  };
-
-  const handleRemoveConfirm = async () => {
-    if (!positionToRemove) return;
-
-    try {
-      await removeFromPosition.mutateAsync({
-        path: { candidate_id: candidateIdNum, position_id: positionToRemove.id },
-      });
-      setRemoveDialogOpen(false);
-      setPositionToRemove(null);
-    } catch (err) {
-      console.error("Failed to remove candidate from position:", err);
-    }
-  };
-
-
-  const handleStageChange = async (positionId: number, newStage: string) => {
-    setUpdatingStage(positionId);
-    try {
-      await updateStageMutation.mutateAsync({
-        path: { candidate_id: candidateIdNum, position_id: positionId },
-        body: { stage: newStage },
-      });
-    } catch (err) {
-      console.error("Failed to update stage:", err);
-    } finally {
-      setUpdatingStage(null);
-    }
+  const handleTranscriptClick = (candidatePositionId: number) => {
+    setTranscriptCandidatePositionId(candidatePositionId);
+    setTranscriptDialogOpen(true);
   };
 
   const availablePositions = positionsData?.items?.filter(
@@ -318,172 +262,42 @@ function CandidateDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {candidate.positions && candidate.positions.length > 0 ? (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead className="w-20"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {candidate.positions.map((position) => {
-                    const validNextStages = getValidNextStages(position.stage);
-                    const isUpdating = updatingStage === position.position_id;
-                    const isTerminal = validNextStages.length === 0;
-
-                    return (
-                      <TableRow key={position.position_id}>
-                        <TableCell className="font-medium">
-                          <Link
-                            to="/positions/$positionId"
-                            params={{ positionId: String(position.position_id) }}
-                            className="hover:underline"
-                          >
-                            {position.position_title}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {isUpdating ? (
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="text-sm text-muted-foreground">Updating...</span>
-                              </div>
-                            ) : isTerminal ? (
-                              <Badge variant={getStageVariant(position.stage)}>
-                                {STAGE_LABELS[position.stage]}
-                              </Badge>
-                            ) : (
-                              <Select
-                                value={position.stage}
-                                onValueChange={(value) => handleStageChange(position.position_id, value)}
-                                disabled={isUpdating}
-                              >
-                                <SelectTrigger className="w-[140px]">
-                                  <SelectValue>
-                                    <Badge variant={getStageVariant(position.stage)}>
-                                      {STAGE_LABELS[position.stage]}
-                                    </Badge>
-                                  </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {validNextStages.map((stage) => (
-                                    <SelectItem
-                                      key={stage}
-                                      value={stage}
-                                      className={stage === "rejected" ? "text-destructive" : ""}
-                                    >
-                                      {STAGE_LABELS[stage]}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveClick(position.position_id, position.position_title)}
-                            disabled={removeFromPosition.isPending}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                No positions linked yet. Use 'Add to Position' to link this candidate.
-              </p>
-            </div>
-          )}
+          <CandidatePositionsTable
+            positions={candidate.positions ?? []}
+            candidateId={candidateIdNum}
+            candidateName={candidate.full_name}
+            onUploadClick={handleUploadClick}
+            onTranscriptClick={handleTranscriptClick}
+          />
         </CardContent>
       </Card>
 
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add to Position</DialogTitle>
-            <DialogDescription>
-              Select a position to link {candidate.full_name} to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select value={selectedPositionId} onValueChange={setSelectedPositionId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a position" />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePositions.map((position) => (
-                  <SelectItem key={position.id} value={String(position.id)}>
-                    {position.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {addError && (
-              <p className="text-sm font-medium text-destructive">{addError}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setAddDialogOpen(false);
-              setSelectedPositionId("");
-              setAddError("");
-            }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddToPosition}
-              disabled={!selectedPositionId || addToPosition.isPending}
-            >
-              {addToPosition.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Add
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DocumentList
+            candidateId={candidateIdNum}
+            onDocumentClick={(documentId) => {
+              setViewerDocumentId(documentId);
+              setViewerOpen(true);
+            }}
+            onVersionHistoryClick={(candidatePositionId) => {
+              setVersionHistoryCandidatePositionId(candidatePositionId);
+              setVersionHistoryOpen(true);
+            }}
+          />
+        </CardContent>
+      </Card>
 
-      <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Remove from Position</DialogTitle>
-            <DialogDescription>
-              Remove {candidate.full_name} from {positionToRemove?.title}? This will delete their pipeline progress for this position.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setRemoveDialogOpen(false);
-              setPositionToRemove(null);
-            }}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleRemoveConfirm}
-              disabled={removeFromPosition.isPending}
-            >
-              {removeFromPosition.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Remove
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddToPositionDialog
+        candidateId={candidateIdNum}
+        candidateName={candidate.full_name}
+        availablePositions={availablePositions}
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+      />
 
       <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
         <DialogContent>
@@ -520,6 +334,44 @@ function CandidateDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {uploadCandidatePositionId !== null && (
+        <CvUploadDialog
+          candidatePositionId={uploadCandidatePositionId}
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          onSuccess={() => refetchDocuments()}
+        />
+      )}
+
+      {transcriptCandidatePositionId !== null && (
+        <TranscriptUploadDialog
+          candidatePositionId={transcriptCandidatePositionId}
+          open={transcriptDialogOpen}
+          onOpenChange={setTranscriptDialogOpen}
+          onSuccess={() => refetchDocuments()}
+        />
+      )}
+
+      <DocumentViewer
+        documentId={viewerDocumentId}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
+
+      {versionHistoryCandidatePositionId !== null && (
+        <CvVersionHistory
+          candidateId={candidateIdNum}
+          candidatePositionId={versionHistoryCandidatePositionId}
+          open={versionHistoryOpen}
+          onOpenChange={setVersionHistoryOpen}
+          onVersionClick={(documentId) => {
+            setVersionHistoryOpen(false);
+            setViewerDocumentId(documentId);
+            setViewerOpen(true);
+          }}
+        />
+      )}
 
       <div className="text-sm text-muted-foreground space-y-1">
         <p>Created: {new Date(candidate.created_at).toLocaleString()}</p>

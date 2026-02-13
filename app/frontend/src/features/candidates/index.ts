@@ -6,4 +6,4 @@ export { useAddToPosition } from "./hooks/use-add-to-position";
 export { useRemoveFromPosition } from "./hooks/use-remove-from-position";
 export { useUpdateStage } from "./hooks/use-update-stage";
 export { useArchiveCandidate } from "./hooks/use-archive-candidate";
-export { STAGE_LABELS, getValidNextStages } from "./stage-transitions";
+export { STAGE_LABELS } from "@/shared/lib/stage-utils";

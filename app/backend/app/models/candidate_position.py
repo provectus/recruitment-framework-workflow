@@ -11,6 +11,8 @@ from sqlalchemy import (
 )
 from sqlmodel import Field, SQLModel
 
+from app.models.enums import PipelineStage
+
 
 class CandidatePosition(SQLModel, table=True):
     __tablename__ = "candidate_positions"
@@ -25,7 +27,9 @@ class CandidatePosition(SQLModel, table=True):
     position_id: int = Field(
         sa_column=Column(Integer, ForeignKey("positions.id"), nullable=False)
     )
-    stage: str = Field(default="new", sa_column=Column(String, nullable=False))
+    stage: str = Field(
+        default=PipelineStage.new, sa_column=Column(String, nullable=False)
+    )
     created_at: datetime = Field(
         sa_column=Column(DateTime, nullable=False, server_default=func.now())
     )

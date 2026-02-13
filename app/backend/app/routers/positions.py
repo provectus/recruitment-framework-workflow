@@ -3,6 +3,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
+from app.exceptions import NotFoundException, ValidationError
 from app.models.user import User
 from app.schemas.positions import (
     CandidateStageItem,
@@ -61,11 +62,10 @@ async def create_position(
             hiring_manager_id=position.hiring_manager_id,
             is_archived=position.is_archived,
         )
-    except ValueError as e:
-        error_msg = str(e)
+    except NotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=error_msg,
+            detail=e.detail,
         ) from e
 
 
@@ -126,16 +126,15 @@ async def update_position(
             hiring_manager_id=position.hiring_manager_id,
             is_archived=position.is_archived,
         )
-    except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg,
-            ) from e
+    except NotFoundException as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=error_msg,
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=e.detail,
+        ) from e
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=e.detail,
         ) from e
 
 
@@ -156,8 +155,8 @@ async def archive_position(
             hiring_manager_id=position.hiring_manager_id,
             is_archived=position.is_archived,
         )
-    except ValueError as e:
+    except NotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
+            detail=e.detail,
         ) from e
