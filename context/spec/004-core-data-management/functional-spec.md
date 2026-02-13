@@ -1,7 +1,7 @@
 # Functional Specification: Core Data Management (Candidates, Positions, Candidate List)
 
 - **Roadmap Item:** Web Application (SPA) → Candidate Management + Position Management + Candidate List
-- **Status:** Draft
+- **Status:** Completed
 - **Author:** Nail
 
 ---
@@ -33,11 +33,11 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
   - **Email address** (required, must be a valid email format)
 - On creation, the candidate has no position associations. Positions are linked separately (see 2.1.3).
   - **Acceptance Criteria:**
-    - [ ] A "New Candidate" action is available from the Candidate List page
-    - [ ] Full name and email are required — form cannot be submitted without them
-    - [ ] Email is validated for format (e.g., rejects "not-an-email")
-    - [ ] Duplicate email addresses are rejected with a clear error message: *"A candidate with this email already exists."*
-    - [ ] After creation, the user is taken to the Candidate Detail page
+    - [x] A "New Candidate" action is available from the Candidate List page
+    - [x] Full name and email are required — form cannot be submitted without them
+    - [x] Email is validated for format (e.g., rejects "not-an-email")
+    - [x] Duplicate email addresses are rejected with a clear error message: *"A candidate with this email already exists."*
+    - [x] After creation, the user is taken to the Candidate Detail page
 
 #### 2.1.2 View & Edit Candidate
 
@@ -47,10 +47,10 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
   - Created date, last modified date
 - The user can edit the candidate's name and email inline or via an edit mode.
   - **Acceptance Criteria:**
-    - [ ] Candidate Detail page displays all fields listed above
-    - [ ] Name and email are editable
-    - [ ] Changes are saved explicitly (not auto-saved) — a "Save" action is required
-    - [ ] Email uniqueness is enforced on edit (same error as creation)
+    - [x] Candidate Detail page displays all fields listed above
+    - [x] Name and email are editable
+    - [x] Changes are saved explicitly (not auto-saved) — a "Save" action is required
+    - [x] Email uniqueness is enforced on edit (same error as creation)
 
 #### 2.1.3 Associate Candidate with Position(s)
 
@@ -59,11 +59,11 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
 - A candidate can be linked to multiple positions. Each link has its own independent pipeline stage.
 - A candidate-position link can be removed.
   - **Acceptance Criteria:**
-    - [ ] An "Add to Position" action is available on the Candidate Detail page
-    - [ ] User selects from a list of existing positions (only non-archived positions shown)
-    - [ ] The same candidate cannot be linked to the same position twice — duplicate attempt shows: *"Candidate is already associated with this position."*
-    - [ ] Each candidate-position link shows the current pipeline stage
-    - [ ] Removing a link requires confirmation: *"Remove [candidate] from [position]? This will delete their pipeline progress for this position."*
+    - [x] An "Add to Position" action is available on the Candidate Detail page
+    - [x] User selects from a list of existing positions (only non-archived positions shown)
+    - [x] The same candidate cannot be linked to the same position twice — duplicate attempt shows: *"Candidate is already associated with this position."*
+    - [x] Each candidate-position link shows the current pipeline stage
+    - [x] Removing a link requires confirmation: *"Remove [candidate] from [position]? This will delete their pipeline progress for this position."*
 
 #### 2.1.4 Pipeline Stage Tracking
 
@@ -72,21 +72,21 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
 - "Rejected" is a terminal stage that can be set from any prior stage.
 - "Hired" is a terminal stage that can only be set from "Offer."
   - **Acceptance Criteria:**
-    - [ ] The current stage is displayed for each candidate-position pair
-    - [ ] Stage can be advanced forward (New → Screening → Technical → Offer → Hired)
-    - [ ] Stage can be set to "Rejected" from any non-terminal stage
-    - [ ] Stage cannot be moved backward (e.g., Technical → Screening is not allowed)
-    - [ ] Changing stage requires a single click/action (no multi-step confirmation)
+    - [x] The current stage is displayed for each candidate-position pair
+    - [x] Stage can be advanced forward (New → Screening → Technical → Offer → Hired)
+    - [x] Stage can be set to "Rejected" from any non-terminal stage
+    - [x] Stage cannot be moved backward (e.g., Technical → Screening is not allowed)
+    - [x] Changing stage requires a single click/action (no multi-step confirmation)
 
 #### 2.1.5 Archive Candidate
 
 - A candidate can be archived (soft deleted). Archived candidates are hidden from the default Candidate List view.
 - Archiving does not delete associated data — it can be restored later if needed.
   - **Acceptance Criteria:**
-    - [ ] An "Archive" action is available on the Candidate Detail page
-    - [ ] Archiving requires confirmation: *"Archive [candidate name]? They will be hidden from the candidate list."*
-    - [ ] Archived candidates do not appear in the default Candidate List
-    - [ ] [NEEDS CLARIFICATION: Should there be a way to view/restore archived candidates in the POC, or is that deferred?]
+    - [x] An "Archive" action is available on the Candidate Detail page
+    - [x] Archiving requires confirmation: *"Archive [candidate name]? They will be hidden from the candidate list."*
+    - [x] Archived candidates do not appear in the default Candidate List
+    - [x] [NEEDS CLARIFICATION: Should there be a way to view/restore archived candidates in the POC, or is that deferred?]
 
 ### 2.2 Position Management
 
@@ -99,13 +99,13 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
   - **Hiring Manager** (required) — selected from the list of Tap users (authenticated Provectus employees who have logged in at least once)
   - **Status** — defaults to **Open** on creation
   - **Acceptance Criteria:**
-    - [ ] A "New Position" action is available from the Position List page
-    - [ ] Title, team, and hiring manager are required
-    - [ ] Team is selected from a dropdown populated by the editable team list
-    - [ ] Hiring manager is selected from a dropdown of existing Tap users
-    - [ ] Requirements field accepts multi-line free text
-    - [ ] Status defaults to "Open" and cannot be changed during creation
-    - [ ] After creation, the user is taken to the Position Detail page
+    - [x] A "New Position" action is available from the Position List page
+    - [x] Title, team, and hiring manager are required
+    - [x] Team is selected from a dropdown populated by the editable team list
+    - [x] Hiring manager is selected from a dropdown of existing Tap users
+    - [x] Requirements field accepts multi-line free text
+    - [x] Status defaults to "Open" and cannot be changed during creation
+    - [x] After creation, the user is taken to the Position Detail page
 
 #### 2.2.2 Position List Page
 
@@ -114,30 +114,30 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
 - Positions are filterable by status (Open / On Hold / Closed) and by team.
 - Archived positions are hidden from the default view.
   - **Acceptance Criteria:**
-    - [ ] Position List page is accessible from main navigation
-    - [ ] Each row shows: title, team, hiring manager, status, candidate count
-    - [ ] User can filter by status (Open / On Hold / Closed / All)
-    - [ ] User can filter by team
-    - [ ] Clicking a position navigates to the Position Detail page
+    - [x] Position List page is accessible from main navigation
+    - [x] Each row shows: title, team, hiring manager, status, candidate count
+    - [x] User can filter by status (Open / On Hold / Closed / All)
+    - [x] User can filter by team
+    - [x] Clicking a position navigates to the Position Detail page
 
 #### 2.2.3 View & Edit Position
 
 - Clicking a position opens a **Position Detail page** showing all fields plus a list of associated candidates with their pipeline stages.
 - All fields (title, requirements, team, hiring manager, status) are editable.
   - **Acceptance Criteria:**
-    - [ ] Position Detail page displays all fields and associated candidates
-    - [ ] All fields are editable
-    - [ ] Status can be changed to Open, On Hold, or Closed
-    - [ ] Changes are saved explicitly via a "Save" action
+    - [x] Position Detail page displays all fields and associated candidates
+    - [x] All fields are editable
+    - [x] Status can be changed to Open, On Hold, or Closed
+    - [x] Changes are saved explicitly via a "Save" action
 
 #### 2.2.4 Archive Position
 
 - A position can be archived (soft deleted). Archived positions are hidden from the default Position List and from position dropdowns when linking candidates.
   - **Acceptance Criteria:**
-    - [ ] An "Archive" action is available on the Position Detail page
-    - [ ] Archiving requires confirmation
-    - [ ] Archived positions do not appear in the default list or in candidate-position linking dropdowns
-    - [ ] Candidates already linked to an archived position retain their data
+    - [x] An "Archive" action is available on the Position Detail page
+    - [x] Archiving requires confirmation
+    - [x] Archived positions do not appear in the default list or in candidate-position linking dropdowns
+    - [x] Candidates already linked to an archived position retain their data
 
 ### 2.3 Candidate List Page
 
@@ -149,10 +149,10 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
 
 - A search bar filters candidates by name or email as the user types.
   - **Acceptance Criteria:**
-    - [ ] Search input is visible at the top of the candidate list
-    - [ ] Typing filters results in real-time (client-side for POC, or debounced API call)
-    - [ ] Search matches against candidate name and email (case-insensitive, partial match)
-    - [ ] Clearing the search restores the full list
+    - [x] Search input is visible at the top of the candidate list
+    - [x] Typing filters results in real-time (client-side for POC, or debounced API call)
+    - [x] Search matches against candidate name and email (case-insensitive, partial match)
+    - [x] Clearing the search restores the full list
 
 #### 2.3.2 Filters
 
@@ -160,20 +160,20 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
 - Filter by **position**: show only candidates linked to a specific position.
 - Filters can be combined (e.g., "Screening" + "Backend Engineer" = candidates at Screening stage for the Backend Engineer position).
   - **Acceptance Criteria:**
-    - [ ] Stage filter dropdown with options: All, New, Screening, Technical, Offer, Hired, Rejected
-    - [ ] Position filter dropdown populated by non-archived positions
-    - [ ] Filters can be combined
-    - [ ] Active filters are visually indicated
-    - [ ] A "Clear filters" action resets all filters
+    - [x] Stage filter dropdown with options: All, New, Screening, Technical, Offer, Hired, Rejected
+    - [x] Position filter dropdown populated by non-archived positions
+    - [x] Filters can be combined
+    - [x] Active filters are visually indicated
+    - [x] A "Clear filters" action resets all filters
 
 #### 2.3.3 Sorting
 
 - The list is sorted by **last updated** (most recent first) by default.
 - Column headers are clickable to sort by that column.
   - **Acceptance Criteria:**
-    - [ ] Default sort: last updated, descending
-    - [ ] Clicking a column header sorts by that column
-    - [ ] Sort direction toggles on repeated clicks (asc/desc)
+    - [x] Default sort: last updated, descending
+    - [x] Clicking a column header sorts by that column
+    - [x] Sort direction toggles on repeated clicks (asc/desc)
 
 ### 2.4 Team Management (Settings)
 
@@ -183,12 +183,12 @@ Tap's POC is manual-first — Lever sync is deferred, so recruiters and hiring m
   - Add a new team (text input)
   - Remove a team (only if no positions are currently using it)
   - **Acceptance Criteria:**
-    - [ ] Settings page is accessible from the navigation
-    - [ ] Teams section lists all existing teams
-    - [ ] User can add a new team by typing a name and confirming
-    - [ ] Duplicate team names are rejected
-    - [ ] Removing a team that is in use by any position (including archived) is blocked with a message: *"This team is assigned to [N] position(s) and cannot be removed."*
-    - [ ] Removing an unused team requires confirmation
+    - [x] Settings page is accessible from the navigation
+    - [x] Teams section lists all existing teams
+    - [x] User can add a new team by typing a name and confirming
+    - [x] Duplicate team names are rejected
+    - [x] Removing a team that is in use by any position (including archived) is blocked with a message: *"This team is assigned to [N] position(s) and cannot be removed."*
+    - [x] Removing an unused team requires confirmation
 
 ---
 

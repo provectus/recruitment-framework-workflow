@@ -27,13 +27,13 @@ _The core foundation — a working web application where recruiters can log in, 
 
 - [ ] **Web Application (SPA)**
   - [x] **Authentication:** Google OAuth 2.0 login for recruiters and hiring managers
-  - [ ] **Candidate Management:** Create, view, and edit candidates manually — name, contact info, status tracking
-  - [ ] **Position Management:** Create and manage open positions with requirements, team, and hiring manager
-  - [ ] **Candidate List:** View candidates with evaluation status and progress tracking
+  - [x] **Candidate Management:** Create, view, and edit candidates manually — name, contact info, status tracking
+  - [x] **Position Management:** Create and manage open positions with requirements, team, and hiring manager
+  - [x] **Candidate List:** View candidates with evaluation status and progress tracking
   - [ ] **Interview Library:** Dedicated page listing all recruitment interviews with candidate name, position, date, and interviewer — browse, search, and access recordings and transcripts in one place
   - [ ] **Recording & Transcript Viewer:** Click into any interview to access recording playback and full transcript
-  - [ ] **CV Upload:** Drag-and-drop upload of CVs, associated with a candidate and position
-  - [ ] **Transcript Upload:** Manual upload or paste of interview transcripts per candidate and interview stage — ensures the evaluation pipeline works independently of Barley
+  - [x] **CV Upload:** Drag-and-drop upload of CVs, associated with a candidate and position
+  - [x] **Transcript Upload:** Manual upload or paste of interview transcripts per candidate and interview stage — ensures the evaluation pipeline works independently of Barley
 
 - [ ] **Backend API**
   - [ ] **Core API:** FastAPI service handling auth, uploads, candidate data, and evaluation orchestration
