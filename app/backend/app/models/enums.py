@@ -14,3 +14,23 @@ class PipelineStage(enum.StrEnum):
     offer = "offer"
     hired = "hired"
     rejected = "rejected"
+
+
+class DocumentType(enum.StrEnum):
+    cv = "cv"
+    transcript = "transcript"
+
+
+class DocumentStatus(enum.StrEnum):
+    pending = "pending"
+    active = "active"
+
+
+class InterviewStage(enum.StrEnum):
+    screening = "screening"
+    technical = "technical"
+
+
+class InputMethod(enum.StrEnum):
+    file = "file"
+    paste = "paste"
