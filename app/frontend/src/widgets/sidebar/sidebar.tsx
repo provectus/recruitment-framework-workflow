@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
+import { GlobalUploadMenu } from "@/widgets/documents/global-upload-menu";
 
 interface NavItem {
   to: string;
@@ -37,6 +38,12 @@ export function Sidebar() {
       )}
     >
       <div className="flex-1 p-2 pt-4">
+        <div className="mb-4">
+          <GlobalUploadMenu collapsed={collapsed} />
+        </div>
+
+        <Separator className="mb-4" />
+
         <nav className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
