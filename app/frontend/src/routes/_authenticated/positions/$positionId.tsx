@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, Archive } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -84,7 +84,7 @@ function PositionDetailPage() {
   });
 
   useEffect(() => {
-    if (position) {
+    if (position && teams && users) {
       form.reset({
         title: position.title,
         requirements: position.requirements || "",
@@ -93,7 +93,7 @@ function PositionDetailPage() {
         status: position.status as "open" | "on_hold" | "closed",
       });
     }
-  }, [position, form]);
+  }, [position, teams, users, form]);
 
   const onSubmit = async (data: PositionFormData) => {
     const changedFields: Partial<PositionFormData> = {};
@@ -340,24 +340,24 @@ function PositionDetailPage() {
                 </TableHeader>
                 <TableBody>
                   {position.candidates.map((candidate) => (
-                    <Link
+                    <TableRow
                       key={candidate.candidate_id}
-                      to="/candidates/$candidateId"
-                      params={{ candidateId: String(candidate.candidate_id) }}
-                      className="contents"
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate({
+                        to: "/candidates/$candidateId",
+                        params: { candidateId: String(candidate.candidate_id) },
+                      })}
                     >
-                      <TableRow className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {candidate.candidate_name}
-                        </TableCell>
-                        <TableCell>{candidate.candidate_email}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStageVariant(candidate.stage)}>
-                            {formatStage(candidate.stage)}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    </Link>
+                      <TableCell className="font-medium">
+                        {candidate.candidate_name}
+                      </TableCell>
+                      <TableCell>{candidate.candidate_email}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStageVariant(candidate.stage)}>
+                          {formatStage(candidate.stage)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
                   ))}
                 </TableBody>
               </Table>
