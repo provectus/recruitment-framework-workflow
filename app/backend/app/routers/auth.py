@@ -18,6 +18,12 @@ from app.services import auth_service, user_service
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _safe_redirect_path(url: str | None) -> str:
+    if not url or not url.startswith("/") or url.startswith("//") or "\\" in url:
+        return "/"
+    return url
+
+
 @router.post("/dev-login", response_model=UserResponse)
 async def dev_login(
     request: DevLoginRequest,
@@ -45,7 +51,7 @@ async def dev_login(
         value=token,
         httponly=True,
         path="/",
-        samesite="lax",
+        samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
     )
@@ -72,7 +78,7 @@ async def get_me(current_user: User = Depends(get_current_user)) -> UserResponse
 async def login(redirect: str | None = Query(default=None)) -> RedirectResponse:
     state = secrets.token_urlsafe(32)
 
-    auth_state = {"state": state, "redirect": redirect or "/"}
+    auth_state = {"state": state, "redirect": _safe_redirect_path(redirect)}
     cognito_url = await auth_service.build_cognito_auth_url(
         redirect_path=redirect, state=state
     )
@@ -136,7 +142,7 @@ async def callback(
         google_id=claims.get("sub", ""),
     )
 
-    redirect_path = auth_state.get("redirect", "/")
+    redirect_path = _safe_redirect_path(auth_state.get("redirect"))
     redirect_response = RedirectResponse(
         url=redirect_path, status_code=status.HTTP_302_FOUND
     )
@@ -146,7 +152,7 @@ async def callback(
         value=tokens["access_token"],
         httponly=True,
         path="/",
-        samesite="lax",
+        samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
     )
@@ -155,7 +161,7 @@ async def callback(
         value=tokens["id_token"],
         httponly=True,
         path="/",
-        samesite="lax",
+        samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
     )
@@ -166,7 +172,7 @@ async def callback(
             value=tokens["refresh_token"],
             httponly=True,
             path="/",
-            samesite="lax",
+            samesite="strict",
             secure=settings.cookie_secure,
             domain=settings.cookie_domain,
         )
@@ -196,7 +202,7 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
         value=tokens["access_token"],
         httponly=True,
         path="/",
-        samesite="lax",
+        samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
     )
@@ -205,7 +211,7 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
         value=tokens["id_token"],
         httponly=True,
         path="/",
-        samesite="lax",
+        samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
     )

@@ -368,3 +368,110 @@ async def test_refresh_with_expired_token(client: AsyncClient):
         response = await client.post("/auth/refresh")
         assert response.status_code == 401
         assert response.json()["detail"] == "Refresh failed"
+
+
+def _extract_auth_state_from_response(response) -> dict:
+    from http.cookies import SimpleCookie
+
+    for header in response.headers.get_list("set-cookie"):
+        if header.startswith("auth_state="):
+            cookie = SimpleCookie()
+            cookie.load(header)
+            return json.loads(cookie["auth_state"].value)
+    raise AssertionError("auth_state cookie not found in response")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "malicious_redirect",
+    [
+        "https://evil.com",
+        "//evil.com",
+        "//evil.com/path",
+        "",
+    ],
+)
+async def test_login_rejects_open_redirect(
+    client: AsyncClient, malicious_redirect: str
+):
+    with (
+        patch.object(
+            settings, "cognito_domain", "test.auth.us-east-1.amazoncognito.com"
+        ),
+        patch.object(settings, "cognito_client_id", "test_client_id"),
+    ):
+        response = await client.get(
+            "/auth/login",
+            params={"redirect": malicious_redirect},
+            follow_redirects=False,
+        )
+        assert response.status_code == 302
+        state_data = _extract_auth_state_from_response(response)
+        assert state_data["redirect"] == "/"
+
+
+@pytest.mark.asyncio
+async def test_login_allows_safe_redirect(client: AsyncClient):
+    with (
+        patch.object(
+            settings, "cognito_domain", "test.auth.us-east-1.amazoncognito.com"
+        ),
+        patch.object(settings, "cognito_client_id", "test_client_id"),
+    ):
+        response = await client.get(
+            "/auth/login",
+            params={"redirect": "/dashboard"},
+            follow_redirects=False,
+        )
+        assert response.status_code == 302
+        state_data = _extract_auth_state_from_response(response)
+        assert state_data["redirect"] == "/dashboard"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "malicious_redirect",
+    [
+        "https://evil.com",
+        "//evil.com",
+    ],
+)
+async def test_callback_rejects_open_redirect_in_state(
+    client: AsyncClient, malicious_redirect: str
+):
+    with (
+        patch.object(settings, "debug", False),
+        patch.object(
+            auth_service,
+            "exchange_code_for_tokens",
+            new_callable=AsyncMock,
+        ) as mock_exchange,
+        patch.object(
+            auth_service,
+            "validate_cognito_id_token",
+            new_callable=AsyncMock,
+        ) as mock_validate,
+    ):
+        mock_exchange.return_value = {
+            "access_token": "test_access_token",
+            "id_token": "test_id_token",
+            "refresh_token": "test_refresh_token",
+        }
+        mock_validate.return_value = {
+            "sub": "google123",
+            "email": "user@provectus.com",
+            "name": "Test User",
+            "picture": None,
+        }
+
+        test_state = "test_state_value"
+        auth_state = {"state": test_state, "redirect": malicious_redirect}
+        client.cookies.set("auth_state", json.dumps(auth_state))
+
+        response = await client.get(
+            f"/auth/callback?code=test_code&state={test_state}",
+            follow_redirects=False,
+        )
+
+        assert response.status_code == 302
+        assert response.headers["location"] == "/"
