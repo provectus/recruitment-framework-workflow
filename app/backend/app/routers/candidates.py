@@ -268,8 +268,9 @@ async def list_candidate_documents(
     documents = await document_service.list_candidate_documents(
         session,
         candidate_id,
-        position_id,
-        type,
-        candidate_position_id,
+        user_id=current_user.id,
+        position_id=position_id,
+        type=type,
+        candidate_position_id=candidate_position_id,
     )
     return [DocumentResponse(**doc) for doc in documents]

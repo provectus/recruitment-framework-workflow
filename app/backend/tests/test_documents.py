@@ -601,6 +601,102 @@ async def test_get_document_with_view_url(
     assert call_kwargs["expiration"] == 3600
 
 
+@patch("app.services.storage_service.generate_view_url")
+@patch("app.services.storage_service.generate_upload_url")
+async def test_get_document_allowed_for_hiring_manager(
+    mock_generate_upload_url: AsyncMock,
+    mock_generate_view_url: AsyncMock,
+    client: AsyncClient,
+    session: AsyncSession,
+    candidate_position: CandidatePosition,
+    test_user: User,
+):
+    mock_generate_upload_url.return_value = "https://s3.amazonaws.com/fake-upload-url"
+    mock_generate_view_url.return_value = "https://s3.example.com/view-url"
+
+    presign_response = await client.post(
+        "/api/documents/presign",
+        json={
+            "type": "cv",
+            "candidate_position_id": candidate_position.id,
+            "file_name": "resume.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1024000,
+        },
+    )
+    assert presign_response.status_code == 201
+    document_id = presign_response.json()["document_id"]
+
+    await client.post(f"/api/documents/{document_id}/complete")
+
+    position = await session.get(Position, candidate_position.position_id)
+    hm_user = await session.get(User, position.hiring_manager_id)
+
+    mock_hm = User(
+        id=hm_user.id,
+        email=hm_user.email,
+        google_id=hm_user.google_id,
+        full_name=hm_user.full_name,
+    )
+    app.dependency_overrides[get_current_user] = lambda: mock_hm
+
+    get_response = await client.get(f"/api/documents/{document_id}")
+    assert get_response.status_code == 200
+
+    data = get_response.json()
+    assert data["id"] == document_id
+    assert data["view_url"] == "https://s3.example.com/view-url"
+
+
+@patch("app.services.storage_service.generate_upload_url")
+async def test_get_document_forbidden_for_unrelated_user(
+    mock_generate_upload_url: AsyncMock,
+    client: AsyncClient,
+    session: AsyncSession,
+    candidate_position: CandidatePosition,
+    test_user: User,
+):
+    mock_generate_upload_url.return_value = "https://s3.amazonaws.com/fake-upload-url"
+
+    presign_response = await client.post(
+        "/api/documents/presign",
+        json={
+            "type": "cv",
+            "candidate_position_id": candidate_position.id,
+            "file_name": "resume.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1024000,
+        },
+    )
+    assert presign_response.status_code == 201
+    document_id = presign_response.json()["document_id"]
+
+    await client.post(f"/api/documents/{document_id}/complete")
+
+    unrelated_user = User(
+        email="stranger@provectus.com",
+        google_id="stranger123",
+        full_name="Stranger User",
+    )
+    session.add(unrelated_user)
+    await session.commit()
+    await session.refresh(unrelated_user)
+
+    mock_stranger = User(
+        id=unrelated_user.id,
+        email=unrelated_user.email,
+        google_id=unrelated_user.google_id,
+        full_name=unrelated_user.full_name,
+    )
+    app.dependency_overrides[get_current_user] = lambda: mock_stranger
+
+    get_response = await client.get(f"/api/documents/{document_id}")
+    assert get_response.status_code == 403
+
+    data = get_response.json()
+    assert "not authorized" in data["detail"].lower()
+
+
 async def test_get_nonexistent_document(client: AsyncClient):
     response = await client.get("/api/documents/999")
 
@@ -853,3 +949,96 @@ async def test_list_candidate_documents_with_candidate_position_id_filter(
     assert len(documents) == 1
     assert documents[0]["id"] == doc1_id
     assert documents[0]["candidate_position_id"] == candidate_position.id
+
+
+@patch("app.services.storage_service.generate_upload_url")
+async def test_list_candidate_documents_allowed_for_hiring_manager(
+    mock_generate_upload_url: AsyncMock,
+    client: AsyncClient,
+    session: AsyncSession,
+    candidate_position: CandidatePosition,
+    test_user: User,
+):
+    mock_generate_upload_url.return_value = "https://s3.amazonaws.com/fake-upload-url"
+
+    presign_response = await client.post(
+        "/api/documents/presign",
+        json={
+            "type": "cv",
+            "candidate_position_id": candidate_position.id,
+            "file_name": "resume.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1024000,
+        },
+    )
+    assert presign_response.status_code == 201
+    doc_id = presign_response.json()["document_id"]
+    await client.post(f"/api/documents/{doc_id}/complete")
+
+    position = await session.get(Position, candidate_position.position_id)
+    hm_user = await session.get(User, position.hiring_manager_id)
+
+    mock_hm = User(
+        id=hm_user.id,
+        email=hm_user.email,
+        google_id=hm_user.google_id,
+        full_name=hm_user.full_name,
+    )
+    app.dependency_overrides[get_current_user] = lambda: mock_hm
+
+    response = await client.get(
+        f"/api/candidates/{candidate_position.candidate_id}/documents"
+    )
+    assert response.status_code == 200
+    documents = response.json()
+    assert len(documents) == 1
+    assert documents[0]["id"] == doc_id
+
+
+@patch("app.services.storage_service.generate_upload_url")
+async def test_list_candidate_documents_forbidden_for_unrelated_user(
+    mock_generate_upload_url: AsyncMock,
+    client: AsyncClient,
+    session: AsyncSession,
+    candidate_position: CandidatePosition,
+    test_user: User,
+):
+    mock_generate_upload_url.return_value = "https://s3.amazonaws.com/fake-upload-url"
+
+    presign_response = await client.post(
+        "/api/documents/presign",
+        json={
+            "type": "cv",
+            "candidate_position_id": candidate_position.id,
+            "file_name": "resume.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1024000,
+        },
+    )
+    assert presign_response.status_code == 201
+    doc_id = presign_response.json()["document_id"]
+    await client.post(f"/api/documents/{doc_id}/complete")
+
+    unrelated_user = User(
+        email="stranger@provectus.com",
+        google_id="stranger123",
+        full_name="Stranger User",
+    )
+    session.add(unrelated_user)
+    await session.commit()
+    await session.refresh(unrelated_user)
+
+    mock_stranger = User(
+        id=unrelated_user.id,
+        email=unrelated_user.email,
+        google_id=unrelated_user.google_id,
+        full_name=unrelated_user.full_name,
+    )
+    app.dependency_overrides[get_current_user] = lambda: mock_stranger
+
+    response = await client.get(
+        f"/api/candidates/{candidate_position.candidate_id}/documents"
+    )
+    assert response.status_code == 403
+    data = response.json()
+    assert "not authorized" in data["detail"].lower()

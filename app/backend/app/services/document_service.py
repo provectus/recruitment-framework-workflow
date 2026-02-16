@@ -9,6 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.candidate_position import CandidatePosition
 from app.models.document import Document
 from app.models.enums import DocumentStatus, DocumentType, InputMethod
+from app.models.position import Position
 from app.models.user import User
 from app.services import storage_service
 
@@ -178,6 +179,7 @@ async def enrich_document_response(
 async def get_document(
     session: AsyncSession,
     document_id: int,
+    user_id: int,
 ) -> dict:
     document = await session.get(Document, document_id)
     if document is None:
@@ -185,6 +187,26 @@ async def get_document(
             status_code=404,
             detail=f"Document {document_id} not found",
         )
+
+    if document.uploaded_by_id != user_id:
+        candidate_position = await session.get(
+            CandidatePosition, document.candidate_position_id
+        )
+        hiring_manager_query = (
+            select(Position.hiring_manager_id)
+            .join(
+                CandidatePosition,
+                CandidatePosition.position_id == Position.id,
+            )
+            .where(CandidatePosition.candidate_id == candidate_position.candidate_id)
+            .where(Position.hiring_manager_id == user_id)
+        )
+        hm_result = await session.exec(hiring_manager_query)
+        if hm_result.first() is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to view this document",
+            )
 
     result = await enrich_document_response(session, document)
 
@@ -200,10 +222,36 @@ async def get_document(
 async def list_candidate_documents(
     session: AsyncSession,
     candidate_id: int,
+    user_id: int,
     position_id: int | None = None,
     type: str | None = None,
     candidate_position_id: int | None = None,
 ) -> list[dict]:
+    uploaded_doc_query = (
+        select(Document.id)
+        .join(CandidatePosition, Document.candidate_position_id == CandidatePosition.id)
+        .where(CandidatePosition.candidate_id == candidate_id)
+        .where(Document.uploaded_by_id == user_id)
+        .limit(1)
+    )
+    uploaded_result = await session.exec(uploaded_doc_query)
+    has_uploaded = uploaded_result.first() is not None
+
+    if not has_uploaded:
+        hiring_manager_query = (
+            select(Position.id)
+            .join(CandidatePosition, CandidatePosition.position_id == Position.id)
+            .where(CandidatePosition.candidate_id == candidate_id)
+            .where(Position.hiring_manager_id == user_id)
+            .limit(1)
+        )
+        hm_result = await session.exec(hiring_manager_query)
+        if hm_result.first() is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Not authorized to view documents for this candidate",
+            )
+
     InterviewerUser = aliased(User)
     UploadedByUser = aliased(User)
 
