@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useDocuments } from "@/features/documents";
 import { useCandidate } from "@/features/candidates";
 import { formatDate } from "@/shared/lib/format";
@@ -100,201 +101,207 @@ export function DocumentList({
     return titleA.localeCompare(titleB);
   });
 
-  const shouldGroupByPosition = !positionId && documentsByPosition.size > 0;
+  const renderDocumentRow = (document: DocumentResponse) => (
+    <TableRow
+      key={document.id}
+      onClick={() => onDocumentClick?.(document.id)}
+      className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+    >
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant={
+              TYPE_VARIANTS[document.type as keyof typeof TYPE_VARIANTS] || "outline"
+            }
+          >
+            {document.type.toUpperCase()}
+          </Badge>
+          {isCurrentCV(document) && (
+            <Badge variant="default" className="bg-green-600">
+              Current
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="font-medium">
+        <div className="flex items-center gap-2">
+          {getDisplayFilename(document)}
+          {isCurrentCV(document) && hasMultipleCVVersions(document) && (
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onVersionHistoryClick?.(document.candidate_position_id);
+              }}
+            >
+              Version history
+            </Button>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {document.type === "transcript" && document.interview_date
+          ? formatDate(document.interview_date)
+          : formatDate(document.created_at)}
+      </TableCell>
+      <TableCell className="text-muted-foreground">
+        {document.type === "transcript" && document.interviewer_name
+          ? document.interviewer_name
+          : (document.uploaded_by_name || "Unknown")}
+      </TableCell>
+    </TableRow>
+  );
+
+  const renderPositionDocuments = (candidatePositionId: number) => {
+    const positionDocs = documentsByPosition.get(candidatePositionId) || [];
+    const cvDocs = positionDocs.filter((doc) => doc.type === "cv");
+    const transcriptDocs = positionDocs.filter((doc) => doc.type === "transcript");
+
+    const transcriptsByStage = new Map<string, DocumentResponse[]>();
+    transcriptDocs.forEach((doc) => {
+      const stage = doc.interview_stage || "Unknown";
+      const existing = transcriptsByStage.get(stage) || [];
+      transcriptsByStage.set(stage, [...existing, doc]);
+    });
+
+    transcriptsByStage.forEach((docs, stage) => {
+      transcriptsByStage.set(
+        stage,
+        docs.sort((a, b) => {
+          const dateA = a.interview_date ? new Date(a.interview_date).getTime() : 0;
+          const dateB = b.interview_date ? new Date(b.interview_date).getTime() : 0;
+          return dateB - dateA;
+        })
+      );
+    });
+
+    const sortedStages = Array.from(transcriptsByStage.keys()).sort();
+
+    return (
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Type</TableHead>
+              <TableHead>Filename / Stage</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Uploader</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {cvDocs.map(renderDocumentRow)}
+            {sortedStages.map((stage) => {
+              const stageDocs = transcriptsByStage.get(stage) || [];
+              return (
+                <React.Fragment key={stage}>
+                  <TableRow className="bg-muted/30 hover:bg-muted/30">
+                    <TableCell colSpan={4} className="font-medium text-sm">
+                      {stage} Interviews
+                    </TableCell>
+                  </TableRow>
+                  {stageDocs.map(renderDocumentRow)}
+                </React.Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const shouldGroupByPosition = !positionId && sortedPositionIds.length > 0;
+
+  if (!shouldGroupByPosition) {
+    return (
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Type</TableHead>
+              <TableHead>Filename / Stage</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Uploader</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.map((document) => (
+              <TableRow
+                key={document.id}
+                onClick={() => onDocumentClick?.(document.id)}
+                className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+              >
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        TYPE_VARIANTS[document.type as keyof typeof TYPE_VARIANTS] || "outline"
+                      }
+                    >
+                      {document.type.toUpperCase()}
+                    </Badge>
+                    {isCurrentCV(document) && (
+                      <Badge variant="default" className="bg-green-600">
+                        Current
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {document.type === "transcript" && document.interview_stage
+                      ? `${document.interview_stage} - ${getDisplayFilename(document)}`
+                      : getDisplayFilename(document)}
+                    {isCurrentCV(document) && hasMultipleCVVersions(document) && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onVersionHistoryClick?.(document.candidate_position_id);
+                        }}
+                      >
+                        Version history
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {document.type === "transcript" && document.interview_date
+                    ? formatDate(document.interview_date)
+                    : formatDate(document.created_at)}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {document.type === "transcript" && document.interviewer_name
+                    ? document.interviewer_name
+                    : (document.uploaded_by_name || "Unknown")}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  const defaultTab = String(sortedPositionIds[0]);
 
   return (
-    <div className="space-y-6">
-      {shouldGroupByPosition ? (
-        sortedPositionIds.map((candidatePositionId) => {
-          const positionDocs = documentsByPosition.get(candidatePositionId) || [];
-          const positionTitle = positionTitleMap.get(candidatePositionId) || "Unknown Position";
-
-          const cvDocs = positionDocs.filter((doc) => doc.type === "cv");
-          const transcriptDocs = positionDocs.filter((doc) => doc.type === "transcript");
-
-          const transcriptsByStage = new Map<string, DocumentResponse[]>();
-          transcriptDocs.forEach((doc) => {
-            const stage = doc.interview_stage || "Unknown";
-            const existing = transcriptsByStage.get(stage) || [];
-            transcriptsByStage.set(stage, [...existing, doc]);
-          });
-
-          transcriptsByStage.forEach((docs, stage) => {
-            transcriptsByStage.set(
-              stage,
-              docs.sort((a, b) => {
-                const dateA = a.interview_date ? new Date(a.interview_date).getTime() : 0;
-                const dateB = b.interview_date ? new Date(b.interview_date).getTime() : 0;
-                return dateB - dateA;
-              })
-            );
-          });
-
-          const sortedStages = Array.from(transcriptsByStage.keys()).sort();
-
-          const renderDocumentRow = (document: DocumentResponse) => (
-            <TableRow
-              key={document.id}
-              onClick={() => onDocumentClick?.(document.id)}
-              className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
-            >
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      TYPE_VARIANTS[
-                        document.type as keyof typeof TYPE_VARIANTS
-                      ] || "outline"
-                    }
-                  >
-                    {document.type.toUpperCase()}
-                  </Badge>
-                  {isCurrentCV(document) && (
-                    <Badge variant="default" className="bg-green-600">
-                      Current
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="font-medium">
-                <div className="flex items-center gap-2">
-                  {getDisplayFilename(document)}
-                  {isCurrentCV(document) && hasMultipleCVVersions(document) && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onVersionHistoryClick?.(document.candidate_position_id);
-                      }}
-                    >
-                      Version history
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {document.type === "transcript" && document.interview_date
-                  ? formatDate(document.interview_date)
-                  : formatDate(document.created_at)}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {document.type === "transcript" && document.interviewer_name
-                  ? document.interviewer_name
-                  : (document.uploaded_by_name || "Unknown")}
-              </TableCell>
-            </TableRow>
-          );
-
-          return (
-            <div key={candidatePositionId} className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">
-                {positionTitle}
-              </h3>
-              <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Filename / Stage</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Uploader</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cvDocs.map(renderDocumentRow)}
-                    {sortedStages.map((stage) => {
-                      const stageDocs = transcriptsByStage.get(stage) || [];
-                      return (
-                        <React.Fragment key={stage}>
-                          <TableRow className="bg-muted/30 hover:bg-muted/30">
-                            <TableCell colSpan={4} className="font-medium text-sm">
-                              {stage} Interviews
-                            </TableCell>
-                          </TableRow>
-                          {stageDocs.map(renderDocumentRow)}
-                        </React.Fragment>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Filename / Stage</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Uploader</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((document) => (
-                <TableRow
-                  key={document.id}
-                  onClick={() => onDocumentClick?.(document.id)}
-                  className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          TYPE_VARIANTS[
-                            document.type as keyof typeof TYPE_VARIANTS
-                          ] || "outline"
-                        }
-                      >
-                        {document.type.toUpperCase()}
-                      </Badge>
-                      {isCurrentCV(document) && (
-                        <Badge variant="default" className="bg-green-600">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {document.type === "transcript" && document.interview_stage
-                        ? `${document.interview_stage} - ${getDisplayFilename(document)}`
-                        : getDisplayFilename(document)}
-                      {isCurrentCV(document) && hasMultipleCVVersions(document) && (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onVersionHistoryClick?.(document.candidate_position_id);
-                          }}
-                        >
-                          Version history
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {document.type === "transcript" && document.interview_date
-                      ? formatDate(document.interview_date)
-                      : formatDate(document.created_at)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {document.type === "transcript" && document.interviewer_name
-                      ? document.interviewer_name
-                      : (document.uploaded_by_name || "Unknown")}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
+    <Tabs defaultValue={defaultTab}>
+      <TabsList variant="line">
+        {sortedPositionIds.map((cpId) => (
+          <TabsTrigger key={cpId} value={String(cpId)}>
+            {positionTitleMap.get(cpId) || "Unknown Position"}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {sortedPositionIds.map((cpId) => (
+        <TabsContent key={cpId} value={String(cpId)}>
+          {renderPositionDocuments(cpId)}
+        </TabsContent>
+      ))}
+    </Tabs>
   );
 }
