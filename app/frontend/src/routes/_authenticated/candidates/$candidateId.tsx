@@ -1,10 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Archive } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
-import { useCandidate, useUpdateCandidate, useArchiveCandidate } from "@/features/candidates";
+import { useCandidate, useArchiveCandidate } from "@/features/candidates";
 import { usePositions } from "@/features/positions";
 import { useDocuments } from "@/features/documents";
 import { Button } from "@/shared/ui/button";
@@ -13,7 +10,7 @@ import { CvUploadDialog } from "@/widgets/documents/cv-upload-dialog";
 import { TranscriptUploadDialog } from "@/widgets/documents/transcript-upload-dialog";
 import { DocumentList } from "@/widgets/documents/document-list";
 import { DocumentViewer, CvVersionHistory } from "@/widgets/documents";
-import { CandidatePositionsTable, AddToPositionDialog } from "@/widgets/candidates";
+import { CandidatePositionsTable, AddToPositionDialog, CandidateInfoCard } from "@/widgets/candidates";
 import {
   Dialog,
   DialogContent,
@@ -22,27 +19,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/shared/ui/form";
-import { Input } from "@/shared/ui/input";
 import { Skeleton } from "@/shared/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/candidates/$candidateId")({
   component: CandidateDetailPage,
 });
-
-const candidateSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  email: z.email("Please enter a valid email"),
-});
-
-type CandidateFormData = z.infer<typeof candidateSchema>;
 
 function CandidateDetailPage() {
   const navigate = useNavigate();
@@ -50,11 +31,11 @@ function CandidateDetailPage() {
   const candidateIdNum = Number(candidateId);
   const { data: candidate, isLoading, error } = useCandidate(candidateIdNum);
   const { data: positionsData } = usePositions();
-  const updateCandidate = useUpdateCandidate(candidateIdNum);
   const archiveCandidate = useArchiveCandidate(candidateIdNum);
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadCandidatePositionId, setUploadCandidatePositionId] = useState<number | null>(null);
@@ -69,65 +50,6 @@ function CandidateDetailPage() {
   const [versionHistoryCandidatePositionId, setVersionHistoryCandidatePositionId] = useState<number | null>(null);
 
   const { refetch: refetchDocuments } = useDocuments(candidateIdNum);
-
-  const form = useForm<CandidateFormData>({
-    resolver: zodResolver(candidateSchema),
-    defaultValues: {
-      full_name: "",
-      email: "",
-    },
-  });
-
-  useEffect(() => {
-    if (candidate) {
-      form.reset({
-        full_name: candidate.full_name,
-        email: candidate.email,
-      });
-    }
-  }, [candidate, form]);
-
-  const onSubmit = async (data: CandidateFormData) => {
-    const changedFields: Partial<CandidateFormData> = {};
-    if (data.full_name !== candidate?.full_name) {
-      changedFields.full_name = data.full_name;
-    }
-    if (data.email !== candidate?.email) {
-      changedFields.email = data.email;
-    }
-
-    if (Object.keys(changedFields).length === 0) return;
-
-    try {
-      const result = await updateCandidate.mutateAsync({
-        path: { candidate_id: candidateIdNum },
-        body: changedFields,
-      });
-      if (result) {
-        form.reset({
-          full_name: result.full_name,
-          email: result.email,
-        });
-      }
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status?: number } };
-        if (axiosError.response?.status === 409) {
-          form.setError("email", {
-            message: "A candidate with this email already exists.",
-          });
-        } else if (axiosError.response?.status === 404) {
-          form.setError("root", {
-            message: "Candidate not found",
-          });
-        } else {
-          console.error("Failed to update candidate:", err);
-        }
-      } else {
-        console.error("Failed to update candidate:", err);
-      }
-    }
-  };
 
   const handleUploadClick = (candidatePositionId: number) => {
     setUploadCandidatePositionId(candidatePositionId);
@@ -150,18 +72,12 @@ function CandidateDetailPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-64" />
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-28" />
-          </div>
+          <Skeleton className="h-10 w-28" />
         </div>
         <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
+          <CardContent className="pt-6 space-y-4">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
           </CardContent>
         </Card>
       </div>
@@ -185,68 +101,23 @@ function CandidateDetailPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div>
           <h1 className="text-2xl font-semibold">{candidate.full_name}</h1>
+          <p className="text-sm text-muted-foreground">{candidate.email}</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={updateCandidate.isPending}
-          >
-            {updateCandidate.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Save
-          </Button>
-          <Button variant="outline" onClick={() => setArchiveDialogOpen(true)}>
-            <Archive className="mr-2 h-4 w-4" />
-            Archive
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => setArchiveDialogOpen(true)}>
+          <Archive className="mr-2 h-4 w-4" />
+          Archive
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Candidate Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form className="space-y-4">
-              <FormField
-                control={form.control}
-                name="full_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled={updateCandidate.isPending} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled={updateCandidate.isPending} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {form.formState.errors.root && (
-                <p className="text-sm font-medium text-destructive">
-                  {form.formState.errors.root.message}
-                </p>
-              )}
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <CandidateInfoCard
+        candidateId={candidateIdNum}
+        fullName={candidate.full_name}
+        email={candidate.email}
+        createdAt={candidate.created_at}
+        updatedAt={candidate.updated_at}
+      />
 
       <Card>
         <CardHeader>
@@ -299,7 +170,10 @@ function CandidateDetailPage() {
         onOpenChange={setAddDialogOpen}
       />
 
-      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+      <Dialog open={archiveDialogOpen} onOpenChange={(open) => {
+        setArchiveDialogOpen(open);
+        if (!open) setArchiveError(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Archive Candidate</DialogTitle>
@@ -307,6 +181,9 @@ function CandidateDetailPage() {
               Are you sure you want to archive {candidate.full_name}? They will be hidden from the candidates list.
             </DialogDescription>
           </DialogHeader>
+          {archiveError && (
+            <p className="text-sm text-destructive">{archiveError}</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setArchiveDialogOpen(false)}>
               Cancel
@@ -315,13 +192,14 @@ function CandidateDetailPage() {
               variant="destructive"
               onClick={async () => {
                 try {
+                  setArchiveError(null);
                   await archiveCandidate.mutateAsync({
                     path: { candidate_id: candidateIdNum },
                   });
                   setArchiveDialogOpen(false);
                   navigate({ to: "/candidates" });
-                } catch (err) {
-                  console.error("Failed to archive candidate:", err);
+                } catch {
+                  setArchiveError("Failed to archive candidate. Please try again.");
                 }
               }}
               disabled={archiveCandidate.isPending}
@@ -372,11 +250,6 @@ function CandidateDetailPage() {
           }}
         />
       )}
-
-      <div className="text-sm text-muted-foreground space-y-1">
-        <p>Created: {new Date(candidate.created_at).toLocaleString()}</p>
-        <p>Last updated: {new Date(candidate.updated_at).toLocaleString()}</p>
-      </div>
     </div>
   );
 }

@@ -31,6 +31,7 @@ function PositionDetailPage() {
   const { data: position, isLoading, error } = usePosition(positionIdNum);
   const archivePosition = useArchivePosition(positionIdNum);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -94,7 +95,10 @@ function PositionDetailPage() {
 
       <PositionCandidatesTable candidates={position.candidates} />
 
-      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+      <Dialog open={archiveDialogOpen} onOpenChange={(open) => {
+        setArchiveDialogOpen(open);
+        if (!open) setArchiveError(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Archive Position</DialogTitle>
@@ -103,6 +107,9 @@ function PositionDetailPage() {
               It will be hidden from the positions list and dropdown menus.
             </DialogDescription>
           </DialogHeader>
+          {archiveError && (
+            <p className="text-sm text-destructive">{archiveError}</p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
@@ -114,13 +121,14 @@ function PositionDetailPage() {
               variant="destructive"
               onClick={async () => {
                 try {
+                  setArchiveError(null);
                   await archivePosition.mutateAsync({
                     path: { position_id: positionIdNum },
                   });
                   setArchiveDialogOpen(false);
                   navigate({ to: "/positions" });
-                } catch (err) {
-                  console.error("Failed to archive position:", err);
+                } catch {
+                  setArchiveError("Failed to archive position. Please try again.");
                 }
               }}
               disabled={archivePosition.isPending}
