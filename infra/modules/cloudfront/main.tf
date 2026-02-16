@@ -12,6 +12,7 @@ resource "aws_cloudfront_distribution" "spa" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
   aliases             = [var.domain]
+  web_acl_id          = var.web_acl_arn != "" ? var.web_acl_arn : null
 
   origin {
     domain_name              = var.spa_bucket_regional_domain_name

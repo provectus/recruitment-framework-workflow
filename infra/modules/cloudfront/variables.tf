@@ -27,3 +27,9 @@ variable "certificate_arn" {
   description = "ACM certificate ARN for HTTPS"
   type        = string
 }
+
+variable "web_acl_arn" {
+  description = "ARN of the WAF Web ACL to associate with the distribution"
+  type        = string
+  default     = ""
+}

@@ -76,6 +76,7 @@ module "cloudfront" {
   spa_bucket_id                   = module.s3.spa_bucket_id
   spa_bucket_regional_domain_name = module.s3.spa_bucket_regional_domain_name
   certificate_arn                 = module.acm.certificate_arn
+  web_acl_arn                     = module.waf.cloudfront_web_acl_arn
 }
 
 # IAM Module - Roles and permissions for ECS, GitHub Actions, and OIDC
@@ -108,6 +109,14 @@ module "cognito" {
   google_client_secret = var.google_client_secret
 }
 
+# WAF Module - Web Application Firewall ACLs for CloudFront and ALB
+module "waf" {
+  source = "./modules/waf"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
 # ECS Module - ECS cluster, ALB, and backend service
 module "ecs" {
   source = "./modules/ecs"
@@ -134,6 +143,12 @@ module "ecs" {
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
   cognito_client_secret_arn    = module.cognito.client_secret_arn
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
+}
+
+# Associate WAF with ALB
+resource "aws_wafv2_web_acl_association" "alb" {
+  resource_arn = module.ecs.alb_arn
+  web_acl_arn  = module.waf.alb_web_acl_arn
 }
 
 # Monitoring Module - SNS, CloudWatch alarms, ALB logs
