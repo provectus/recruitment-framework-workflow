@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import type { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { useTeams, useCreateTeam, useDeleteTeam } from "@/features/settings";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -47,8 +47,7 @@ function SettingsPage() {
           setError(null);
         },
         onError: (err) => {
-          const axiosError = err as AxiosError;
-          if (axiosError.response?.status === 409) {
+          if (err instanceof AxiosError && err.response?.status === 409) {
             setError("A team with this name already exists.");
           } else {
             setError("Failed to create team. Please try again.");
@@ -69,8 +68,7 @@ function SettingsPage() {
           setDeleteError(null);
         },
         onError: (err) => {
-          const axiosError = err as AxiosError;
-          if (axiosError.response?.status === 409) {
+          if (err instanceof AxiosError && err.response?.status === 409) {
             setDeleteError(
               "This team is assigned to positions and cannot be removed."
             );

@@ -90,7 +90,7 @@ export function GlobalUploadMenu({ collapsed = false, className }: GlobalUploadM
   };
 
   const handlePositionSelect = (positionId: string) => {
-    setSelectedPositionId(parseInt(positionId));
+    setSelectedPositionId(parseInt(positionId, 10));
     setStep("upload");
   };
 
