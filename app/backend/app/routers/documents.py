@@ -54,6 +54,7 @@ async def get_document(
     document = await document_service.get_document(
         session=session,
         document_id=document_id,
+        user_id=current_user.id,
     )
     return DocumentDetailResponse(**document)
 
