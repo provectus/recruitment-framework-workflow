@@ -147,8 +147,16 @@ async def create_candidate(
         email=email,
     )
     session.add(candidate)
-    await session.commit()
-    await session.refresh(candidate)
+
+    try:
+        await session.commit()
+        await session.refresh(candidate)
+    except IntegrityError as e:
+        await session.rollback()
+        raise ConflictError(
+            "A candidate with this email already exists."
+        ) from e
+
     return candidate
 
 
