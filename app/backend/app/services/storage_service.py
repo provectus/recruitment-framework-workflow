@@ -66,6 +66,15 @@ async def put_text_object(
         )
 
 
+async def get_object_size(s3_key: str) -> int:
+    async with _s3_client() as s3_client:
+        response = await s3_client.head_object(
+            Bucket=settings.s3_bucket_name,
+            Key=s3_key,
+        )
+        return response["ContentLength"]
+
+
 async def delete_object(s3_key: str) -> None:
     async with _s3_client() as s3_client:
         await s3_client.delete_object(

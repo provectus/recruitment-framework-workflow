@@ -99,6 +99,16 @@ async def interviewer(session: AsyncSession) -> User:
     return user
 
 
+@pytest.fixture(autouse=True)
+def mock_get_object_size():
+    with patch(
+        "app.services.storage_service.get_object_size",
+        new_callable=AsyncMock,
+        return_value=0,
+    ) as mock:
+        yield mock
+
+
 @patch("app.services.storage_service.generate_upload_url")
 async def test_presign_cv_happy_path(
     mock_generate_upload_url: AsyncMock,
@@ -203,6 +213,44 @@ async def test_complete_upload_happy_path(
     assert data["uploaded_by_name"] == "Test User"
     assert "created_at" in data
     assert "updated_at" in data
+
+
+@patch("app.services.storage_service.delete_object", new_callable=AsyncMock)
+@patch(
+    "app.services.storage_service.get_object_size",
+    new_callable=AsyncMock,
+    return_value=50_000_000,
+)
+@patch("app.services.storage_service.generate_upload_url")
+async def test_complete_upload_rejects_oversized_file(
+    mock_generate_upload_url: AsyncMock,
+    mock_get_object_size: AsyncMock,
+    mock_delete_object: AsyncMock,
+    client: AsyncClient,
+    candidate_position: CandidatePosition,
+):
+    mock_generate_upload_url.return_value = "https://s3.amazonaws.com/fake-upload-url"
+
+    presign_response = await client.post(
+        "/api/documents/presign",
+        json={
+            "type": "cv",
+            "candidate_position_id": candidate_position.id,
+            "file_name": "resume.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1024000,
+        },
+    )
+    assert presign_response.status_code == 201
+    document_id = presign_response.json()["document_id"]
+
+    complete_response = await client.post(f"/api/documents/{document_id}/complete")
+    assert complete_response.status_code == 409
+
+    data = complete_response.json()
+    assert "exceeds" in data["detail"].lower()
+
+    mock_delete_object.assert_called_once()
 
 
 async def test_presign_oversize_file(

@@ -89,6 +89,19 @@ async def complete_upload(
             detail=f"Document already completed (status: {document.status})",
         )
 
+    if document.file_size is not None:
+        actual_size = await storage_service.get_object_size(document.s3_key)
+        max_allowed = int(document.file_size * 1.05)
+        if actual_size > max_allowed:
+            await storage_service.delete_object(document.s3_key)
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Uploaded file size ({actual_size} bytes) exceeds "
+                    f"declared size ({document.file_size} bytes)"
+                ),
+            )
+
     document.status = DocumentStatus.active
 
     session.add(document)
