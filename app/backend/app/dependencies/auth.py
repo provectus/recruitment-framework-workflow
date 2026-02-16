@@ -28,11 +28,11 @@ async def get_current_user(
     except JWTError:
         pass
 
-    if not email:
+    if not email and not settings.debug:
         try:
             claims = await auth_service.validate_cognito_id_token(token)
             email = claims.get("email")
-        except (JWTError, ValueError):
+        except Exception:
             pass
 
     if not email:

@@ -79,15 +79,7 @@ async def test_auth_me_with_no_cookie(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_auth_me_with_expired_cookie(client: AsyncClient):
-    with (
-        patch.object(settings, "debug", True),
-        patch.object(
-            auth_service,
-            "validate_cognito_id_token",
-            new_callable=AsyncMock,
-            side_effect=ValueError("Invalid token"),
-        ),
-    ):
+    with patch.object(settings, "debug", True):
         login_response = await client.post(
             "/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
@@ -117,6 +109,27 @@ async def test_auth_me_with_invalid_cookie(client: AsyncClient):
     response = await client.get("/auth/me")
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid authentication credentials"
+
+
+@pytest.mark.asyncio
+async def test_auth_me_with_invalid_cookie_cognito_unreachable(client: AsyncClient):
+    """Invalid cookie where HS256 decode fails and Cognito JWKS is unreachable.
+
+    This covers the real production failure: a well-formed but invalid JWT
+    bypasses the JWTError in HS256 decode, falls through to Cognito validation,
+    and the JWKS fetch fails with a network error. Must return 401, not 500.
+    """
+    with patch.object(settings, "debug", False):
+        fake_jwt = jwt.encode(
+            {"sub": "someone@test.com", "exp": datetime.now(UTC) + timedelta(hours=1)},
+            "wrong-secret-key",
+            algorithm="HS256",
+        )
+        client.cookies.set("access_token", fake_jwt)
+
+        response = await client.get("/auth/me")
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Invalid authentication credentials"
 
 
 @pytest.mark.asyncio
@@ -151,6 +164,7 @@ async def test_login_redirects_to_cognito(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_callback_happy_path(client: AsyncClient):
     with (
+        patch.object(settings, "debug", False),
         patch.object(
             auth_service,
             "exchange_code_for_tokens",
