@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import secrets
+import time
 from typing import Any
 from urllib.parse import urlencode
 
@@ -11,6 +12,8 @@ from jose import jwt
 from app.config import settings
 
 _jwks_cache: dict[str, Any] | None = None
+_jwks_cache_time: float = 0.0
+JWKS_CACHE_TTL = 3600
 
 
 async def build_cognito_auth_url(
@@ -53,15 +56,23 @@ async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
 
 
 async def get_jwks() -> dict[str, Any]:
-    global _jwks_cache
-    if _jwks_cache is not None:
+    global _jwks_cache, _jwks_cache_time
+    cache_fresh = (time.monotonic() - _jwks_cache_time) < JWKS_CACHE_TTL
+    if _jwks_cache is not None and cache_fresh:
         return _jwks_cache
 
     async with httpx.AsyncClient() as client:
         response = await client.get(settings.cognito_jwks_url)
         response.raise_for_status()
         _jwks_cache = response.json()
+        _jwks_cache_time = time.monotonic()
         return _jwks_cache
+
+
+def _invalidate_jwks_cache() -> None:
+    global _jwks_cache, _jwks_cache_time
+    _jwks_cache = None
+    _jwks_cache_time = 0.0
 
 
 async def validate_cognito_id_token(id_token: str) -> dict[str, Any]:
@@ -71,8 +82,12 @@ async def validate_cognito_id_token(id_token: str) -> dict[str, Any]:
     jwks = await get_jwks()
     key_dict = next((k for k in jwks["keys"] if k["kid"] == kid), None)
     if not key_dict:
-        msg = "Public key not found in JWKS"
-        raise ValueError(msg)
+        _invalidate_jwks_cache()
+        jwks = await get_jwks()
+        key_dict = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+        if not key_dict:
+            msg = "Public key not found in JWKS"
+            raise ValueError(msg)
 
     public_key = {
         "kty": key_dict["kty"],
