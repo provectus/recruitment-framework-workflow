@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePresignUpload, useCompleteUpload } from "@/features/documents";
 import { getContentType } from "@/shared/lib/content-type";
 import type { FileWithStatus } from "@/widgets/documents/upload-zone";
@@ -51,6 +51,18 @@ export function useFileUpload({
   const [isBulkUpload, setIsBulkUpload] = useState(false);
   const [fileProgress, setFileProgress] = useState<Record<string, number>>({});
 
+  const xhrRefs = useRef<XMLHttpRequest[]>([]);
+  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    const xhrs = xhrRefs.current;
+    const timeouts = timeoutRefs.current;
+    return () => {
+      xhrs.forEach((xhr) => xhr.abort());
+      timeouts.forEach((id) => clearTimeout(id));
+    };
+  }, []);
+
   const presignMutation = usePresignUpload();
   const completeMutation = useCompleteUpload();
 
@@ -72,6 +84,7 @@ export function useFileUpload({
       const response = await presignMutation.mutateAsync({ body });
 
       const xhr = new XMLHttpRequest();
+      xhrRefs.current.push(xhr);
 
       await new Promise<void>((resolve, reject) => {
         xhr.upload.onprogress = (event) => {
@@ -147,11 +160,12 @@ export function useFileUpload({
 
       if (allSuccess) {
         setUploadState("success");
-        setTimeout(() => {
+        const id = setTimeout(() => {
           onClose(false);
           onSuccess?.();
           resetState();
         }, 2000);
+        timeoutRefs.current.push(id);
       } else {
         setUploadState("error");
         setErrorMessage(
@@ -167,11 +181,12 @@ export function useFileUpload({
 
       if (result.success) {
         setUploadState("success");
-        setTimeout(() => {
+        const id = setTimeout(() => {
           onClose(false);
           onSuccess?.();
           resetState();
         }, 1500);
+        timeoutRefs.current.push(id);
       } else {
         setUploadState("error");
         setErrorMessage(result.error || "Upload failed");
@@ -221,11 +236,12 @@ export function useFileUpload({
       });
 
       setUploadState("success");
-      setTimeout(() => {
+      const id = setTimeout(() => {
         onClose(false);
         onSuccess?.();
         resetState();
       }, 1500);
+      timeoutRefs.current.push(id);
     } catch (error) {
       console.error("Complete upload error:", error);
       setErrorMessage("Failed to finalize upload. Please try again.");
