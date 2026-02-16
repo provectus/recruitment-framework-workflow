@@ -60,6 +60,7 @@ services:
     env_file:
       - ./app/backend/.env
     environment:
+      DEBUG: true
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/tap
       S3_BUCKET_NAME: tap-files
       S3_ENDPOINT_URL: http://minio:9000
