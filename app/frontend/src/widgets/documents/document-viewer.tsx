@@ -65,7 +65,18 @@ export function DocumentViewer({
           }
           const arrayBuffer = await response.arrayBuffer();
           const result = await mammoth.convertToHtml({ arrayBuffer });
-          const sanitizedHtml = DOMPurify.sanitize(result.value);
+          const sanitizedHtml = DOMPurify.sanitize(result.value, {
+            ALLOWED_TAGS: [
+              "p", "b", "i", "em", "strong", "u", "a",
+              "ul", "ol", "li", "br",
+              "h1", "h2", "h3", "h4", "h5", "h6",
+              "table", "tr", "td", "th", "thead", "tbody",
+              "span", "div", "img",
+            ],
+            ALLOWED_ATTR: [
+              "href", "target", "src", "alt", "colspan", "rowspan",
+            ],
+          });
           setContentState({ status: "success", content: sanitizedHtml });
           return;
         }
