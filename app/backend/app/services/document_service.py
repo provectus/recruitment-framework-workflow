@@ -14,6 +14,33 @@ from app.models.user import User
 from app.services import storage_service
 
 
+async def _user_can_access_candidate_documents(
+    session: AsyncSession,
+    candidate_id: int,
+    user_id: int,
+) -> bool:
+    uploaded_query = (
+        select(Document.id)
+        .join(CandidatePosition, Document.candidate_position_id == CandidatePosition.id)
+        .where(CandidatePosition.candidate_id == candidate_id)
+        .where(Document.uploaded_by_id == user_id)
+        .limit(1)
+    )
+    uploaded_result = await session.exec(uploaded_query)
+    if uploaded_result.first() is not None:
+        return True
+
+    hiring_manager_query = (
+        select(Position.id)
+        .join(CandidatePosition, CandidatePosition.position_id == Position.id)
+        .where(CandidatePosition.candidate_id == candidate_id)
+        .where(Position.hiring_manager_id == user_id)
+        .limit(1)
+    )
+    hm_result = await session.exec(hiring_manager_query)
+    return hm_result.first() is not None
+
+
 async def create_presigned_upload(
     session: AsyncSession,
     type: str,
@@ -33,6 +60,14 @@ async def create_presigned_upload(
             status_code=404,
             detail=f"Candidate position {candidate_position_id} not found",
         )
+
+    if interviewer_id is not None:
+        interviewer = await session.get(User, interviewer_id)
+        if interviewer is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Interviewer (user {interviewer_id}) not found",
+            )
 
     s3_key = f"documents/{uuid4()}/{file_name}"
 
@@ -128,6 +163,13 @@ async def create_pasted_transcript(
             detail=f"Candidate position {candidate_position_id} not found",
         )
 
+    interviewer = await session.get(User, interviewer_id)
+    if interviewer is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Interviewer (user {interviewer_id}) not found",
+        )
+
     s3_key = f"documents/{uuid4()}/transcript.txt"
 
     await storage_service.put_text_object(s3_key, content, "text/plain")
@@ -201,25 +243,16 @@ async def get_document(
             detail=f"Document {document_id} not found",
         )
 
-    if document.uploaded_by_id != user_id:
-        candidate_position = await session.get(
-            CandidatePosition, document.candidate_position_id
+    candidate_position = await session.get(
+        CandidatePosition, document.candidate_position_id
+    )
+    if not await _user_can_access_candidate_documents(
+        session, candidate_position.candidate_id, user_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view this document",
         )
-        hiring_manager_query = (
-            select(Position.hiring_manager_id)
-            .join(
-                CandidatePosition,
-                CandidatePosition.position_id == Position.id,
-            )
-            .where(CandidatePosition.candidate_id == candidate_position.candidate_id)
-            .where(Position.hiring_manager_id == user_id)
-        )
-        hm_result = await session.exec(hiring_manager_query)
-        if hm_result.first() is None:
-            raise HTTPException(
-                status_code=403,
-                detail="Not authorized to view this document",
-            )
 
     result = await enrich_document_response(session, document)
 
@@ -240,30 +273,11 @@ async def list_candidate_documents(
     type: str | None = None,
     candidate_position_id: int | None = None,
 ) -> list[dict]:
-    uploaded_doc_query = (
-        select(Document.id)
-        .join(CandidatePosition, Document.candidate_position_id == CandidatePosition.id)
-        .where(CandidatePosition.candidate_id == candidate_id)
-        .where(Document.uploaded_by_id == user_id)
-        .limit(1)
-    )
-    uploaded_result = await session.exec(uploaded_doc_query)
-    has_uploaded = uploaded_result.first() is not None
-
-    if not has_uploaded:
-        hiring_manager_query = (
-            select(Position.id)
-            .join(CandidatePosition, CandidatePosition.position_id == Position.id)
-            .where(CandidatePosition.candidate_id == candidate_id)
-            .where(Position.hiring_manager_id == user_id)
-            .limit(1)
+    if not await _user_can_access_candidate_documents(session, candidate_id, user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view documents for this candidate",
         )
-        hm_result = await session.exec(hiring_manager_query)
-        if hm_result.first() is None:
-            raise HTTPException(
-                status_code=403,
-                detail="Not authorized to view documents for this candidate",
-            )
 
     InterviewerUser = aliased(User)
     UploadedByUser = aliased(User)
