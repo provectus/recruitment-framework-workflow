@@ -9,7 +9,13 @@ class Settings(BaseSettings):
 
     app_name: str = "backend"
     debug: bool = False
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/tap"
+    database_url: str = ""
+
+    db_host: str = ""
+    db_port: int = 5432
+    db_name: str = ""
+    db_username: str = ""
+    db_password: str = ""
 
     jwt_secret_key: str = _DEV_JWT_SECRET
     cors_origins: list[str] = ["http://localhost:5173"]
@@ -41,6 +47,19 @@ class Settings(BaseSettings):
     @property
     def cognito_issuer(self) -> str:
         return f"https://cognito-idp.{self.cognito_region}.amazonaws.com/{self.cognito_user_pool_id}"
+
+    @model_validator(mode="after")
+    def _build_database_url_from_parts(self) -> "Settings":
+        if not self.database_url and self.db_host:
+            self.database_url = (
+                f"postgresql+asyncpg://{self.db_username}:{self.db_password}"
+                f"@{self.db_host}:{self.db_port}/{self.db_name}"
+            )
+        if not self.database_url:
+            self.database_url = (
+                "postgresql+asyncpg://postgres:postgres@localhost:5432/tap"
+            )
+        return self
 
     @model_validator(mode="after")
     def _validate_jwt_secret_in_production(self) -> "Settings":

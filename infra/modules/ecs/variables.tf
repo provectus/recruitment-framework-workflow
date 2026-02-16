@@ -59,7 +59,28 @@ variable "certificate_arn" {
 }
 
 variable "db_secret_arn" {
-  description = "ARN of the Secrets Manager secret containing the database connection URL"
+  description = "ARN of the Secrets Manager secret containing the database master password"
+  type        = string
+}
+
+variable "db_host" {
+  description = "RDS instance hostname"
+  type        = string
+}
+
+variable "db_port" {
+  description = "RDS instance port"
+  type        = number
+  default     = 5432
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+}
+
+variable "db_username" {
+  description = "Database master username"
   type        = string
 }
 

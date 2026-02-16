@@ -180,13 +180,29 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "COOKIE_SECURE"
           value = "true"
+        },
+        {
+          name  = "DB_HOST"
+          value = var.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = tostring(var.db_port)
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        },
+        {
+          name  = "DB_USERNAME"
+          value = var.db_username
         }
       ]
 
       secrets = [
         {
-          name      = "DATABASE_URL"
-          valueFrom = var.db_secret_arn
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.db_secret_arn}:password::"
         },
         {
           name      = "COGNITO_USER_POOL_ID"
