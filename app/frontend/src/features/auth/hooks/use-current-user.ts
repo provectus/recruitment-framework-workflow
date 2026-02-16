@@ -10,6 +10,10 @@ export function useCurrentUser() {
   const { data, isLoading } = useQuery({
     ...getMeAuthMeGetOptions(),
     retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const user = data ?? null;
