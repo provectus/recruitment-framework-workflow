@@ -57,6 +57,7 @@ export function TranscriptUploadDialog({
 }: TranscriptUploadDialogProps) {
   const [activeTab, setActiveTab] = useState<"file" | "text">("file");
   const [pastedText, setPastedText] = useState<string>("");
+  const [pasteError, setPasteError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<TranscriptMetadata>({
     interviewStage: "",
     interviewerId: "",
@@ -81,7 +82,7 @@ export function TranscriptUploadDialog({
     content_type: getContentType(file.name),
     file_size: file.size,
     interview_stage: metadata.interviewStage,
-    interviewer_id: parseInt(metadata.interviewerId),
+    interviewer_id: parseInt(metadata.interviewerId, 10),
     interview_date: metadata.interviewDate,
     notes: metadata.notes || null,
   });
@@ -101,6 +102,7 @@ export function TranscriptUploadDialog({
 
   const resetMetadata = () => {
     setPastedText("");
+    setPasteError(null);
     setMetadata({
       interviewStage: "",
       interviewerId: "",
@@ -119,13 +121,14 @@ export function TranscriptUploadDialog({
       return;
     }
 
+    setPasteError(null);
     try {
       await pasteTranscriptMutation.mutateAsync({
         body: {
           candidate_position_id: candidatePositionId,
           content: pastedText,
           interview_stage: metadata.interviewStage,
-          interviewer_id: parseInt(metadata.interviewerId),
+          interviewer_id: parseInt(metadata.interviewerId, 10),
           interview_date: metadata.interviewDate,
           notes: metadata.notes || null,
         },
@@ -134,8 +137,8 @@ export function TranscriptUploadDialog({
       onOpenChange(false);
       resetMetadata();
       onSuccess?.();
-    } catch (error) {
-      console.error("Paste transcript error:", error);
+    } catch {
+      setPasteError("Failed to save transcript. Please try again.");
     }
   };
 
@@ -280,6 +283,9 @@ export function TranscriptUploadDialog({
                     className="min-h-[200px]"
                   />
                 </div>
+                {pasteError && (
+                  <p className="text-sm text-destructive">{pasteError}</p>
+                )}
                 <div className="flex justify-end">
                   <Button
                     onClick={handlePasteSubmit}

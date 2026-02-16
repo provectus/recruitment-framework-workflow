@@ -166,7 +166,10 @@ function CandidatesPage() {
           message: "A candidate with this email already exists.",
         });
       } else {
-        console.error("Failed to create candidate:", error);
+        form.setError("root", {
+          type: "manual",
+          message: "Failed to create candidate. Please try again.",
+        });
       }
     }
   };
@@ -229,6 +232,11 @@ function CandidatesPage() {
                     </FormItem>
                   )}
                 />
+                {form.formState.errors.root && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.root.message}
+                  </p>
+                )}
                 <DialogFooter>
                   <Button type="submit" disabled={createCandidate.isPending}>
                     {createCandidate.isPending && (

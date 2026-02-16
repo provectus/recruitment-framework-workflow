@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Trash2, Upload, FileText } from "lucide-react";
+import { Loader2, MoreVertical, Upload, FileText, Trash2 } from "lucide-react";
 import type { PositionStageItem } from "@/shared/api";
-import { STAGE_LABELS } from "@/shared/lib/stage-utils";
+import { formatStage } from "@/shared/lib/stage-utils";
 import { useUpdateStage, useRemoveFromPosition } from "@/features/candidates";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
@@ -29,6 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
 import { getStageVariant } from "@/shared/lib/stage-utils";
 
 interface CandidatePositionsTableProps {
@@ -50,7 +57,9 @@ export function CandidatePositionsTable({
   const removeFromPosition = useRemoveFromPosition(candidateId);
 
   const [updatingStage, setUpdatingStage] = useState<number | null>(null);
+  const [stageError, setStageError] = useState<string | null>(null);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
   const [positionToRemove, setPositionToRemove] = useState<{
     id: number;
     title: string;
@@ -58,13 +67,14 @@ export function CandidatePositionsTable({
 
   const handleStageChange = async (positionId: number, newStage: string) => {
     setUpdatingStage(positionId);
+    setStageError(null);
     try {
       await updateStageMutation.mutateAsync({
         path: { candidate_id: candidateId, position_id: positionId },
         body: { stage: newStage },
       });
-    } catch (err) {
-      console.error("Failed to update stage:", err);
+    } catch {
+      setStageError("Failed to update stage. Please try again.");
     } finally {
       setUpdatingStage(null);
     }
@@ -77,6 +87,7 @@ export function CandidatePositionsTable({
 
   const handleRemoveConfirm = async () => {
     if (!positionToRemove) return;
+    setRemoveError(null);
     try {
       await removeFromPosition.mutateAsync({
         path: {
@@ -86,8 +97,8 @@ export function CandidatePositionsTable({
       });
       setRemoveDialogOpen(false);
       setPositionToRemove(null);
-    } catch (err) {
-      console.error("Failed to remove candidate from position:", err);
+    } catch {
+      setRemoveError("Failed to remove from position. Please try again.");
     }
   };
 
@@ -104,13 +115,16 @@ export function CandidatePositionsTable({
 
   return (
     <>
+      {stageError && (
+        <p className="text-sm text-destructive mb-2">{stageError}</p>
+      )}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Position</TableHead>
               <TableHead>Stage</TableHead>
-              <TableHead className="w-32">Actions</TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,7 +157,7 @@ export function CandidatePositionsTable({
                         </div>
                       ) : isTerminal ? (
                         <Badge variant={getStageVariant(position.stage)}>
-                          {STAGE_LABELS[position.stage]}
+                          {formatStage(position.stage)}
                         </Badge>
                       ) : (
                         <Select
@@ -158,7 +172,7 @@ export function CandidatePositionsTable({
                               <Badge
                                 variant={getStageVariant(position.stage)}
                               >
-                                {STAGE_LABELS[position.stage]}
+                                {formatStage(position.stage)}
                               </Badge>
                             </SelectValue>
                           </SelectTrigger>
@@ -173,7 +187,7 @@ export function CandidatePositionsTable({
                                     : ""
                                 }
                               >
-                                {STAGE_LABELS[stage]}
+                                {formatStage(stage)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -182,41 +196,45 @@ export function CandidatePositionsTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          onUploadClick(position.candidate_position_id)
-                        }
-                      >
-                        <Upload className="h-4 w-4 mr-1" />
-                        Upload CV
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          onTranscriptClick(position.candidate_position_id)
-                        }
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        Add Transcript
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          handleRemoveClick(
-                            position.position_id,
-                            position.position_title,
-                          )
-                        }
-                        disabled={removeFromPosition.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onUploadClick(position.candidate_position_id)
+                          }
+                        >
+                          <Upload className="h-4 w-4" />
+                          Upload CV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onTranscriptClick(position.candidate_position_id)
+                          }
+                        >
+                          <FileText className="h-4 w-4" />
+                          Add Transcript
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() =>
+                            handleRemoveClick(
+                              position.position_id,
+                              position.position_title,
+                            )
+                          }
+                          disabled={removeFromPosition.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove from Position
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
@@ -225,7 +243,10 @@ export function CandidatePositionsTable({
         </Table>
       </div>
 
-      <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+      <Dialog open={removeDialogOpen} onOpenChange={(open) => {
+        setRemoveDialogOpen(open);
+        if (!open) setRemoveError(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Remove from Position</DialogTitle>
@@ -234,6 +255,9 @@ export function CandidatePositionsTable({
               delete their pipeline progress for this position.
             </DialogDescription>
           </DialogHeader>
+          {removeError && (
+            <p className="text-sm text-destructive">{removeError}</p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
