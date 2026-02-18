@@ -14,3 +14,7 @@ class ConflictError(AppError):
 
 class ValidationError(AppError):
     pass
+
+
+class ForbiddenError(AppError):
+    pass

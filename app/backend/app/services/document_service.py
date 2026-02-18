@@ -2,11 +2,11 @@ import re
 from datetime import date
 from uuid import uuid4
 
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.exceptions import ConflictError, ForbiddenError, NotFoundException
 from app.models.candidate_position import CandidatePosition
 from app.models.document import Document
 from app.models.enums import DocumentStatus, DocumentType, InputMethod
@@ -69,17 +69,15 @@ async def create_presigned_upload(
 ) -> tuple[Document, str]:
     candidate_position = await session.get(CandidatePosition, candidate_position_id)
     if candidate_position is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Candidate position {candidate_position_id} not found",
+        raise NotFoundException(
+            f"Candidate position {candidate_position_id} not found"
         )
 
     if interviewer_id is not None:
         interviewer = await session.get(User, interviewer_id)
         if interviewer is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Interviewer (user {interviewer_id}) not found",
+            raise NotFoundException(
+                f"Interviewer (user {interviewer_id}) not found"
             )
 
     safe_name = _sanitize_file_name(file_name)
@@ -103,13 +101,14 @@ async def create_presigned_upload(
 
     session.add(document)
     await session.flush()
-    await session.commit()
 
     upload_url = await storage_service.generate_upload_url(
         s3_key=s3_key,
         content_type=content_type,
         max_size=file_size,
     )
+
+    await session.commit()
 
     return document, upload_url
 
@@ -121,21 +120,14 @@ async def complete_upload(
 ) -> Document:
     document = await session.get(Document, document_id)
     if document is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Document {document_id} not found",
-        )
+        raise NotFoundException(f"Document {document_id} not found")
 
     if document.uploaded_by_id != user_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Document not owned by current user",
-        )
+        raise ForbiddenError("Document not owned by current user")
 
     if document.status != DocumentStatus.pending:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Document already completed (status: {document.status})",
+        raise ConflictError(
+            f"Document already completed (status: {document.status})"
         )
 
     if document.file_size is not None:
@@ -143,12 +135,9 @@ async def complete_upload(
         max_allowed = int(document.file_size * 1.05)
         if actual_size > max_allowed:
             await storage_service.delete_object(document.s3_key)
-            raise HTTPException(
-                status_code=409,
-                detail=(
-                    f"Uploaded file size ({actual_size} bytes) exceeds "
-                    f"declared size ({document.file_size} bytes)"
-                ),
+            raise ConflictError(
+                f"Uploaded file size ({actual_size} bytes) exceeds "
+                f"declared size ({document.file_size} bytes)"
             )
 
     document.status = DocumentStatus.active
@@ -172,21 +161,17 @@ async def create_pasted_transcript(
 ) -> Document:
     candidate_position = await session.get(CandidatePosition, candidate_position_id)
     if candidate_position is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Candidate position {candidate_position_id} not found",
+        raise NotFoundException(
+            f"Candidate position {candidate_position_id} not found"
         )
 
     interviewer = await session.get(User, interviewer_id)
     if interviewer is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Interviewer (user {interviewer_id}) not found",
+        raise NotFoundException(
+            f"Interviewer (user {interviewer_id}) not found"
         )
 
     s3_key = f"documents/{uuid4()}/transcript.txt"
-
-    await storage_service.put_text_object(s3_key, content, "text/plain")
 
     document = Document(
         type=DocumentType.transcript,
@@ -206,6 +191,9 @@ async def create_pasted_transcript(
 
     session.add(document)
     await session.flush()
+
+    await storage_service.put_text_object(s3_key, content, "text/plain")
+
     await session.commit()
 
     return document
@@ -252,26 +240,19 @@ async def get_document(
 ) -> dict:
     document = await session.get(Document, document_id)
     if document is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Document {document_id} not found",
-        )
+        raise NotFoundException(f"Document {document_id} not found")
 
     candidate_position = await session.get(
         CandidatePosition, document.candidate_position_id
     )
     if candidate_position is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Document {document_id} references missing candidate position",
+        raise NotFoundException(
+            f"Document {document_id} references missing candidate position"
         )
     if not await _user_can_access_candidate_documents(
         session, candidate_position.candidate_id, user_id
     ):
-        raise HTTPException(
-            status_code=403,
-            detail="Not authorized to view this document",
-        )
+        raise ForbiddenError("Not authorized to view this document")
 
     result = await enrich_document_response(session, document)
 
@@ -293,9 +274,8 @@ async def list_candidate_documents(
     candidate_position_id: int | None = None,
 ) -> list[dict]:
     if not await _user_can_access_candidate_documents(session, candidate_id, user_id):
-        raise HTTPException(
-            status_code=403,
-            detail="Not authorized to view documents for this candidate",
+        raise ForbiddenError(
+            "Not authorized to view documents for this candidate"
         )
 
     InterviewerUser = aliased(User)

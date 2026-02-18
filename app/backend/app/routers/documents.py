@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
+from app.exceptions import ConflictError, ForbiddenError, NotFoundException
 from app.models.user import User
 from app.schemas.documents import (
     DocumentDetailResponse,
@@ -24,19 +25,22 @@ async def presign_upload(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PresignResponse:
-    document, upload_url = await document_service.create_presigned_upload(
-        session=session,
-        type=body.type,
-        candidate_position_id=body.candidate_position_id,
-        file_name=body.file_name,
-        content_type=body.content_type,
-        file_size=body.file_size,
-        uploaded_by_id=current_user.id,
-        interview_stage=body.interview_stage,
-        interviewer_id=body.interviewer_id,
-        interview_date=body.interview_date,
-        notes=body.notes,
-    )
+    try:
+        document, upload_url = await document_service.create_presigned_upload(
+            session=session,
+            type=body.type,
+            candidate_position_id=body.candidate_position_id,
+            file_name=body.file_name,
+            content_type=body.content_type,
+            file_size=body.file_size,
+            uploaded_by_id=current_user.id,
+            interview_stage=body.interview_stage,
+            interviewer_id=body.interviewer_id,
+            interview_date=body.interview_date,
+            notes=body.notes,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
 
     return PresignResponse(
         document_id=document.id,
@@ -51,11 +55,16 @@ async def get_document(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentDetailResponse:
-    document = await document_service.get_document(
-        session=session,
-        document_id=document_id,
-        user_id=current_user.id,
-    )
+    try:
+        document = await document_service.get_document(
+            session=session,
+            document_id=document_id,
+            user_id=current_user.id,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
+    except ForbiddenError as e:
+        raise HTTPException(status_code=403, detail=e.detail) from e
     return DocumentDetailResponse(**document)
 
 
@@ -65,11 +74,18 @@ async def complete_upload(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
-    document = await document_service.complete_upload(
-        session=session,
-        document_id=document_id,
-        user_id=current_user.id,
-    )
+    try:
+        document = await document_service.complete_upload(
+            session=session,
+            document_id=document_id,
+            user_id=current_user.id,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
+    except ForbiddenError as e:
+        raise HTTPException(status_code=403, detail=e.detail) from e
+    except ConflictError as e:
+        raise HTTPException(status_code=409, detail=e.detail) from e
 
     enriched = await document_service.enrich_document_response(session, document)
     return DocumentResponse(**enriched)
@@ -83,16 +99,19 @@ async def paste_transcript(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
-    document = await document_service.create_pasted_transcript(
-        session=session,
-        candidate_position_id=body.candidate_position_id,
-        content=body.content,
-        interview_stage=body.interview_stage,
-        interviewer_id=body.interviewer_id,
-        interview_date=body.interview_date,
-        uploaded_by_id=current_user.id,
-        notes=body.notes,
-    )
+    try:
+        document = await document_service.create_pasted_transcript(
+            session=session,
+            candidate_position_id=body.candidate_position_id,
+            content=body.content,
+            interview_stage=body.interview_stage,
+            interviewer_id=body.interviewer_id,
+            interview_date=body.interview_date,
+            uploaded_by_id=current_user.id,
+            notes=body.notes,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
 
     enriched = await document_service.enrich_document_response(session, document)
     return DocumentResponse(**enriched)

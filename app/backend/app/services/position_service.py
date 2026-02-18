@@ -147,9 +147,11 @@ async def get_position_detail(session: AsyncSession, position_id: int) -> dict |
         "requirements": position.requirements,
         "status": position.status,
         "team_id": position.team_id,
-        "team_name": team.name,
+        "team_name": team.name if team else "Unknown",
         "hiring_manager_id": position.hiring_manager_id,
-        "hiring_manager_name": hiring_manager.full_name,
+        "hiring_manager_name": (
+            hiring_manager.full_name if hiring_manager else "Unknown"
+        ),
         "is_archived": position.is_archived,
         "candidates": candidates,
         "created_at": position.created_at.isoformat(),

@@ -25,19 +25,19 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
     ]
 
     total_candidates_result = await session.execute(
-        select(func.count()).select_from(Candidate).where(Candidate.is_archived == False)  # noqa: E712
+        select(func.count()).select_from(Candidate).where(Candidate.is_archived.is_(False))
     )
     total_candidates = total_candidates_result.scalar_one()
 
     total_positions_result = await session.execute(
-        select(func.count()).select_from(Position).where(Position.is_archived == False)  # noqa: E712
+        select(func.count()).select_from(Position).where(Position.is_archived.is_(False))
     )
     total_positions = total_positions_result.scalar_one()
 
     open_positions_result = await session.execute(
         select(func.count())
         .select_from(Position)
-        .where(Position.is_archived == False, Position.status == "open")  # noqa: E712
+        .where(Position.is_archived.is_(False), Position.status == "open")
     )
     open_positions = open_positions_result.scalar_one()
 
@@ -53,7 +53,7 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
         .select_from(Candidate)
         .outerjoin(CandidatePosition, CandidatePosition.candidate_id == Candidate.id)
         .outerjoin(Position, Position.id == CandidatePosition.position_id)
-        .where(Candidate.is_archived == False)  # noqa: E712
+        .where(Candidate.is_archived.is_(False))
         .order_by(CandidatePosition.updated_at.desc().nulls_last(), Candidate.created_at.desc())
         .limit(5)
     )
@@ -80,7 +80,7 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
         .select_from(Position)
         .join(Team, Team.id == Position.team_id)
         .outerjoin(CandidatePosition, CandidatePosition.position_id == Position.id)
-        .where(Position.is_archived == False)  # noqa: E712
+        .where(Position.is_archived.is_(False))
         .group_by(Position.id, Position.title, Position.status, Team.name)
         .order_by(func.count(CandidatePosition.id).desc())
         .limit(5)
