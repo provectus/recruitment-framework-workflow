@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'app/backend/**'
+      - "app/backend/**"
 
 permissions:
   contents: read
@@ -71,6 +71,16 @@ jobs:
         env:
           PYTHONPATH: .
           DATABASE_URL: postgresql+asyncpg://ci:ci@localhost:5432/ci
+          JWT_SECRET_KEY: dev-secret-change-in-production
+          CORS_ORIGINS: "['http://localhost:5173']"
+          COOKIE_DOMAIN: ""
+          COOKIE_SECURE: "false"
+          ALLOWED_EMAIL_DOMAIN: provectus.com
+          COGNITO_USER_POOL_ID: us-east-1_XXXXXXXXX
+          COGNITO_CLIENT_ID: your_client_id_here
+          COGNITO_CLIENT_SECRET: your_client_secret_here
+          COGNITO_DOMAIN: your-cognito-domain.auth.us-east-1.amazoncognito.com
+          COGNITO_REDIRECT_URI: http://localhost:8000/auth/callback
 
       - name: Check spec is up-to-date
         run: |
