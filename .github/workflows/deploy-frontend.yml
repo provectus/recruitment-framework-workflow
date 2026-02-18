@@ -61,13 +61,15 @@ jobs:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/tap-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Sync to S3
+      - name: Sync hashed assets to S3
         run: |
           aws s3 sync dist/ s3://$S3_BUCKET/ \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
-            --exclude "index.html" \
-            --exclude "*.json"
+            --exclude "index.html"
+
+      - name: Upload index.html with no-cache
+        run: |
           aws s3 cp dist/index.html s3://$S3_BUCKET/index.html \
             --cache-control "public, max-age=0, must-revalidate"
 

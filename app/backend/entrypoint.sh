@@ -1,4 +1,9 @@
 #!/bin/sh
 set -e
-uv run alembic upgrade head
+
+if [ "${APP_RUN_MIGRATIONS:-true}" = "true" ]; then
+  echo "Running database migrations..."
+  uv run alembic upgrade head
+fi
+
 exec "$@"
