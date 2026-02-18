@@ -18,7 +18,10 @@ function AuthCallback() {
   useEffect(() => {
     queryClient
       .refetchQueries({ queryKey: currentUserQueryKey() })
-      .then(() => navigate({ to: redirect || "/" }));
+      .then(() => {
+        const user = queryClient.getQueryData(currentUserQueryKey());
+        navigate({ to: user ? (redirect || "/") : "/login" });
+      });
   }, [queryClient, navigate, redirect]);
 
   return (

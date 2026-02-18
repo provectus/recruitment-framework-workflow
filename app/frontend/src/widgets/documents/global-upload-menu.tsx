@@ -81,10 +81,12 @@ export function GlobalUploadMenu({ collapsed = false, className }: GlobalUploadM
     setSearchQuery(candidate.full_name);
     setShowSearchResults(false);
 
-    if (candidate.positions.length === 1) {
+    if (candidate.positions.length === 0) {
+      return;
+    } else if (candidate.positions.length === 1) {
       setSelectedPositionId(candidate.positions[0].position_id);
       setStep("upload");
-    } else if (candidate.positions.length > 1) {
+    } else {
       setStep("select-position");
     }
   };
@@ -214,9 +216,13 @@ export function GlobalUploadMenu({ collapsed = false, className }: GlobalUploadM
                             <div className="text-xs text-muted-foreground">
                               {candidate.email}
                             </div>
-                            {candidate.positions.length > 0 && (
+                            {candidate.positions.length > 0 ? (
                               <div className="text-xs text-muted-foreground mt-1">
                                 {candidate.positions.length} position{candidate.positions.length > 1 ? "s" : ""}
+                              </div>
+                            ) : (
+                              <div className="text-xs text-destructive mt-1">
+                                No positions — cannot upload
                               </div>
                             )}
                           </button>

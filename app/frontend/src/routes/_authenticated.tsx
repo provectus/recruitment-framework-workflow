@@ -3,6 +3,7 @@ import { Sidebar } from "@/widgets/sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
+    if (context.auth.isLoading) return;
     if (!context.auth.isAuthenticated) {
       throw redirect({
         to: "/login",

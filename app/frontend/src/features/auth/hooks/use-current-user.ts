@@ -13,7 +13,7 @@ export function useCurrentUser() {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnReconnect: true,
   });
 
   const user = data ?? null;

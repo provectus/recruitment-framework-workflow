@@ -76,11 +76,15 @@ export function PositionInfoCard({
     }
     if (field === "title" && editValue.trim() === "") return;
 
-    await updatePosition.mutateAsync({
-      path: { position_id: positionId },
-      body: { [field]: editValue },
-    });
-    setEditingField(null);
+    try {
+      await updatePosition.mutateAsync({
+        path: { position_id: positionId },
+        body: { [field]: editValue },
+      });
+      setEditingField(null);
+    } catch {
+      // mutation's onError already handles toast
+    }
   };
 
   const saveSelectField = async (
