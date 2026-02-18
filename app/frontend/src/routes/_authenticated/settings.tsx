@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { AxiosError } from "axios";
 import { useTeams, useCreateTeam, useDeleteTeam } from "@/features/settings";
+import { RubricTemplateTable, TemplateEditorDialog } from "@/widgets/rubrics";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -29,6 +30,7 @@ function SettingsPage() {
 
   const [teamName, setTeamName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [createTemplateOpen, setCreateTemplateOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<{
     id: number;
     name: string;
@@ -190,6 +192,24 @@ function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Separator className="my-6" />
+
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Rubric Templates</h2>
+          <Button onClick={() => setCreateTemplateOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create Template
+          </Button>
+        </div>
+        <RubricTemplateTable />
+      </section>
+
+      <TemplateEditorDialog
+        open={createTemplateOpen}
+        onOpenChange={setCreateTemplateOpen}
+      />
     </div>
   );
 }

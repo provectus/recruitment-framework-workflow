@@ -19,6 +19,7 @@ import {
   PositionInfoCard,
   PositionCandidatesTable,
 } from "@/widgets/positions";
+import { RubricSummaryCard } from "@/widgets/rubrics";
 
 export const Route = createFileRoute("/_authenticated/positions/$positionId")({
   component: PositionDetailPage,
@@ -92,6 +93,8 @@ function PositionDetailPage() {
         createdAt={position.created_at}
         updatedAt={position.updated_at}
       />
+
+      <RubricSummaryCard positionId={positionIdNum} />
 
       <PositionCandidatesTable candidates={position.candidates} />
 
