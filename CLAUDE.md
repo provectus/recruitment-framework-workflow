@@ -40,7 +40,7 @@ React SPA (S3+CF) → FastAPI (ECS Fargate) ↔ n8n (on-prem Docker)
 - **Frontend:** React 19 + TypeScript SPA, Vite, TanStack Router (file-based routing with auto code-splitting), Tailwind v4, shadcn/ui (new-york style, Lucide icons), React Compiler enabled
 - **Backend:** Python 3.12+, FastAPI (async), SQLModel + asyncpg (Postgres), Alembic (async migrations), pydantic-settings for config
 - **Workflow engine:** n8n self-hosted on-prem, triggered via webhooks from FastAPI
-- **Auth:** Google OAuth 2.0 (corporate Workspace)
+- **Auth:** AWS Cognito (Google OAuth federation) + JWT (dev login)
 
 ## Repository Structure
 
@@ -52,9 +52,12 @@ app/
       main.py       # Entrypoint, lifespan, router registration
       config.py     # pydantic-settings (reads .env)
       database.py   # async SQLAlchemy engine + session factory
-      models/       # SQLModel models (candidate, position, document, team, user, enums)
-      routers/      # FastAPI route modules (auth, candidates, documents, positions, teams, users, health)
-      services/     # Business logic layer (auth, candidate, document, position, storage, team, user)
+      exceptions.py # Custom exception hierarchy (AppError → NotFoundException, ConflictError, ValidationError)
+      dependencies/ # FastAPI Depends() providers (auth: get_current_user)
+      models/       # SQLModel models (candidate, candidate_position, document, position, position_rubric, rubric_template, team, user, enums)
+      routers/      # FastAPI route modules (auth, candidates, dashboard, documents, health, position_rubrics, positions, rubric_templates, teams, users)
+      schemas/      # Pydantic request/response schemas per domain
+      services/     # Business logic layer (auth, candidate, dashboard, document, position, position_rubric, rubric_template, storage, team, user)
     migrations/     # Alembic (async, renders as batch, SQLModel metadata)
     scripts/        # seed.py (dev data), export_openapi.py (generates frontend/openapi.json)
     tests/          # pytest-asyncio, aiosqlite in-memory, httpx AsyncClient
@@ -64,10 +67,10 @@ app/
     openapi.json    # Generated OpenAPI spec — source for API client codegen
     src/
       routes/       # TanStack file-based routes (routeTree.gen.ts auto-generated)
-      features/     # Feature modules (auth, candidates, documents, positions, settings)
-      widgets/      # Composite UI blocks (candidates, dashboard, documents, positions, sidebar)
+      features/     # Feature modules (auth, candidates, dashboard, documents, positions, rubrics, settings)
+      widgets/      # Composite UI blocks (candidates, dashboard, documents, positions, rubrics, sidebar)
       shared/       # api/ (generated client), lib/, ui/ (shadcn components)
-infra/              # Terraform IaC — VPC, ECS, RDS, S3, CloudFront, Cognito, IAM, ACM, monitoring
+infra/              # Terraform IaC — networking, ECS, RDS, S3, CloudFront, Cognito, IAM, ACM, WAF, monitoring
 .github/workflows/  # CI + deploy pipelines (see CI/CD section)
 context/
   product/          # Product definition, architecture, roadmap, POC plans
@@ -196,5 +199,5 @@ After feature completion: code review pass, then CI fix pass.
 Emoji prefix + conventional commit: `✨ feat:`, `🐛 fix:`, `📝 docs:`, `🔧 chore:`, `♻️ refactor:`, `🚀 ci:`, `🏗️ feat:` (infra), `🔒️ fix:` (security), `💚 fix:` (CI)
 
 ### Spec numbering
-Sequential in `context/spec/`: 001-authentication, 002-infrastructure, 003-lever-api-research, 004-core-data-management, 005-document-uploads. Next spec gets `006-*`.
+Sequential in `context/spec/`: 001-authentication, 002-infrastructure, 003-lever-api-research, 004-core-data-management, 005-document-uploads, 006-decision-rubrics. Next spec gets `007-*`.
 
