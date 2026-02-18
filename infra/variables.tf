@@ -52,3 +52,9 @@ variable "google_client_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alarm SNS notifications (empty = no subscription)"
+  type        = string
+  default     = ""
+}

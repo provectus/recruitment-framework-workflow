@@ -163,7 +163,7 @@ resource "aws_iam_role_policy" "ecs_task_bedrock" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-*"
+        Resource = "arn:aws:bedrock:${var.region}::foundation-model/anthropic.claude-*"
       }
     ]
   })
@@ -277,10 +277,16 @@ resource "aws_iam_role_policy" "github_actions_ecs" {
         Effect = "Allow"
         Action = [
           "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition",
-          "ecs:RunTask"
+          "ecs:RegisterTaskDefinition"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:RunTask"
+        ]
+        Resource = "arn:aws:ecs:${var.region}:*:task-definition/${var.project_name}-*"
       },
       {
         Effect = "Allow"
@@ -358,7 +364,7 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
 # ECR Repository for backend container images
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.project_name}-backend"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
   force_delete         = false
 
   image_scanning_configuration {

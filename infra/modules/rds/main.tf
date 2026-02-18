@@ -36,7 +36,7 @@ resource "aws_db_instance" "this" {
   username                    = "tap_admin"
   manage_master_user_password = true
 
-  multi_az               = false
+  multi_az               = var.multi_az
   publicly_accessible    = false
   vpc_security_group_ids = [var.rds_security_group_id]
   db_subnet_group_name   = aws_db_subnet_group.this.name

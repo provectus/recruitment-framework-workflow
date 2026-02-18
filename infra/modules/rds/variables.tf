@@ -41,3 +41,9 @@ variable "engine_version" {
   type        = string
   default     = "16"
 }
+
+variable "multi_az" {
+  description = "Enable Multi-AZ deployment for RDS"
+  type        = bool
+  default     = false
+}

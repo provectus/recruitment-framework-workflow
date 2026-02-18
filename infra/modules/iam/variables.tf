@@ -8,6 +8,11 @@ variable "environment" {
   type        = string
 }
 
+variable "region" {
+  description = "AWS region for resource ARN construction"
+  type        = string
+}
+
 variable "github_repo" {
   description = "GitHub repository in format org/repo for OIDC trust policy"
   type        = string

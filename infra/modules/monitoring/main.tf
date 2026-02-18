@@ -71,22 +71,35 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Sid    = "AWSLogDeliveryWrite"
         Effect = "Allow"
         Principal = {
-          Service = "elasticloadbalancing.amazonaws.com"
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
         }
         Action   = "s3:PutObject"
         Resource = "${aws_s3_bucket.alb_logs.arn}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
       },
       {
         Sid    = "AWSLogDeliveryAclCheck"
         Effect = "Allow"
         Principal = {
-          Service = "elasticloadbalancing.amazonaws.com"
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
         Resource = aws_s3_bucket.alb_logs.arn
       }
     ]
   })
+}
+
+# SNS Email Subscription (only created when alert_email is provided)
+resource "aws_sns_topic_subscription" "email" {
+  count     = var.alert_email != "" ? 1 : 0
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
 }
 
 # CloudWatch Alarm: ECS Unhealthy Hosts

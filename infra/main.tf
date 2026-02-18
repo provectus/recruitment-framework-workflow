@@ -85,6 +85,7 @@ module "iam" {
 
   project_name                 = var.project_name
   environment                  = var.environment
+  region                       = var.region
   github_repo                  = var.github_repo
   files_bucket_arn             = module.s3.files_bucket_arn
   spa_bucket_arn               = module.s3.spa_bucket_arn
@@ -160,4 +161,5 @@ module "monitoring" {
   alb_arn_suffix          = module.ecs.alb_arn_suffix
   target_group_arn_suffix = module.ecs.target_group_arn_suffix
   db_instance_id          = module.rds.db_instance_id
+  alert_email             = var.alert_email
 }

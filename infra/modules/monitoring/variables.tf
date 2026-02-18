@@ -22,3 +22,9 @@ variable "db_instance_id" {
   description = "RDS instance identifier for CloudWatch alarm dimensions"
   type        = string
 }
+
+variable "alert_email" {
+  description = "Email address for SNS alarm notifications (empty = no subscription)"
+  type        = string
+  default     = ""
+}
