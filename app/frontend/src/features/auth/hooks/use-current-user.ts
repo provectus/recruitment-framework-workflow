@@ -1,14 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  getMeAuthMeGetOptions,
-  getMeAuthMeGetQueryKey,
+  getMeApiAuthMeGetOptions,
+  getMeApiAuthMeGetQueryKey,
 } from "@/shared/api/@tanstack/react-query.gen";
 
-export { getMeAuthMeGetQueryKey as currentUserQueryKey };
+export { getMeApiAuthMeGetQueryKey as currentUserQueryKey };
 
 export function useCurrentUser() {
   const { data, isLoading } = useQuery({
-    ...getMeAuthMeGetOptions(),
+    ...getMeApiAuthMeGetOptions(),
     retry: false,
     staleTime: Infinity,
     refetchOnWindowFocus: false,

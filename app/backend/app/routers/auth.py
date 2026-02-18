@@ -15,7 +15,7 @@ from app.models.user import User
 from app.schemas.auth import DevLoginRequest, StatusResponse, UserResponse
 from app.services import auth_service, user_service
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def _safe_redirect_path(url: str | None) -> str:

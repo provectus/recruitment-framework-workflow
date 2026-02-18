@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { logoutAuthLogoutPostMutation } from "@/shared/api/@tanstack/react-query.gen";
+import { logoutApiAuthLogoutPostMutation } from "@/shared/api/@tanstack/react-query.gen";
 import { currentUserQueryKey } from "./use-current-user";
 
 export function useLogout() {
@@ -8,7 +8,7 @@ export function useLogout() {
   const navigate = useNavigate();
 
   return useMutation({
-    ...logoutAuthLogoutPostMutation(),
+    ...logoutApiAuthLogoutPostMutation(),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: currentUserQueryKey() });
       navigate({ to: "/login", search: { redirect: undefined, error: undefined } });

@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     cognito_client_id: str = ""
     cognito_client_secret: str = ""
     cognito_domain: str = ""
-    cognito_redirect_uri: str = "http://localhost:8000/auth/callback"
+    cognito_redirect_uri: str = "http://localhost:8000/api/auth/callback"
 
     s3_bucket_name: str = ""
     s3_region: str = "us-east-1"

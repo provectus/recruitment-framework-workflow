@@ -30,13 +30,13 @@
         }
       }
     },
-    "/auth/dev-login": {
+    "/api/auth/dev-login": {
       "post": {
         "tags": [
           "auth"
         ],
         "summary": "Dev Login",
-        "operationId": "dev_login_auth_dev_login_post",
+        "operationId": "dev_login_api_auth_dev_login_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -71,13 +71,13 @@
         }
       }
     },
-    "/auth/me": {
+    "/api/auth/me": {
       "get": {
         "tags": [
           "auth"
         ],
         "summary": "Get Me",
-        "operationId": "get_me_auth_me_get",
+        "operationId": "get_me_api_auth_me_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -92,13 +92,13 @@
         }
       }
     },
-    "/auth/refresh": {
+    "/api/auth/refresh": {
       "post": {
         "tags": [
           "auth"
         ],
         "summary": "Refresh",
-        "operationId": "refresh_auth_refresh_post",
+        "operationId": "refresh_api_auth_refresh_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -113,13 +113,13 @@
         }
       }
     },
-    "/auth/logout": {
+    "/api/auth/logout": {
       "post": {
         "tags": [
           "auth"
         ],
         "summary": "Logout",
-        "operationId": "logout_auth_logout_post",
+        "operationId": "logout_api_auth_logout_post",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -127,6 +127,27 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Stats",
+        "operationId": "get_dashboard_stats_api_dashboard_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStats"
                 }
               }
             }
@@ -2089,6 +2110,53 @@
         "type": "object",
         "title": "CandidateUpdate"
       },
+      "DashboardStats": {
+        "properties": {
+          "pipeline_counts": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineCount"
+            },
+            "type": "array",
+            "title": "Pipeline Counts"
+          },
+          "total_candidates": {
+            "type": "integer",
+            "title": "Total Candidates"
+          },
+          "total_positions": {
+            "type": "integer",
+            "title": "Total Positions"
+          },
+          "open_positions": {
+            "type": "integer",
+            "title": "Open Positions"
+          },
+          "recent_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/RecentCandidate"
+            },
+            "type": "array",
+            "title": "Recent Candidates"
+          },
+          "positions_summary": {
+            "items": {
+              "$ref": "#/components/schemas/PositionSummary"
+            },
+            "type": "array",
+            "title": "Positions Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pipeline_counts",
+          "total_candidates",
+          "total_positions",
+          "open_positions",
+          "recent_candidates",
+          "positions_summary"
+        ],
+        "title": "DashboardStats"
+      },
       "DevLoginRequest": {
         "properties": {
           "email": {
@@ -2551,6 +2619,24 @@
         ],
         "title": "PasteTranscriptRequest"
       },
+      "PipelineCount": {
+        "properties": {
+          "stage": {
+            "type": "string",
+            "title": "Stage"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "count"
+        ],
+        "title": "PipelineCount"
+      },
       "PositionCreate": {
         "properties": {
           "title": {
@@ -2929,6 +3015,39 @@
         ],
         "title": "PositionStageItem"
       },
+      "PositionSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "candidate_count": {
+            "type": "integer",
+            "title": "Candidate Count"
+          },
+          "team_name": {
+            "type": "string",
+            "title": "Team Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "candidate_count",
+          "team_name"
+        ],
+        "title": "PositionSummary"
+      },
       "PositionUpdate": {
         "properties": {
           "title": {
@@ -3090,6 +3209,54 @@
           "s3_key"
         ],
         "title": "PresignResponse"
+      },
+      "RecentCandidate": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "position_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Title"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "position_title",
+          "stage",
+          "updated_at"
+        ],
+        "title": "RecentCandidate"
       },
       "RubricCategory": {
         "properties": {

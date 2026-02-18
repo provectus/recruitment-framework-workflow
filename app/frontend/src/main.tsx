@@ -9,20 +9,20 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { client } from "@/shared/api/client.gen";
-import { getMeAuthMeGetQueryKey } from "@/shared/api/@tanstack/react-query.gen";
+import { getMeApiAuthMeGetQueryKey } from "@/shared/api/@tanstack/react-query.gen";
 import { useAuth } from "@/features/auth";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 
 client.setConfig({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? "",
 });
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (error instanceof AxiosError && error.response?.status === 401) {
-        queryClient.setQueryData(getMeAuthMeGetQueryKey(), null as never);
+        queryClient.setQueryData(getMeApiAuthMeGetQueryKey(), null as never);
       }
     },
   }),

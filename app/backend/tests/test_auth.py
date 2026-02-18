@@ -21,7 +21,7 @@ async def test_health_check_still_works(client: AsyncClient):
 async def test_dev_login_creates_user_and_sets_cookie(client: AsyncClient):
     with patch.object(settings, "debug", True):
         response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
 
@@ -39,14 +39,14 @@ async def test_dev_login_creates_user_and_sets_cookie(client: AsyncClient):
 async def test_dev_login_updates_existing_user(client: AsyncClient):
     with patch.object(settings, "debug", True):
         response1 = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert response1.status_code == 200
         user_id = response1.json()["id"]
 
         response2 = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Updated User"},
         )
         assert response2.status_code == 200
@@ -58,12 +58,12 @@ async def test_dev_login_updates_existing_user(client: AsyncClient):
 async def test_auth_me_with_valid_cookie(client: AsyncClient):
     with patch.object(settings, "debug", True):
         login_response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert login_response.status_code == 200
 
-        me_response = await client.get("/auth/me")
+        me_response = await client.get("/api/auth/me")
         assert me_response.status_code == 200
         data = me_response.json()
         assert data["email"] == "test@provectus.com"
@@ -72,7 +72,7 @@ async def test_auth_me_with_valid_cookie(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_auth_me_with_no_cookie(client: AsyncClient):
-    response = await client.get("/auth/me")
+    response = await client.get("/api/auth/me")
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
@@ -81,7 +81,7 @@ async def test_auth_me_with_no_cookie(client: AsyncClient):
 async def test_auth_me_with_expired_cookie(client: AsyncClient):
     with patch.object(settings, "debug", True):
         login_response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert login_response.status_code == 200
@@ -97,7 +97,7 @@ async def test_auth_me_with_expired_cookie(client: AsyncClient):
 
         client.cookies.set("access_token", expired_token)
 
-        response = await client.get("/auth/me")
+        response = await client.get("/api/auth/me")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid authentication credentials"
 
@@ -106,7 +106,7 @@ async def test_auth_me_with_expired_cookie(client: AsyncClient):
 async def test_auth_me_with_invalid_cookie(client: AsyncClient):
     client.cookies.set("access_token", "invalid_token")
 
-    response = await client.get("/auth/me")
+    response = await client.get("/api/auth/me")
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid authentication credentials"
 
@@ -127,7 +127,7 @@ async def test_auth_me_with_invalid_cookie_cognito_unreachable(client: AsyncClie
         )
         client.cookies.set("access_token", fake_jwt)
 
-        response = await client.get("/auth/me")
+        response = await client.get("/api/auth/me")
         assert response.status_code == 401
         assert response.json()["detail"] == "Invalid authentication credentials"
 
@@ -136,7 +136,7 @@ async def test_auth_me_with_invalid_cookie_cognito_unreachable(client: AsyncClie
 async def test_dev_login_when_debug_false(client: AsyncClient):
     with patch.object(settings, "debug", False):
         response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert response.status_code == 404
@@ -150,7 +150,7 @@ async def test_login_redirects_to_cognito(client: AsyncClient):
         ),
         patch.object(settings, "cognito_client_id", "test_client_id"),
     ):
-        response = await client.get("/auth/login", follow_redirects=False)
+        response = await client.get("/api/auth/login", follow_redirects=False)
         assert response.status_code == 302
         location = response.headers["location"]
         assert "test.auth.us-east-1.amazoncognito.com" in location
@@ -193,7 +193,7 @@ async def test_callback_happy_path(client: AsyncClient):
         client.cookies.set("auth_state", json.dumps(auth_state))
 
         response = await client.get(
-            f"/auth/callback?code=test_code&state={test_state}",
+            f"/api/auth/callback?code=test_code&state={test_state}",
             follow_redirects=False,
         )
 
@@ -206,7 +206,7 @@ async def test_callback_happy_path(client: AsyncClient):
         assert "id_token" in cookie_names
         assert "refresh_token" in cookie_names
 
-        me_response = await client.get("/auth/me")
+        me_response = await client.get("/api/auth/me")
         assert me_response.status_code == 200
         assert me_response.json()["email"] == "user@provectus.com"
 
@@ -241,14 +241,14 @@ async def test_callback_domain_rejection(client: AsyncClient):
         client.cookies.set("auth_state", json.dumps(auth_state))
 
         response = await client.get(
-            f"/auth/callback?code=test_code&state={test_state}",
+            f"/api/auth/callback?code=test_code&state={test_state}",
             follow_redirects=False,
         )
 
         assert response.status_code == 302
         assert "domain_restricted" in response.headers["location"]
 
-        me_response = await client.get("/auth/me")
+        me_response = await client.get("/api/auth/me")
         assert me_response.status_code == 401
 
 
@@ -258,7 +258,7 @@ async def test_callback_invalid_state(client: AsyncClient):
     client.cookies.set("auth_state", json.dumps(auth_state))
 
     response = await client.get(
-        "/auth/callback?code=test_code&state=wrong_state", follow_redirects=False
+        "/api/auth/callback?code=test_code&state=wrong_state", follow_redirects=False
     )
 
     assert response.status_code == 302
@@ -269,16 +269,16 @@ async def test_callback_invalid_state(client: AsyncClient):
 async def test_logout_clears_cookies(client: AsyncClient):
     with patch.object(settings, "debug", True):
         login_response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert login_response.status_code == 200
 
-    me_response = await client.get("/auth/me")
+    me_response = await client.get("/api/auth/me")
     assert me_response.status_code == 200
     assert me_response.json()["email"] == "test@provectus.com"
 
-    logout_response = await client.post("/auth/logout")
+    logout_response = await client.post("/api/auth/logout")
     assert logout_response.status_code == 200
     assert logout_response.json() == {"status": "ok"}
 
@@ -302,28 +302,28 @@ async def test_logout_clears_cookies(client: AsyncClient):
 async def test_logout_subsequent_me_returns_401(client: AsyncClient):
     with patch.object(settings, "debug", True):
         login_response = await client.post(
-            "/auth/dev-login",
+            "/api/auth/dev-login",
             json={"email": "test@provectus.com", "name": "Test User"},
         )
         assert login_response.status_code == 200
 
-    me_response_before = await client.get("/auth/me")
+    me_response_before = await client.get("/api/auth/me")
     assert me_response_before.status_code == 200
 
-    logout_response = await client.post("/auth/logout")
+    logout_response = await client.post("/api/auth/logout")
     assert logout_response.status_code == 200
 
     client.cookies.delete("access_token")
     client.cookies.delete("id_token")
     client.cookies.delete("refresh_token")
 
-    me_response_after = await client.get("/auth/me")
+    me_response_after = await client.get("/api/auth/me")
     assert me_response_after.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_refresh_without_cookie_returns_401(client: AsyncClient):
-    response = await client.post("/auth/refresh")
+    response = await client.post("/api/auth/refresh")
     assert response.status_code == 401
     assert response.json()["detail"] == "No refresh token"
 
@@ -342,7 +342,7 @@ async def test_refresh_with_valid_token(client: AsyncClient):
 
         client.cookies.set("refresh_token", "test_refresh_token")
 
-        response = await client.post("/auth/refresh")
+        response = await client.post("/api/auth/refresh")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
 
@@ -365,7 +365,7 @@ async def test_refresh_with_expired_token(client: AsyncClient):
 
         client.cookies.set("refresh_token", "expired_refresh_token")
 
-        response = await client.post("/auth/refresh")
+        response = await client.post("/api/auth/refresh")
         assert response.status_code == 401
         assert response.json()["detail"] == "Refresh failed"
 
@@ -401,7 +401,7 @@ async def test_login_rejects_open_redirect(
         patch.object(settings, "cognito_client_id", "test_client_id"),
     ):
         response = await client.get(
-            "/auth/login",
+            "/api/auth/login",
             params={"redirect": malicious_redirect},
             follow_redirects=False,
         )
@@ -419,7 +419,7 @@ async def test_login_allows_safe_redirect(client: AsyncClient):
         patch.object(settings, "cognito_client_id", "test_client_id"),
     ):
         response = await client.get(
-            "/auth/login",
+            "/api/auth/login",
             params={"redirect": "/dashboard"},
             follow_redirects=False,
         )
@@ -469,7 +469,7 @@ async def test_callback_rejects_open_redirect_in_state(
         client.cookies.set("auth_state", json.dumps(auth_state))
 
         response = await client.get(
-            f"/auth/callback?code=test_code&state={test_state}",
+            f"/api/auth/callback?code=test_code&state={test_state}",
             follow_redirects=False,
         )
 
