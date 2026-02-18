@@ -2,7 +2,10 @@
 FROM python:3.12-slim AS base
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.7.8 /uv /uvx /bin/
+
+# Create non-root user
+RUN addgroup --system app && adduser --system --ingroup app app
 
 # Set working directory
 WORKDIR /app
@@ -20,12 +23,16 @@ RUN chmod +x entrypoint.sh
 # Development stage
 FROM base AS dev
 RUN uv sync --frozen
+RUN chown -R app:app /app
+USER app
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uv", "run", "fastapi", "dev", "--host", "0.0.0.0"]
 
 # Production stage
 FROM base AS prod
+RUN chown -R app:app /app
+USER app
 EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uv", "run", "fastapi", "run", "--host", "0.0.0.0"]
