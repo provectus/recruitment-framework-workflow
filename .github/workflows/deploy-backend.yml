@@ -79,8 +79,11 @@ jobs:
 
       - name: Run database migrations
         env:
-          TASK_FAMILY: tap-backend
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          set -euo pipefail
+
           TASK_DEF_ARN=$(aws ecs describe-services \
             --cluster $ECS_CLUSTER \
             --services $ECS_SERVICE \
@@ -93,12 +96,21 @@ jobs:
             --query 'services[0].networkConfiguration' \
             --output json)
 
+          if [ "$NETWORK_CONFIG" = "null" ] || [ -z "$NETWORK_CONFIG" ]; then
+            echo "::error::Could not retrieve network configuration from ECS service"
+            exit 1
+          fi
+
+          OVERRIDES=$(jq -n \
+            --arg image "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            '{containerOverrides:[{name:"tap-backend",image:$image,command:["alembic","upgrade","head"]}]}')
+
           TASK_ARN=$(aws ecs run-task \
             --cluster $ECS_CLUSTER \
             --task-definition "$TASK_DEF_ARN" \
             --launch-type FARGATE \
             --network-configuration "$NETWORK_CONFIG" \
-            --overrides '{"containerOverrides":[{"name":"tap-backend","command":["alembic","upgrade","head"]}]}' \
+            --overrides "$OVERRIDES" \
             --query 'tasks[0].taskArn' \
             --output text)
 

@@ -1,7 +1,5 @@
 data "aws_caller_identity" "current" {}
 
-data "aws_elb_service_account" "current" {}
-
 data "aws_region" "current" {}
 
 # SNS Topic for alarm notifications
@@ -73,7 +71,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Sid    = "AWSLogDeliveryWrite"
         Effect = "Allow"
         Principal = {
-          AWS = data.aws_elb_service_account.current.arn
+          Service = "elasticloadbalancing.amazonaws.com"
         }
         Action   = "s3:PutObject"
         Resource = "${aws_s3_bucket.alb_logs.arn}/*"

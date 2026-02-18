@@ -277,7 +277,8 @@ resource "aws_iam_role_policy" "github_actions_ecs" {
         Effect = "Allow"
         Action = [
           "ecs:DescribeTaskDefinition",
-          "ecs:RegisterTaskDefinition"
+          "ecs:RegisterTaskDefinition",
+          "ecs:RunTask"
         ]
         Resource = "*"
       },
@@ -357,8 +358,8 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
 # ECR Repository for backend container images
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.project_name}-backend"
-  image_tag_mutability = "IMMUTABLE"
-  force_delete         = true
+  image_tag_mutability = "MUTABLE"
+  force_delete         = false
 
   image_scanning_configuration {
     scan_on_push = true
