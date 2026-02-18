@@ -113,9 +113,9 @@ function PositionsPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Positions</h1>
+    <div className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Positions</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -301,7 +301,7 @@ function PositionsPage() {
         </div>
       ) : positions && positions.items.length > 0 ? (
         <>
-        <div className="border rounded-lg">
+        <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -384,12 +384,12 @@ function PositionsPage() {
         )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Briefcase className="h-10 w-10 text-muted-foreground/50 mb-4" />
           {hasActiveFilters ? (
             <>
-              <h3 className="text-lg font-semibold mb-2">No matches found</h3>
-              <p className="text-muted-foreground mb-4">
+              <h3 className="text-base font-semibold tracking-tight mb-2">No matches found</h3>
+              <p className="text-muted-foreground max-w-xs mb-4">
                 Try adjusting your filters.
               </p>
               <Button variant="outline" onClick={clearFilters}>
@@ -399,8 +399,8 @@ function PositionsPage() {
             </>
           ) : (
             <>
-              <h3 className="text-lg font-semibold mb-2">No positions yet</h3>
-              <p className="text-muted-foreground mb-4">
+              <h3 className="text-base font-semibold tracking-tight mb-2">No positions yet</h3>
+              <p className="text-muted-foreground max-w-xs mb-4">
                 Create your first position to start tracking candidates.
               </p>
               <Button onClick={() => setDialogOpen(true)}>

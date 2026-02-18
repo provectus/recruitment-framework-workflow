@@ -84,10 +84,10 @@ function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl">
-      <h1 className="text-2xl font-semibold">Settings</h1>
+    <div className="p-8 max-w-4xl">
+      <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
 
-      <Separator className="my-6" />
+      <Separator className="my-8" />
 
       <section>
         <h2 className="text-lg font-semibold mb-4">Teams</h2>
@@ -142,7 +142,7 @@ function SettingsPage() {
             {teams.map((team) => (
               <div
                 key={team.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="flex items-center justify-between p-4 border rounded-xl shadow-soft-xs"
               >
                 <span className="font-medium">{team.name}</span>
                 <Button
@@ -193,7 +193,7 @@ function SettingsPage() {
         </DialogContent>
       </Dialog>
 
-      <Separator className="my-6" />
+      <Separator className="my-8" />
 
       <section>
         <div className="flex items-center justify-between mb-4">

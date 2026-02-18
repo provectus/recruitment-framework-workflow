@@ -28,9 +28,9 @@ function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-8 w-full max-w-sm px-4">
+      <div className="flex flex-col items-center gap-10 w-full max-w-sm px-6">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-4xl font-bold tracking-tight">Tap</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight">Tap</h1>
           <p className="text-muted-foreground">
             Recruitment workflow automation
           </p>
@@ -45,7 +45,7 @@ function Login() {
           </Alert>
         )}
 
-        <Button onClick={handleGoogleSignIn} size="lg" className="gap-2">
+        <Button onClick={handleGoogleSignIn} size="lg" className="w-full gap-2 shadow-soft-sm hover:shadow-soft-md">
           <svg
             className="h-5 w-5"
             viewBox="0 0 24 24"

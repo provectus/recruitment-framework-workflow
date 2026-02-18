@@ -117,7 +117,7 @@ function CriterionRow({
     : undefined;
 
   return (
-    <div className="flex items-start gap-2 p-2 border rounded-md bg-muted/30">
+    <div className="flex items-start gap-2 p-3 border rounded-lg bg-muted/30">
       <div className="flex flex-col gap-1 pt-1">
         <button
           type="button"

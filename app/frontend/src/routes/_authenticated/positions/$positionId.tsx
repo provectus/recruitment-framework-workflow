@@ -36,7 +36,7 @@ function PositionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-10 w-28" />
@@ -54,7 +54,7 @@ function PositionDetailPage() {
 
   if (error || !position) {
     return (
-      <div className="p-6">
+      <div className="p-8">
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
@@ -70,7 +70,7 @@ function PositionDetailPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{position.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{position.title}</h1>
           <Badge variant={getStatusVariant(position.status)}>
             {formatStatus(position.status)}
           </Badge>

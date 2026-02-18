@@ -28,7 +28,7 @@ export function PositionCandidatesTable({
       </CardHeader>
       <CardContent>
         {candidates.length > 0 ? (
-          <div className="border rounded-lg">
+          <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>

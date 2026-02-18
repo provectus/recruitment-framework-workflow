@@ -130,7 +130,7 @@ export function PositionInfoCard({
   return (
     <Card>
       <CardContent className="pt-6 pb-0">
-        <div className="divide-y">
+        <div className="divide-y divide-border/40">
           {fields.map(({ name, label, value, type }) => (
             <div
               key={name}
@@ -190,7 +190,7 @@ export function PositionInfoCard({
           ))}
         </div>
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground pt-4">
+      <CardFooter className="text-xs text-muted-foreground/70 pt-4">
         Created {formatDate(createdAt)} &middot; Updated{" "}
         {formatDate(updatedAt)}
       </CardFooter>

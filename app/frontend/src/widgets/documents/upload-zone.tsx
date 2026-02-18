@@ -206,10 +206,10 @@ export function UploadZone({
         onDrop={handleDrop}
         onClick={handleClick}
         className={cn(
-          "relative rounded-lg border-2 border-dashed p-8 transition-colors",
+          "relative rounded-2xl border-2 border-dashed p-10 transition-colors",
           "flex flex-col items-center justify-center gap-4",
           "cursor-pointer hover:border-primary/50",
-          isDragging && "border-primary bg-primary/5",
+          isDragging && "border-primary bg-primary/5 shadow-soft-sm",
           disabled && "cursor-not-allowed opacity-50",
           isUploading && "cursor-not-allowed",
           error && "border-destructive"

@@ -69,7 +69,7 @@ function CandidateDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-10 w-28" />
@@ -86,7 +86,7 @@ function CandidateDetailPage() {
 
   if (error || !candidate) {
     return (
-      <div className="p-6">
+      <div className="p-8">
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
@@ -99,10 +99,10 @@ function CandidateDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{candidate.full_name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{candidate.full_name}</h1>
           <p className="text-sm text-muted-foreground">{candidate.email}</p>
         </div>
         <Button variant="outline" onClick={() => setArchiveDialogOpen(true)}>

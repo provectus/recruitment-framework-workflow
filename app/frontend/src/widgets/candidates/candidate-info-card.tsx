@@ -86,7 +86,7 @@ export function CandidateInfoCard({
   return (
     <Card>
       <CardContent className="pt-6 pb-0">
-        <div className="divide-y">
+        <div className="divide-y divide-border/40">
           {fields.map(({ name, label, value }) => (
             <div key={name} className="group flex items-center gap-4 py-3 first:pt-0">
               <span className="w-24 shrink-0 text-sm text-muted-foreground">
@@ -163,7 +163,7 @@ export function CandidateInfoCard({
           ))}
         </div>
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground pt-4">
+      <CardFooter className="text-xs text-muted-foreground/70 pt-4">
         Created {formatDate(createdAt)} &middot; Updated{" "}
         {formatDate(updatedAt)}
       </CardFooter>

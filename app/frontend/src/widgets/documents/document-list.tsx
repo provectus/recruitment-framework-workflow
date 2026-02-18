@@ -180,7 +180,7 @@ export function DocumentList({
     const sortedStages = Array.from(transcriptsByStage.keys()).sort();
 
     return (
-      <div className="border rounded-lg">
+      <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -215,7 +215,7 @@ export function DocumentList({
 
   if (!shouldGroupByPosition) {
     return (
-      <div className="border rounded-lg">
+      <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
