@@ -71,10 +71,10 @@ export function DocumentViewer({
               "ul", "ol", "li", "br",
               "h1", "h2", "h3", "h4", "h5", "h6",
               "table", "tr", "td", "th", "thead", "tbody",
-              "span", "div", "img",
+              "span", "div",
             ],
             ALLOWED_ATTR: [
-              "href", "target", "src", "alt", "colspan", "rowspan",
+              "href", "target", "alt", "colspan", "rowspan",
             ],
           });
           setContentState({ status: "success", content: sanitizedHtml });

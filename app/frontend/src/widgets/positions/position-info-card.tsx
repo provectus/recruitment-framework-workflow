@@ -82,8 +82,8 @@ export function PositionInfoCard({
         body: { [field]: editValue },
       });
       setEditingField(null);
-    } catch {
-      // mutation's onError already handles toast
+    } catch (error) {
+      console.error("Failed to update position:", error);
     }
   };
 
@@ -96,11 +96,15 @@ export function PositionInfoCard({
         ? { [field]: value }
         : { [field]: Number(value) };
 
-    await updatePosition.mutateAsync({
-      path: { position_id: positionId },
-      body: payload,
-    });
-    setEditingField(null);
+    try {
+      await updatePosition.mutateAsync({
+        path: { position_id: positionId },
+        body: payload,
+      });
+      setEditingField(null);
+    } catch (error) {
+      console.error("Failed to update position:", error);
+    }
   };
 
   const fields: {

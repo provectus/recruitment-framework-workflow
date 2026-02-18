@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 import { FileText, MoreHorizontal, Plus } from "lucide-react";
 import {
   usePositionRubric,
@@ -53,7 +53,7 @@ export function RubricSummaryCard({ positionId }: RubricSummaryCardProps) {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
 
   const is404 =
-    error instanceof AxiosError && error.response?.status === 404;
+    isAxiosError(error) && error.response?.status === 404;
   const hasRubric = rubric && !error;
   const noRubric = is404 || (!error && !rubric);
   const hasError = !!error && !is404;

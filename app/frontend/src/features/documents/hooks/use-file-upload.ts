@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { usePresignUpload, useCompleteUpload } from "@/features/documents";
 import { getContentType } from "@/shared/lib/content-type";
-import type { FileWithStatus } from "@/widgets/documents/upload-zone";
+import type { FileWithStatus } from "@/shared/lib/file-types";
 
 export type UploadState =
   | "idle"
@@ -50,6 +50,7 @@ export function useFileUpload({
   const [uploadResults, setUploadResults] = useState<FileUploadResult[]>([]);
   const [isBulkUpload, setIsBulkUpload] = useState(false);
   const [fileProgress, setFileProgress] = useState<Record<string, number>>({});
+  const [totalFileCount, setTotalFileCount] = useState(0);
 
   const xhrRefs = useRef<XMLHttpRequest[]>([]);
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -75,6 +76,7 @@ export function useFileUpload({
     setUploadResults([]);
     setIsBulkUpload(false);
     setFileProgress({});
+    setTotalFileCount(0);
   };
 
   const uploadSingleFile = async (file: File): Promise<FileUploadResult> => {
@@ -148,6 +150,7 @@ export function useFileUpload({
 
     if (validFiles.length > 1) {
       setIsBulkUpload(true);
+      setTotalFileCount(validFiles.length);
       setUploadState("uploading");
       setErrorMessage(null);
 
@@ -267,7 +270,7 @@ export function useFileUpload({
 
   const getStatusMessage = () => {
     if (isBulkUpload && uploadState === "uploading") {
-      return `Uploading ${uploadResults.length} files...`;
+      return `Uploading ${totalFileCount} files...`;
     }
     switch (uploadState) {
       case "presigning":

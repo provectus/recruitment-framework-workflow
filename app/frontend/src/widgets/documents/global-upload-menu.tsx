@@ -82,6 +82,7 @@ export function GlobalUploadMenu({ collapsed = false, className }: GlobalUploadM
     setShowSearchResults(false);
 
     if (candidate.positions.length === 0) {
+      handleClose();
       return;
     } else if (candidate.positions.length === 1) {
       setSelectedPositionId(candidate.positions[0].position_id);

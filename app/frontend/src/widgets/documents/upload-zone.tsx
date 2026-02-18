@@ -3,11 +3,9 @@ import { Progress } from "@/shared/ui/progress";
 import { cn } from "@/shared/lib/utils";
 import { Upload, FileText, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
-export interface FileWithStatus {
-  file: File;
-  valid: boolean;
-  error?: string;
-}
+import type { FileWithStatus } from "@/shared/lib/file-types";
+
+export type { FileWithStatus };
 
 interface UploadZoneProps {
   acceptedFormats: string[];
