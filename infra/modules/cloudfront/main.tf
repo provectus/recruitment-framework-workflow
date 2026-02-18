@@ -1,3 +1,41 @@
+resource "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "${var.project_name}-security-headers"
+
+  security_headers_config {
+    content_security_policy {
+      override                = true
+      content_security_policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-ancestors 'none'"
+    }
+
+    strict_transport_security {
+      override                   = true
+      access_control_max_age_sec = 63072000
+      include_subdomains         = true
+      preload                    = true
+    }
+
+    content_type_options {
+      override = true
+    }
+
+    frame_options {
+      override     = true
+      frame_option = "DENY"
+    }
+
+    referrer_policy {
+      override        = true
+      referrer_policy = "strict-origin-when-cross-origin"
+    }
+
+    xss_protection {
+      override   = true
+      mode_block = true
+      protection = true
+    }
+  }
+}
+
 resource "aws_cloudfront_origin_access_control" "spa" {
   name                              = "${var.project_name}-spa-oac"
   description                       = "OAC for ${var.project_name} SPA S3 bucket"
@@ -26,7 +64,8 @@ resource "aws_cloudfront_distribution" "spa" {
     target_origin_id       = "S3-${var.spa_bucket_id}"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
-    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id              = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    response_headers_policy_id   = aws_cloudfront_response_headers_policy.security_headers.id
   }
 
   custom_error_response {

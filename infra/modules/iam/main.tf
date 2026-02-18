@@ -71,7 +71,7 @@ resource "aws_iam_role_policy" "ecs_execution" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:*:*:*"
+        Resource = "arn:aws:logs:*:*:log-group:/ecs/${var.project_name}*"
       },
       {
         Effect = "Allow"
@@ -357,7 +357,7 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
 # ECR Repository for backend container images
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.project_name}-backend"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
   force_delete         = true
 
   image_scanning_configuration {

@@ -257,7 +257,7 @@ resource "aws_ecs_service" "backend" {
     rollback = true
   }
 
-  enable_execute_command = true
+  enable_execute_command = var.environment != "prod"
 
   depends_on = [aws_lb_listener.https]
 
