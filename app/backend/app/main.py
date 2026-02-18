@@ -8,6 +8,7 @@ from app.config import settings
 from app.routers import (
     auth,
     candidates,
+    dashboard,
     documents,
     health,
     position_rubrics,
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(dashboard.router)
 app.include_router(teams.router)
 app.include_router(positions.router)
 app.include_router(candidates.router)
