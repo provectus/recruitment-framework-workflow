@@ -8,7 +8,9 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
+from app.dependencies.auth import get_current_user
 from app.main import app
+from app.models.user import User
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
@@ -46,6 +48,37 @@ async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield session
 
     app.dependency_overrides[get_session] = get_session_override
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        yield client
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def authenticated_client(
+    session: AsyncSession,
+) -> AsyncGenerator[AsyncClient, None]:
+    user = User(
+        email="test@example.com",
+        google_id="test-google-id",
+        full_name="Test User",
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    async def get_session_override() -> AsyncGenerator[AsyncSession, None]:
+        yield session
+
+    async def get_current_user_override() -> User:
+        return user
+
+    app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_current_user] = get_current_user_override
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
