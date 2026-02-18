@@ -4,6 +4,7 @@ import { RubricEditor, type RubricStructure } from "./rubric-editor";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
@@ -73,6 +74,9 @@ export function AssignRubricDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Assign Rubric</DialogTitle>
+          <DialogDescription>
+            Choose a template or create a custom rubric for this position.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-2 mb-4">

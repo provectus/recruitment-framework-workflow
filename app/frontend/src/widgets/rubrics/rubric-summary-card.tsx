@@ -28,6 +28,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
@@ -172,6 +173,9 @@ export function RubricSummaryCard({ positionId }: RubricSummaryCardProps) {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Rubric</DialogTitle>
+            <DialogDescription>
+              Modify the rubric categories and criteria for this position.
+            </DialogDescription>
           </DialogHeader>
           {rubric && (
             <RubricEditor

@@ -51,7 +51,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/shared/ui/pagination";
-import { getStatusVariant } from "@/shared/lib/stage-utils";
+import { getStatusVariant, formatStatus } from "@/shared/lib/stage-utils";
 
 export const Route = createFileRoute("/_authenticated/positions/")({
   component: PositionsPage,
@@ -329,7 +329,7 @@ function PositionsPage() {
                   <TableCell>{position.hiring_manager_name}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(position.status)}>
-                      {position.status}
+                      {formatStatus(position.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
