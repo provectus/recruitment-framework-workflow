@@ -17,9 +17,10 @@ async def get_current_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
 ) -> User:
-    token = request.cookies.get("access_token") or request.cookies.get("id_token")
+    access_token = request.cookies.get("access_token")
+    id_token_cookie = request.cookies.get("id_token")
 
-    if not token:
+    if not access_token and not id_token_cookie:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -27,15 +28,18 @@ async def get_current_user(
 
     email: str | None = None
 
-    try:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
-        email = payload.get("sub")
-    except InvalidTokenError:
-        pass
-
-    if not email and not settings.debug:
+    if access_token:
         try:
-            claims = await auth_service.validate_cognito_id_token(token)
+            payload = jwt.decode(
+                access_token, settings.jwt_secret_key, algorithms=["HS256"]
+            )
+            email = payload.get("sub")
+        except InvalidTokenError:
+            pass
+
+    if not email and id_token_cookie and not settings.debug:
+        try:
+            claims = await auth_service.validate_cognito_id_token(id_token_cookie)
             email = claims.get("email")
         except Exception:
             logger.warning("Cognito token validation failed", exc_info=True)

@@ -36,6 +36,12 @@ async def dev_login(
     if not settings.debug:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
+    if not request.email.endswith(f"@{settings.allowed_email_domain}"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email domain not allowed",
+        )
+
     user = await user_service.create_or_update(
         session=session,
         email=request.email,

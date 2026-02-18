@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -14,6 +15,7 @@ from app.config import settings
 
 _jwks_cache: dict[str, Any] | None = None
 _jwks_cache_time: float = 0.0
+_jwks_cache_lock = asyncio.Lock()
 JWKS_CACHE_TTL = 3600
 
 
@@ -62,12 +64,17 @@ async def get_jwks() -> dict[str, Any]:
     if _jwks_cache is not None and cache_fresh:
         return _jwks_cache
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(settings.cognito_jwks_url)
-        response.raise_for_status()
-        _jwks_cache = response.json()
-        _jwks_cache_time = time.monotonic()
-        return _jwks_cache
+    async with _jwks_cache_lock:
+        cache_fresh = (time.monotonic() - _jwks_cache_time) < JWKS_CACHE_TTL
+        if _jwks_cache is not None and cache_fresh:
+            return _jwks_cache
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(settings.cognito_jwks_url)
+            response.raise_for_status()
+            _jwks_cache = response.json()
+            _jwks_cache_time = time.monotonic()
+            return _jwks_cache
 
 
 def _invalidate_jwks_cache() -> None:

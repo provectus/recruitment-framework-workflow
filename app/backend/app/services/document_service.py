@@ -260,6 +260,11 @@ async def get_document(
     candidate_position = await session.get(
         CandidatePosition, document.candidate_position_id
     )
+    if candidate_position is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Document {document_id} references missing candidate position",
+        )
     if not await _user_can_access_candidate_documents(
         session, candidate_position.candidate_id, user_id
     ):
