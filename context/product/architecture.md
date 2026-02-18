@@ -1,13 +1,13 @@
 # System Architecture Overview: Recruitment Workflow POC
 
-- **Version:** 4.0
+- **Version:** 4.1
 - **Status:** Revised — manual-first POC, Lever deferred
 
 ---
 
 ## 1. Application & Technology Stack
 
-- **Frontend:** React + TypeScript SPA (Vite) — recruiter-facing UI for candidate/position management, transcript/CV upload, and evaluation tracking
+- **Frontend:** React + TypeScript SPA (Vite) — recruiter-facing UI for candidate/position management, rubric management, transcript/CV upload, and evaluation tracking
 - **Backend API:** Python + FastAPI — API layer between SPA, n8n, and external services
 - **Workflow Engine:** n8n (self-hosted on-prem, Docker Compose on dedicated instance)
 - **Authentication:** Google OAuth 2.0 (corporate Google Workspace)
@@ -27,9 +27,9 @@
 
 ## 3. Data & Persistence
 
-- **Primary Database:** PostgreSQL (AWS RDS) — candidates, positions, evaluations, artifacts, users, audit trail
+- **Primary Database:** PostgreSQL (AWS RDS) — candidates, positions, evaluations, artifacts, rubrics, users, audit trail
 - **File Storage:** AWS S3 — uploaded transcripts, recordings, and CVs (written by API, presigned URLs for upload/download)
-- **Prompt Templates & Rubrics:** Version-controlled files in repository
+- **Prompt Templates:** Version-controlled files in repository
 - **Candidate Source of Truth:** PostgreSQL (manual entry via SPA; Lever sync planned for future)
 
 **Data Model:**
@@ -48,6 +48,13 @@ Interview (many) → Candidate (1)
   - Source: barley_sync | manual_upload
   - Transcript text, recording URL (if Barley)
   - Linked to position and interviewer
+RubricTemplate (many, standalone)
+  - Reusable evaluation framework: name, description, structure (JSONB)
+  - Soft-deleted via is_archived
+Position (1) → PositionRubric (0..1)
+  - Links position to its evaluation rubric, tracks source template
+  PositionRubric (1) → PositionRubricVersions (many)
+    - Append-only JSONB snapshots: structure, version_number, created_by
 Evaluation (1) → Audit Log (many)
 ```
 

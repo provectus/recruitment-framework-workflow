@@ -71,6 +71,7 @@ _Build the core evaluation and decision-support capabilities, from screening thr
 - [ ] **Technical Evaluation**
   - [ ] **Technical Transcript Analysis:** Process technical interview transcripts (from Barley sync or manual upload) against competency areas
   - [ ] **Decision Rubric Engine:** Apply weighted scoring framework with transparent reasoning for each criterion
+    - [x] Rubric management: templates, position rubrics, versioning, editor (spec 006)
 
 - [ ] **Recommendation Generation**
   - [ ] **Hire/No-Hire Recommendation:** Generate structured recommendation with confidence level and supporting evidence
