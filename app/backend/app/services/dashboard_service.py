@@ -14,23 +14,25 @@ from app.schemas.dashboard import (
 
 
 async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
-    pipeline_stmt = (
-        select(CandidatePosition.stage, func.count())
-        .group_by(CandidatePosition.stage)
+    pipeline_stmt = select(CandidatePosition.stage, func.count()).group_by(
+        CandidatePosition.stage
     )
     pipeline_result = await session.execute(pipeline_stmt)
     pipeline_counts = [
-        PipelineCount(stage=row[0], count=row[1])
-        for row in pipeline_result.all()
+        PipelineCount(stage=row[0], count=row[1]) for row in pipeline_result.all()
     ]
 
     total_candidates_result = await session.execute(
-        select(func.count()).select_from(Candidate).where(Candidate.is_archived.is_(False))
+        select(func.count())
+        .select_from(Candidate)
+        .where(Candidate.is_archived.is_(False))
     )
     total_candidates = total_candidates_result.scalar_one()
 
     total_positions_result = await session.execute(
-        select(func.count()).select_from(Position).where(Position.is_archived.is_(False))
+        select(func.count())
+        .select_from(Position)
+        .where(Position.is_archived.is_(False))
     )
     total_positions = total_positions_result.scalar_one()
 
@@ -54,7 +56,10 @@ async def get_dashboard_stats(session: AsyncSession) -> DashboardStats:
         .outerjoin(CandidatePosition, CandidatePosition.candidate_id == Candidate.id)
         .outerjoin(Position, Position.id == CandidatePosition.position_id)
         .where(Candidate.is_archived.is_(False))
-        .order_by(CandidatePosition.updated_at.desc().nulls_last(), Candidate.created_at.desc())
+        .order_by(
+            CandidatePosition.updated_at.desc().nulls_last(),
+            Candidate.created_at.desc(),
+        )
         .limit(5)
     )
     recent_result = await session.execute(recent_stmt)

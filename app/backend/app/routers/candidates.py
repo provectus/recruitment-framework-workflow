@@ -3,7 +3,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
 from app.dependencies.auth import get_current_user
-from app.exceptions import ConflictError, NotFoundException, ValidationError
+from app.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundException,
+    ValidationError,
+)
 from app.models.user import User
 from app.schemas.candidates import (
     CandidateCreate,
@@ -265,12 +270,16 @@ async def list_candidate_documents(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> list[DocumentResponse]:
-    documents = await document_service.list_candidate_documents(
-        session,
-        candidate_id,
-        user_id=current_user.id,
-        position_id=position_id,
-        type=type,
-        candidate_position_id=candidate_position_id,
-    )
+    try:
+        documents = await document_service.list_candidate_documents(
+            session,
+            candidate_id,
+            user_id=current_user.id,
+            position_id=position_id,
+            type=type,
+            candidate_position_id=candidate_position_id,
+        )
+    except ForbiddenError as e:
+        raise HTTPException(status_code=403, detail=e.detail) from e
+
     return [DocumentResponse(**doc) for doc in documents]

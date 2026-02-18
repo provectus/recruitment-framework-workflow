@@ -69,16 +69,12 @@ async def create_presigned_upload(
 ) -> tuple[Document, str]:
     candidate_position = await session.get(CandidatePosition, candidate_position_id)
     if candidate_position is None:
-        raise NotFoundException(
-            f"Candidate position {candidate_position_id} not found"
-        )
+        raise NotFoundException(f"Candidate position {candidate_position_id} not found")
 
     if interviewer_id is not None:
         interviewer = await session.get(User, interviewer_id)
         if interviewer is None:
-            raise NotFoundException(
-                f"Interviewer (user {interviewer_id}) not found"
-            )
+            raise NotFoundException(f"Interviewer (user {interviewer_id}) not found")
 
     safe_name = _sanitize_file_name(file_name)
     s3_key = f"documents/{uuid4()}/{safe_name}"
@@ -126,9 +122,7 @@ async def complete_upload(
         raise ForbiddenError("Document not owned by current user")
 
     if document.status != DocumentStatus.pending:
-        raise ConflictError(
-            f"Document already completed (status: {document.status})"
-        )
+        raise ConflictError(f"Document already completed (status: {document.status})")
 
     if document.file_size is not None:
         actual_size = await storage_service.get_object_size(document.s3_key)
@@ -161,15 +155,11 @@ async def create_pasted_transcript(
 ) -> Document:
     candidate_position = await session.get(CandidatePosition, candidate_position_id)
     if candidate_position is None:
-        raise NotFoundException(
-            f"Candidate position {candidate_position_id} not found"
-        )
+        raise NotFoundException(f"Candidate position {candidate_position_id} not found")
 
     interviewer = await session.get(User, interviewer_id)
     if interviewer is None:
-        raise NotFoundException(
-            f"Interviewer (user {interviewer_id}) not found"
-        )
+        raise NotFoundException(f"Interviewer (user {interviewer_id}) not found")
 
     s3_key = f"documents/{uuid4()}/transcript.txt"
 
@@ -274,9 +264,7 @@ async def list_candidate_documents(
     candidate_position_id: int | None = None,
 ) -> list[dict]:
     if not await _user_can_access_candidate_documents(session, candidate_id, user_id):
-        raise ForbiddenError(
-            "Not authorized to view documents for this candidate"
-        )
+        raise ForbiddenError("Not authorized to view documents for this candidate")
 
     InterviewerUser = aliased(User)
     UploadedByUser = aliased(User)
