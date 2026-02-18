@@ -7,7 +7,8 @@ from typing import Any
 from urllib.parse import urlencode
 
 import httpx
-from jose import jwt
+import jwt
+from jwt import PyJWK
 
 from app.config import settings
 
@@ -89,13 +90,7 @@ async def validate_cognito_id_token(id_token: str) -> dict[str, Any]:
             msg = "Public key not found in JWKS"
             raise ValueError(msg)
 
-    public_key = {
-        "kty": key_dict["kty"],
-        "kid": key_dict["kid"],
-        "use": key_dict["use"],
-        "n": key_dict["n"],
-        "e": key_dict["e"],
-    }
+    public_key = PyJWK(key_dict).key
 
     claims = jwt.decode(
         id_token,

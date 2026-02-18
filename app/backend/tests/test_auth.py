@@ -2,9 +2,9 @@ import json
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
+import jwt
 import pytest
 from httpx import AsyncClient
-from jose import jwt
 
 from app.config import settings
 from app.services import auth_service

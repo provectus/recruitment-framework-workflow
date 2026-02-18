@@ -1,11 +1,16 @@
+import logging
+
+import jwt
 from fastapi import Depends, HTTPException, Request, status
-from jose import JWTError, jwt
+from jwt.exceptions import InvalidTokenError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.config import settings
 from app.database import get_session
 from app.models.user import User
 from app.services import auth_service, user_service
+
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(
@@ -25,7 +30,7 @@ async def get_current_user(
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
         email = payload.get("sub")
-    except JWTError:
+    except InvalidTokenError:
         pass
 
     if not email and not settings.debug:
@@ -33,7 +38,7 @@ async def get_current_user(
             claims = await auth_service.validate_cognito_id_token(token)
             email = claims.get("email")
         except Exception:
-            pass
+            logger.warning("Cognito token validation failed", exc_info=True)
 
     if not email:
         raise HTTPException(

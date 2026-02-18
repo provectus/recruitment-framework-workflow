@@ -1,3 +1,4 @@
+import re
 from datetime import date
 from uuid import uuid4
 
@@ -12,6 +13,9 @@ from app.models.enums import DocumentStatus, DocumentType, InputMethod
 from app.models.position import Position
 from app.models.user import User
 from app.services import storage_service
+
+MAX_FILE_NAME_LENGTH = 255
+_UNSAFE_CHARS = re.compile(r"[/\\:\x00-\x1f\x7f]")
 
 
 async def _user_can_access_candidate_documents(
@@ -39,6 +43,15 @@ async def _user_can_access_candidate_documents(
     )
     hm_result = await session.exec(hiring_manager_query)
     return hm_result.first() is not None
+
+
+def _sanitize_file_name(file_name: str) -> str:
+    sanitized = _UNSAFE_CHARS.sub("_", file_name).strip(". ")
+    if len(sanitized) > MAX_FILE_NAME_LENGTH:
+        sanitized = sanitized[:MAX_FILE_NAME_LENGTH]
+    if not sanitized:
+        sanitized = "unnamed"
+    return sanitized
 
 
 async def create_presigned_upload(
@@ -69,7 +82,8 @@ async def create_presigned_upload(
                 detail=f"Interviewer (user {interviewer_id}) not found",
             )
 
-    s3_key = f"documents/{uuid4()}/{file_name}"
+    safe_name = _sanitize_file_name(file_name)
+    s3_key = f"documents/{uuid4()}/{safe_name}"
 
     document = Document(
         type=type,
@@ -114,7 +128,7 @@ async def complete_upload(
 
     if document.uploaded_by_id != user_id:
         raise HTTPException(
-            status_code=409,
+            status_code=403,
             detail="Document not owned by current user",
         )
 

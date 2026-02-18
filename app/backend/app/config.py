@@ -1,7 +1,13 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
-_DEV_JWT_SECRET = "dev-secret-change-in-production"
+_KNOWN_WEAK_SECRETS = frozenset(
+    {
+        "dev-secret-change-in-production",
+        "secret",
+        "changeme",
+    }
+)
 
 
 class Settings(BaseSettings):
@@ -17,10 +23,10 @@ class Settings(BaseSettings):
     db_username: str = ""
     db_password: str = ""
 
-    jwt_secret_key: str = _DEV_JWT_SECRET
+    jwt_secret_key: str = ""
     cors_origins: list[str] = ["http://localhost:5173"]
     cookie_domain: str | None = None
-    cookie_secure: bool = False
+    cookie_secure: bool = True
     allowed_email_domain: str = "provectus.com"
 
     cognito_user_pool_id: str = ""
@@ -56,16 +62,17 @@ class Settings(BaseSettings):
                 f"@{self.db_host}:{self.db_port}/{self.db_name}"
             )
         if not self.database_url:
-            self.database_url = (
-                "postgresql+asyncpg://postgres:postgres@localhost:5432/tap"
-            )
+            msg = "DATABASE_URL or DB_HOST must be set"
+            raise ValueError(msg)
         return self
 
     @model_validator(mode="after")
-    def _validate_jwt_secret_in_production(self) -> "Settings":
-        if not self.debug and self.jwt_secret_key == _DEV_JWT_SECRET:
-            msg = "JWT_SECRET_KEY must be changed from the default"
-            msg += " in production (DEBUG=false)"
+    def _validate_jwt_secret(self) -> "Settings":
+        if not self.jwt_secret_key:
+            msg = "JWT_SECRET_KEY must be set"
+            raise ValueError(msg)
+        if self.jwt_secret_key in _KNOWN_WEAK_SECRETS and not self.debug:
+            msg = "JWT_SECRET_KEY must not use a known weak value in production"
             raise ValueError(msg)
         return self
 

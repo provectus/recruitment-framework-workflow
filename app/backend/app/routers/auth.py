@@ -3,9 +3,9 @@ import json
 import secrets
 from datetime import UTC, datetime, timedelta
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
-from jose import jwt
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.config import settings
@@ -16,6 +16,9 @@ from app.schemas.auth import DevLoginRequest, StatusResponse, UserResponse
 from app.services import auth_service, user_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+ACCESS_TOKEN_MAX_AGE = 3600
+REFRESH_TOKEN_MAX_AGE = 30 * 24 * 3600
 
 
 def _safe_redirect_path(url: str | None) -> str:
@@ -54,6 +57,7 @@ async def dev_login(
         samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
+        max_age=ACCESS_TOKEN_MAX_AGE,
     )
 
     return UserResponse(
@@ -155,6 +159,7 @@ async def callback(
         samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
+        max_age=ACCESS_TOKEN_MAX_AGE,
     )
     redirect_response.set_cookie(
         key="id_token",
@@ -164,6 +169,7 @@ async def callback(
         samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
+        max_age=ACCESS_TOKEN_MAX_AGE,
     )
 
     if tokens.get("refresh_token"):
@@ -175,6 +181,7 @@ async def callback(
             samesite="strict",
             secure=settings.cookie_secure,
             domain=settings.cookie_domain,
+            max_age=REFRESH_TOKEN_MAX_AGE,
         )
 
     redirect_response.delete_cookie(key="auth_state", path="/")
@@ -205,6 +212,7 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
         samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
+        max_age=ACCESS_TOKEN_MAX_AGE,
     )
     response.set_cookie(
         key="id_token",
@@ -214,6 +222,7 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
         samesite="strict",
         secure=settings.cookie_secure,
         domain=settings.cookie_domain,
+        max_age=ACCESS_TOKEN_MAX_AGE,
     )
 
     return StatusResponse(status="ok")
