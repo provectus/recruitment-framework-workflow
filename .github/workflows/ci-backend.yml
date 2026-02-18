@@ -70,6 +70,7 @@ jobs:
         run: uv run python scripts/export_openapi.py
         env:
           PYTHONPATH: .
+          DATABASE_URL: postgresql+asyncpg://ci:ci@localhost:5432/ci
 
       - name: Check spec is up-to-date
         run: |

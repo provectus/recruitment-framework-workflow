@@ -4,10 +4,12 @@ Usage:
     cd app/backend && uv run python -m scripts.seed
 """
 
+from __future__ import annotations
+
 import asyncio
+from typing import TYPE_CHECKING
 
 from sqlalchemy import text
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import async_session_factory
 from app.models import (
@@ -19,6 +21,9 @@ from app.models import (
 )
 from app.models.enums import PipelineStage, PositionStatus
 
+if TYPE_CHECKING:
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
 TEAMS = [
     {"name": "Engineering"},
     {"name": "Data Science"},
@@ -27,25 +32,99 @@ TEAMS = [
 ]
 
 USERS = [
-    {"email": "alex.morgan@provectus.com", "google_id": "seed_gid_001", "full_name": "Alex Morgan"},
-    {"email": "jamie.chen@provectus.com", "google_id": "seed_gid_002", "full_name": "Jamie Chen"},
-    {"email": "sam.patel@provectus.com", "google_id": "seed_gid_003", "full_name": "Sam Patel"},
-    {"email": "taylor.kim@provectus.com", "google_id": "seed_gid_004", "full_name": "Taylor Kim"},
-    {"email": "jordan.lee@provectus.com", "google_id": "seed_gid_005", "full_name": "Jordan Lee"},
-    {"email": "casey.ward@provectus.com", "google_id": "seed_gid_006", "full_name": "Casey Ward"},
+    {
+        "email": "alex.morgan@provectus.com",
+        "google_id": "seed_gid_001",
+        "full_name": "Alex Morgan",
+    },
+    {
+        "email": "jamie.chen@provectus.com",
+        "google_id": "seed_gid_002",
+        "full_name": "Jamie Chen",
+    },
+    {
+        "email": "sam.patel@provectus.com",
+        "google_id": "seed_gid_003",
+        "full_name": "Sam Patel",
+    },
+    {
+        "email": "taylor.kim@provectus.com",
+        "google_id": "seed_gid_004",
+        "full_name": "Taylor Kim",
+    },
+    {
+        "email": "jordan.lee@provectus.com",
+        "google_id": "seed_gid_005",
+        "full_name": "Jordan Lee",
+    },
+    {
+        "email": "casey.ward@provectus.com",
+        "google_id": "seed_gid_006",
+        "full_name": "Casey Ward",
+    },
 ]
 
 POSITIONS = [
-    {"title": "Senior Backend Engineer", "status": PositionStatus.open, "team_idx": 0, "manager_idx": 0},
-    {"title": "ML Engineer", "status": PositionStatus.open, "team_idx": 1, "manager_idx": 1},
-    {"title": "Senior Frontend Engineer", "status": PositionStatus.open, "team_idx": 0, "manager_idx": 0},
-    {"title": "Data Analyst", "status": PositionStatus.on_hold, "team_idx": 1, "manager_idx": 1},
-    {"title": "UX Designer", "status": PositionStatus.open, "team_idx": 2, "manager_idx": 3},
-    {"title": "Product Manager", "status": PositionStatus.open, "team_idx": 3, "manager_idx": 4},
-    {"title": "DevOps Engineer", "status": PositionStatus.closed, "team_idx": 0, "manager_idx": 2},
-    {"title": "Junior Python Developer", "status": PositionStatus.open, "team_idx": 0, "manager_idx": 2},
-    {"title": "Research Scientist", "status": PositionStatus.on_hold, "team_idx": 1, "manager_idx": 1},
-    {"title": "UI Designer", "status": PositionStatus.open, "team_idx": 2, "manager_idx": 3},
+    {
+        "title": "Senior Backend Engineer",
+        "status": PositionStatus.open,
+        "team_idx": 0,
+        "manager_idx": 0,
+    },
+    {
+        "title": "ML Engineer",
+        "status": PositionStatus.open,
+        "team_idx": 1,
+        "manager_idx": 1,
+    },
+    {
+        "title": "Senior Frontend Engineer",
+        "status": PositionStatus.open,
+        "team_idx": 0,
+        "manager_idx": 0,
+    },
+    {
+        "title": "Data Analyst",
+        "status": PositionStatus.on_hold,
+        "team_idx": 1,
+        "manager_idx": 1,
+    },
+    {
+        "title": "UX Designer",
+        "status": PositionStatus.open,
+        "team_idx": 2,
+        "manager_idx": 3,
+    },
+    {
+        "title": "Product Manager",
+        "status": PositionStatus.open,
+        "team_idx": 3,
+        "manager_idx": 4,
+    },
+    {
+        "title": "DevOps Engineer",
+        "status": PositionStatus.closed,
+        "team_idx": 0,
+        "manager_idx": 2,
+    },
+    {
+        "title": "Junior Python Developer",
+        "status": PositionStatus.open,
+        "team_idx": 0,
+        "manager_idx": 2,
+    },
+    {
+        "title": "Research Scientist",
+        "status": PositionStatus.on_hold,
+        "team_idx": 1,
+        "manager_idx": 1,
+    },
+    {
+        "title": "UI Designer",
+        "status": PositionStatus.open,
+        "team_idx": 2,
+        "manager_idx": 3,
+    },
 ]
 
 CANDIDATES = [
