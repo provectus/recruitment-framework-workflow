@@ -72,3 +72,9 @@ variable "cloudfront_distribution_arn" {
   description = "ARN of the CloudFront distribution for GitHub Actions policy scoping"
   type        = string
 }
+
+variable "enable_bedrock" {
+  description = "Whether to attach Bedrock InvokeModel IAM policy to the ECS task role"
+  type        = bool
+  default     = false
+}

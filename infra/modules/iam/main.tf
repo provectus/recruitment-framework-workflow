@@ -153,8 +153,9 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
 }
 
 resource "aws_iam_role_policy" "ecs_task_bedrock" {
-  name = "${var.project_name}-ecs-task-bedrock-policy"
-  role = aws_iam_role.ecs_task.id
+  count = var.enable_bedrock ? 1 : 0
+  name  = "${var.project_name}-ecs-task-bedrock-policy"
+  role  = aws_iam_role.ecs_task.id
 
   policy = jsonencode({
     Version = "2012-10-17"

@@ -59,6 +59,12 @@ variable "jwt_secret_key_arn" {
   sensitive   = true
 }
 
+variable "enable_bedrock" {
+  description = "Enable Bedrock AI model access for ECS tasks (Phase 2 feature)"
+  type        = bool
+  default     = false
+}
+
 variable "alert_email" {
   description = "Email address for CloudWatch alarm SNS notifications (empty = no subscription)"
   type        = string
