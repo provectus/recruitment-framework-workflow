@@ -7,8 +7,8 @@ export function useDevLogin() {
 
   return useMutation({
     ...devLoginApiAuthDevLoginPostMutation(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: currentUserQueryKey() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: currentUserQueryKey() });
     },
   });
 }

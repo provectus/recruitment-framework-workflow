@@ -1,16 +1,12 @@
-import {
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import { AxiosError } from "axios";
+import { useAuth } from "@/features/auth";
+import { getMeApiAuthMeGetQueryKey } from "@/shared/api/@tanstack/react-query.gen";
+import { client } from "@/shared/api/client.gen";
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { AxiosError } from "axios";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { client } from "@/shared/api/client.gen";
-import { getMeApiAuthMeGetQueryKey } from "@/shared/api/@tanstack/react-query.gen";
-import { useAuth } from "@/features/auth";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
 
@@ -30,8 +26,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
-        if (error instanceof AxiosError && error.response?.status === 401)
-          return false;
+        if (error instanceof AxiosError && error.response?.status === 401) return false;
         return failureCount < 1;
       },
     },

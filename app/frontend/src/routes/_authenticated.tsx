@@ -1,4 +1,6 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useAuth } from "@/features/auth";
 import { Sidebar } from "@/widgets/sidebar";
 import { useOnboardingWizard, OnboardingContext } from "@/features/onboarding";
 import { OnboardingWizard } from "@/widgets/onboarding";
@@ -17,7 +19,15 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const wizard = useOnboardingWizard();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate({ to: "/login", search: { redirect: undefined, error: undefined } });
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <OnboardingContext value={{ openWizard: wizard.open }}>

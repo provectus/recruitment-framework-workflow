@@ -1,9 +1,9 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useDevLogin } from "@/features/auth";
+import { useAuth, useDevLogin } from "@/features/auth";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -83,13 +83,17 @@ function DevLoginForm({ redirectTo }: { redirectTo?: string }) {
   const [name, setName] = useState("Dev User");
   const navigate = useNavigate();
   const devLogin = useDevLogin();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: redirectTo ?? "/" });
+    }
+  }, [isAuthenticated, navigate, redirectTo]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    devLogin.mutate(
-      { body: { email, name } },
-      { onSuccess: () => navigate({ to: redirectTo ?? "/" }) },
-    );
+    devLogin.mutate({ body: { email, name } });
   };
 
   return (
