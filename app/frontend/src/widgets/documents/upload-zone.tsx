@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Progress } from "@/shared/ui/progress";
 import { cn } from "@/shared/lib/utils";
+import { getContentType } from "@/shared/lib/content-type";
 import { Upload, FileText, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
 import type { FileWithStatus } from "@/shared/lib/file-types";
@@ -113,7 +114,7 @@ export function UploadZone({
     };
 
     xhr.open("PUT", url);
-    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.setRequestHeader("Content-Type", getContentType(file.name));
     xhr.send(file);
   };
 
