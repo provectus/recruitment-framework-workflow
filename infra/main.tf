@@ -94,6 +94,7 @@ module "iam" {
   cognito_user_pool_id_ssm_arn = module.cognito.ssm_user_pool_id_arn
   cognito_client_id_ssm_arn    = module.cognito.ssm_client_id_arn
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
+  jwt_secret_key_arn           = var.jwt_secret_key_arn
   ecs_cluster_arn              = module.ecs.cluster_arn
   ecs_service_arn              = module.ecs.service_arn
   cloudfront_distribution_arn  = module.cloudfront.distribution_arn
@@ -143,6 +144,9 @@ module "ecs" {
   cognito_client_id_ssm_arn    = module.cognito.ssm_client_id_arn
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
   cognito_client_secret_arn    = module.cognito.client_secret_arn
+  jwt_secret_key_arn           = var.jwt_secret_key_arn
+  cognito_redirect_uri         = "https://${var.domain}/api/auth/callback"
+  allowed_email_domain         = "provectus.com"
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
 }
 

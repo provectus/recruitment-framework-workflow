@@ -53,6 +53,12 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
+variable "jwt_secret_key_arn" {
+  description = "ARN of the Secrets Manager secret containing the JWT secret key"
+  type        = string
+  sensitive   = true
+}
+
 variable "alert_email" {
   description = "Email address for CloudWatch alarm SNS notifications (empty = no subscription)"
   type        = string

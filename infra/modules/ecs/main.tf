@@ -196,6 +196,14 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "DB_USERNAME"
           value = var.db_username
+        },
+        {
+          name  = "COGNITO_REDIRECT_URI"
+          value = var.cognito_redirect_uri
+        },
+        {
+          name  = "ALLOWED_EMAIL_DOMAIN"
+          value = var.allowed_email_domain
         }
       ]
 
@@ -219,6 +227,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name      = "COGNITO_CLIENT_SECRET"
           valueFrom = var.cognito_client_secret_arn
+        },
+        {
+          name      = "JWT_SECRET_KEY"
+          valueFrom = var.jwt_secret_key_arn
         }
       ]
     }

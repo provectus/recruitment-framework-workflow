@@ -80,7 +80,8 @@ resource "aws_iam_role_policy" "ecs_execution" {
         ]
         Resource = [
           var.db_secret_arn,
-          var.cognito_client_secret_arn
+          var.cognito_client_secret_arn,
+          var.jwt_secret_key_arn
         ]
       },
       {
@@ -183,7 +184,8 @@ resource "aws_iam_role_policy" "ecs_task_secrets" {
         ]
         Resource = [
           var.db_secret_arn,
-          var.cognito_client_secret_arn
+          var.cognito_client_secret_arn,
+          var.jwt_secret_key_arn
         ]
       },
       {

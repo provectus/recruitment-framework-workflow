@@ -38,6 +38,11 @@ variable "cognito_client_secret_arn" {
   type        = string
 }
 
+variable "jwt_secret_key_arn" {
+  description = "ARN of the Secrets Manager secret containing the JWT secret key"
+  type        = string
+}
+
 variable "cognito_user_pool_id_ssm_arn" {
   description = "ARN of the SSM parameter containing Cognito User Pool ID"
   type        = string

@@ -114,6 +114,22 @@ variable "alb_access_logs_bucket_id" {
   default     = ""
 }
 
+variable "jwt_secret_key_arn" {
+  description = "ARN of the Secrets Manager secret containing the JWT secret key"
+  type        = string
+}
+
+variable "cognito_redirect_uri" {
+  description = "OAuth callback URI for Cognito authentication"
+  type        = string
+}
+
+variable "allowed_email_domain" {
+  description = "Allowed email domain for user registration"
+  type        = string
+  default     = "provectus.com"
+}
+
 variable "autoscaling_min_capacity" {
   description = "Minimum number of ECS tasks"
   type        = number
