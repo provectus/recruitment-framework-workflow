@@ -29,9 +29,9 @@ export function RecentActivity() {
             ))}
           </>
         ) : data && data.recent_candidates.length > 0 ? (
-          data.recent_candidates.map((candidate) => (
+          data.recent_candidates.map((candidate, index) => (
             <div
-              key={candidate.id}
+              key={`${candidate.id}-${index}`}
               className="flex items-start justify-between gap-2"
             >
               <div className="min-w-0">
