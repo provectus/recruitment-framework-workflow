@@ -44,6 +44,14 @@ jobs:
 
       - name: Test
         run: uv run pytest
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///./test.db
+          JWT_SECRET_KEY: dev-secret-change-in-production
+          DEBUG: "true"
+          COGNITO_USER_POOL_ID: us-east-1_XXXXXXXXX
+          COGNITO_CLIENT_ID: ci_test
+          COGNITO_CLIENT_SECRET: ci_test
+          COGNITO_DOMAIN: test.auth.us-east-1.amazoncognito.com
 
   openapi-check:
     name: OpenAPI Spec Up-to-date
