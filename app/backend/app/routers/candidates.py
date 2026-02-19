@@ -270,7 +270,8 @@ async def list_candidate_documents(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> list[DocumentResponse]:
-    assert current_user.id is not None
+    if current_user.id is None:
+        raise HTTPException(status_code=401, detail="User ID missing")
     try:
         documents = await document_service.list_candidate_documents(
             session,

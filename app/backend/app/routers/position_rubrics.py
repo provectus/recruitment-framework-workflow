@@ -29,7 +29,8 @@ async def create_position_rubric(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PositionRubricResponse:
-    assert current_user.id is not None
+    if current_user.id is None:
+        raise HTTPException(status_code=401, detail="User ID missing")
     try:
         result = await position_rubric_service.create_rubric(
             session,
@@ -85,7 +86,8 @@ async def update_position_rubric(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PositionRubricResponse:
-    assert current_user.id is not None
+    if current_user.id is None:
+        raise HTTPException(status_code=401, detail="User ID missing")
     try:
         result = await position_rubric_service.update_rubric(
             session,
@@ -167,7 +169,8 @@ async def revert_rubric_version(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PositionRubricResponse:
-    assert current_user.id is not None
+    if current_user.id is None:
+        raise HTTPException(status_code=401, detail="User ID missing")
     try:
         result = await position_rubric_service.revert_to_version(
             session, position_id, version_number, current_user.id
