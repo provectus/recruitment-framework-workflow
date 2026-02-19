@@ -124,6 +124,11 @@ variable "cognito_redirect_uri" {
   type        = string
 }
 
+variable "files_bucket_name" {
+  description = "Name of the S3 bucket for file uploads"
+  type        = string
+}
+
 variable "allowed_email_domain" {
   description = "Allowed email domain for user registration"
   type        = string

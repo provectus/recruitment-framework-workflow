@@ -85,7 +85,7 @@ resource "aws_cognito_user_pool_client" "web" {
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
 
   # Callback and logout URLs
-  callback_urls = ["https://api.${var.domain}/auth/callback"]
+  callback_urls = ["https://${var.domain}/api/auth/callback"]
   logout_urls   = ["https://${var.domain}/login"]
 
   # Auth flows
@@ -141,7 +141,7 @@ resource "aws_ssm_parameter" "domain" {
   name        = "/tap/cognito/domain"
   description = "Cognito Hosted UI domain URL for Tap application"
   type        = "String"
-  value       = "https://${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
+  value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
 
   tags = {
     Name = "${var.project_name}-cognito-domain"

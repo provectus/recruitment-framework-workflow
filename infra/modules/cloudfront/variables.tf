@@ -33,3 +33,8 @@ variable "web_acl_arn" {
   type        = string
   default     = ""
 }
+
+variable "alb_domain_name" {
+  description = "DNS name of the ALB for API origin"
+  type        = string
+}

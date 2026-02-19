@@ -113,15 +113,11 @@ Choose a custom domain for the application (e.g., `tap.provectus.com`). You will
    - Add these records to your DNS zone
    - Wait for validation to complete (can take up to 30 minutes)
 
-2. **API Endpoint:**
-   - Record: `api.your-domain.com`
-   - Type: CNAME or A-alias
-   - Value: ALB DNS name (output by Terraform as `api_endpoint`)
-
-3. **Frontend SPA:**
+2. **Application Domain:**
    - Record: `your-domain.com`
    - Type: CNAME or A-alias
-   - Value: CloudFront distribution domain (output by Terraform as `cloudfront_domain_name`)
+   - Value: CloudFront distribution domain (output by Terraform as `cloudfront_distribution_domain`)
+   - Both the SPA and API (`/api/*`) are served through CloudFront — no separate `api.` subdomain is needed
 
 ### 4. Enable Amazon Bedrock Model Access
 
@@ -276,9 +272,9 @@ Wait for CloudFront invalidation to complete (typically 1-3 minutes).
 Verify the deployment:
 
 ```bash
-# Test API health endpoint
-API_URL=$(terraform output -raw api_endpoint)
-curl https://${API_URL}/health
+# Test API health endpoint (served through CloudFront /api/* path)
+DOMAIN=$(terraform output -raw cloudfront_distribution_domain)
+curl https://${DOMAIN}/api/health
 
 # Expected response: {"status":"healthy"}
 ```
@@ -286,8 +282,7 @@ curl https://${API_URL}/health
 Open the frontend URL in a browser:
 
 ```bash
-FRONTEND_URL=$(terraform output -raw cloudfront_url)
-echo "Frontend: https://${FRONTEND_URL}"
+echo "Frontend: https://${DOMAIN}"
 ```
 
 Test Google OAuth login flow and verify the application is functional.

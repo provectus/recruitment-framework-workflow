@@ -13,8 +13,7 @@ environment = "poc"
 
 # Custom domain for the application (e.g., tap.provectus.com)
 # Required DNS records will need to be created after terraform apply:
-# - api.your-domain.com → ALB
-# - your-domain.com → CloudFront
+# - your-domain.com → CloudFront (serves both SPA and /api/* via path routing)
 # - ACM validation CNAME records (output by Terraform)
 domain = "your-domain.com"
 
@@ -27,3 +26,13 @@ github_repo = "your-org/your-repo"
 # Authorized redirect URI: https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
 google_client_id     = "your-google-client-id.apps.googleusercontent.com"
 google_client_secret = "your-google-client-secret"
+
+# ARN of the JWT secret key in AWS Secrets Manager
+# Create with: aws secretsmanager create-secret --name tap/jwt-secret-key --secret-string "$(openssl rand -base64 64)"
+jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:tap/jwt-secret-key-AbCdEf"
+
+# Enable Bedrock AI model access for ECS tasks (set true after enabling model access in console)
+enable_bedrock = false
+
+# Email address for CloudWatch alarm notifications (leave empty to skip)
+alert_email = ""

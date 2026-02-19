@@ -289,21 +289,35 @@ resource "aws_iam_role_policy" "github_actions_ecs" {
         Action = [
           "ecs:RunTask"
         ]
-        Resource = "arn:aws:ecs:${var.region}:*:task-definition/${var.project_name}-*"
+        Resource = [
+          "arn:aws:ecs:${var.region}:*:task-definition/${var.project_name}-*",
+          var.ecs_cluster_arn
+        ]
       },
       {
         Effect = "Allow"
         Action = [
           "ecs:UpdateService",
-          "ecs:DescribeServices",
-          "ecs:ListTasks",
-          "ecs:DescribeTasks"
+          "ecs:DescribeServices"
         ]
         Resource = [
           var.ecs_cluster_arn,
-          var.ecs_service_arn,
-          "${var.ecs_cluster_arn}/*"
+          var.ecs_service_arn
         ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:ListTasks",
+          "ecs:DescribeTasks",
+          "ecs:StopTask"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnEquals = {
+            "ecs:cluster" = var.ecs_cluster_arn
+          }
+        }
       },
       {
         Effect = "Allow"
@@ -367,7 +381,7 @@ resource "aws_iam_role_policy" "github_actions_cloudfront" {
 # ECR Repository for backend container images
 resource "aws_ecr_repository" "backend" {
   name                 = "${var.project_name}-backend"
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "MUTABLE"
   force_delete         = false
 
   image_scanning_configuration {

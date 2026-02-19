@@ -204,6 +204,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "ALLOWED_EMAIL_DOMAIN"
           value = var.allowed_email_domain
+        },
+        {
+          name  = "S3_BUCKET_NAME"
+          value = var.files_bucket_name
         }
       ]
 

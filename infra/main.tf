@@ -77,6 +77,7 @@ module "cloudfront" {
   spa_bucket_regional_domain_name = module.s3.spa_bucket_regional_domain_name
   certificate_arn                 = module.acm.certificate_arn
   web_acl_arn                     = module.waf.cloudfront_web_acl_arn
+  alb_domain_name                 = module.ecs.alb_dns_name
 }
 
 # IAM Module - Roles and permissions for ECS, GitHub Actions, and OIDC
@@ -147,6 +148,7 @@ module "ecs" {
   cognito_client_secret_arn    = module.cognito.client_secret_arn
   jwt_secret_key_arn           = var.jwt_secret_key_arn
   cognito_redirect_uri         = "https://${var.domain}/api/auth/callback"
+  files_bucket_name            = module.s3.files_bucket_id
   allowed_email_domain         = "provectus.com"
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
 }

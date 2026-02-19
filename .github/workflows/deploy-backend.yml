@@ -135,7 +135,7 @@ jobs:
             exit 1
           fi
 
-          OVERRIDES='{"containerOverrides":[{"name":"tap-backend","command":["alembic","upgrade","head"],"environment":[{"name":"APP_RUN_MIGRATIONS","value":"false"}]}]}'
+          OVERRIDES='{"containerOverrides":[{"name":"tap-backend","command":["uv","run","alembic","upgrade","head"],"environment":[{"name":"APP_RUN_MIGRATIONS","value":"false"}]}]}'
 
           TASK_ARN=$(aws ecs run-task \
             --cluster $ECS_CLUSTER \
