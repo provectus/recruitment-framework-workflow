@@ -174,6 +174,7 @@ bun run generate:api                    # Regenerate API client from openapi.jso
 |---|---|---|
 | `ci-backend.yml` | PR → `main` (backend paths) | ruff lint + format check, mypy, bandit security scan, pytest, OpenAPI spec freshness |
 | `ci-frontend.yml` | PR → `main` (frontend paths) | bun install, generate API client, eslint, build (includes tsc) |
+| `ci-infra.yml` | PR → `main` (infra paths) | terraform fmt, validate, tflint (no AWS creds needed) |
 | `dependency-review.yml` | PR → `main` | Flags high-severity dependency vulnerabilities |
 | `deploy-backend.yml` | Push to `main` (backend paths) | Lint/test → Docker build → push to ECR → ECS force-new-deployment |
 | `deploy-frontend.yml` | Push to `main` (frontend paths) | Lint/build → S3 sync → CloudFront invalidation |
