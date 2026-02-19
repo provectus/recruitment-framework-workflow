@@ -51,7 +51,7 @@ async def dev_login(
     payload = {
         "sub": user.email,
         "name": user.full_name,
-        "exp": datetime.now(UTC) + timedelta(minutes=30),
+        "exp": datetime.now(UTC) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE),
     }
     token = jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
 
