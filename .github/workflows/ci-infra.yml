@@ -51,4 +51,4 @@ jobs:
         run: tflint --init
 
       - name: Run TFLint
-        run: tflint --recursive
+        run: tflint --recursive --config "$(pwd)/.tflint.hcl"
