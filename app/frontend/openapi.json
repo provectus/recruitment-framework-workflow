@@ -219,13 +219,13 @@
         }
       }
     },
-    "/api/teams/{team_id}": {
-      "delete": {
+    "/api/teams/{team_id}/archive": {
+      "post": {
         "tags": [
           "teams"
         ],
-        "summary": "Delete Team",
-        "operationId": "delete_team_api_teams__team_id__delete",
+        "summary": "Archive Team",
+        "operationId": "archive_team_api_teams__team_id__archive_post",
         "parameters": [
           {
             "name": "team_id",

@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  deleteTeamApiTeamsTeamIdDeleteMutation,
+  archiveTeamApiTeamsTeamIdArchivePostMutation,
   listTeamsApiTeamsGetQueryKey,
 } from "@/shared/api/@tanstack/react-query.gen";
 
-export function useDeleteTeam() {
+export function useArchiveTeam() {
   const queryClient = useQueryClient();
   return useMutation({
-    ...deleteTeamApiTeamsTeamIdDeleteMutation(),
+    ...archiveTeamApiTeamsTeamIdArchivePostMutation(),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: listTeamsApiTeamsGetQueryKey(),

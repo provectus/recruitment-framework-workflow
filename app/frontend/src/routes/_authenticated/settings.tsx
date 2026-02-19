@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { AxiosError } from "axios";
-import { useTeams, useCreateTeam, useDeleteTeam } from "@/features/settings";
+import { useTeams, useCreateTeam, useArchiveTeam } from "@/features/settings";
 import { RubricTemplateTable, TemplateEditorDialog } from "@/widgets/rubrics";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -26,7 +26,7 @@ function SettingsPage() {
   const { data, isLoading } = useTeams();
   const teams = data ?? [];
   const createTeam = useCreateTeam();
-  const deleteTeam = useDeleteTeam();
+  const deleteTeam = useArchiveTeam();
 
   const [teamName, setTeamName] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -49,23 +49,25 @@ async def test_create_team_duplicate_case_insensitive(client: AsyncClient):
     assert response.status_code == 409
 
 
-async def test_delete_team(client: AsyncClient):
+async def test_archive_team(client: AsyncClient, session: AsyncSession):
     create_response = await client.post("/api/teams", json={"name": "Engineering"})
     team_id = create_response.json()["id"]
 
-    delete_response = await client.delete(f"/api/teams/{team_id}")
-    assert delete_response.status_code == 204
+    archive_response = await client.post(f"/api/teams/{team_id}/archive")
+    assert archive_response.status_code == 204
 
     list_response = await client.get("/api/teams")
     assert list_response.json() == []
 
 
-async def test_delete_team_not_found(client: AsyncClient):
-    response = await client.delete("/api/teams/9999")
+async def test_archive_team_not_found(client: AsyncClient):
+    response = await client.post("/api/teams/9999/archive")
     assert response.status_code == 404
 
 
-async def test_delete_team_in_use(client: AsyncClient, session: AsyncSession):
+async def test_archive_team_with_active_positions(
+    client: AsyncClient, session: AsyncSession
+):
     create_response = await client.post("/api/teams", json={"name": "Engineering"})
     team_id = create_response.json()["id"]
 
@@ -87,8 +89,8 @@ async def test_delete_team_in_use(client: AsyncClient, session: AsyncSession):
     session.add(position)
     await session.commit()
 
-    delete_response = await client.delete(f"/api/teams/{team_id}")
-    assert delete_response.status_code == 409
+    archive_response = await client.post(f"/api/teams/{team_id}/archive")
+    assert archive_response.status_code == 409
 
 
 async def test_list_teams_excludes_archived(client: AsyncClient, session: AsyncSession):
@@ -103,7 +105,7 @@ async def test_list_teams_excludes_archived(client: AsyncClient, session: AsyncS
     assert list_response.json() == []
 
 
-async def test_delete_team_blocked_by_archived_position(
+async def test_archive_team_allowed_when_positions_archived(
     client: AsyncClient, session: AsyncSession
 ):
     create_response = await client.post("/api/teams", json={"name": "Engineering"})
@@ -128,5 +130,5 @@ async def test_delete_team_blocked_by_archived_position(
     session.add(position)
     await session.commit()
 
-    delete_response = await client.delete(f"/api/teams/{team_id}")
-    assert delete_response.status_code == 409
+    archive_response = await client.post(f"/api/teams/{team_id}/archive")
+    assert archive_response.status_code == 204

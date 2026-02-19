@@ -36,14 +36,14 @@ async def create_team(
         ) from e
 
 
-@router.delete("/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_team(
+@router.post("/{team_id}/archive", status_code=status.HTTP_204_NO_CONTENT)
+async def archive_team(
     team_id: int,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> None:
     try:
-        await team_service.delete_team(session, team_id)
+        await team_service.archive_team(session, team_id)
     except NotFoundException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

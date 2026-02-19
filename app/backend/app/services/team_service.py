@@ -28,20 +28,24 @@ async def create_team(session: AsyncSession, name: str) -> Team:
     return team
 
 
-async def delete_team(session: AsyncSession, team_id: int) -> None:
-    statement = select(Team).where(Team.id == team_id)
+async def archive_team(session: AsyncSession, team_id: int) -> None:
+    statement = select(Team).where(Team.id == team_id, Team.is_archived.is_(False))
     result = await session.exec(statement)
     team = result.one_or_none()
 
     if not team:
         raise NotFoundException(f"Team with id {team_id} not found")
 
-    position_statement = select(Position).where(Position.team_id == team_id)
+    position_statement = select(Position).where(
+        Position.team_id == team_id,
+        Position.is_archived.is_(False),
+    )
     position_result = await session.exec(position_statement)
     position = position_result.first()
 
     if position:
-        raise ConflictError(f"Team with id {team_id} is in use by positions")
+        raise ConflictError(f"Team with id {team_id} has active positions")
 
-    await session.delete(team)
+    team.is_archived = True
+    session.add(team)
     await session.commit()
