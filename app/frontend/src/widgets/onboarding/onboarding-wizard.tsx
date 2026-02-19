@@ -1,6 +1,9 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/shared/ui/dialog";
 import { Progress } from "@/shared/ui/progress";
 import type { WizardStep } from "@/features/onboarding";
@@ -34,6 +37,10 @@ export function OnboardingWizard({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
       <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Getting Started</DialogTitle>
+          <DialogDescription>Onboarding wizard for new users</DialogDescription>
+        </DialogHeader>
         <div className="space-y-1 mb-2">
           <Progress value={progressPercent} />
           <p className="text-xs text-muted-foreground text-right">
