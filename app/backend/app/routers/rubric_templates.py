@@ -24,7 +24,7 @@ async def list_rubric_templates(
     current_user: User = Depends(get_current_user),
 ) -> RubricTemplateListResponse:
     templates = await rubric_template_service.list_templates(session)
-    template_ids = [t.id for t in templates]
+    template_ids = [t.id for t in templates if t.id is not None]
     position_counts = await rubric_template_service.count_positions_by_templates(
         session, template_ids
     )
@@ -38,6 +38,7 @@ async def list_rubric_templates(
             created_at=template.created_at,
         )
         for template in templates
+        if template.id is not None
     ]
     return RubricTemplateListResponse(items=items, total=len(items))
 

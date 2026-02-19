@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.types import JSON
@@ -48,7 +49,7 @@ class PositionRubricVersion(SQLModel, table=True):
         )
     )
     version_number: int = Field(sa_column=Column(Integer, nullable=False))
-    structure: dict = Field(sa_column=Column(JSON, nullable=False))
+    structure: dict[str, Any] = Field(sa_column=Column(JSON, nullable=False))
     created_by_id: int = Field(
         sa_column=Column(Integer, ForeignKey("users.id"), nullable=False)
     )

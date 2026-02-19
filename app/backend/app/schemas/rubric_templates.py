@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -29,7 +30,7 @@ class RubricTemplateDetail(BaseModel):
     id: int
     name: str
     description: str | None
-    structure: dict
+    structure: dict[str, Any]
     is_archived: bool
     created_at: datetime
     updated_at: datetime

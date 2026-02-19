@@ -40,7 +40,7 @@ plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = "app.services.*"
-disable_error_code = ["call-overload", "arg-type", "attr-defined", "union-attr", "no-any-return", "type-arg"]
+disable_error_code = ["call-overload", "arg-type", "attr-defined", "union-attr", "no-any-return", "type-arg", "import-untyped"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]

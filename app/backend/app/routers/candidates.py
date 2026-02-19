@@ -270,6 +270,7 @@ async def list_candidate_documents(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> list[DocumentResponse]:
+    assert current_user.id is not None
     try:
         documents = await document_service.list_candidate_documents(
             session,

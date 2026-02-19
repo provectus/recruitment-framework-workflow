@@ -72,7 +72,8 @@ jobs:
           PYTHONPATH: .
           DATABASE_URL: postgresql+asyncpg://ci:ci@localhost:5432/ci
           JWT_SECRET_KEY: dev-secret-change-in-production
-          CORS_ORIGINS: "['http://localhost:5173']"
+          CORS_ORIGINS: '["http://localhost:5173"]'
+          DEBUG: "true"
           COOKIE_DOMAIN: ""
           COOKIE_SECURE: "false"
           ALLOWED_EMAIL_DOMAIN: provectus.com

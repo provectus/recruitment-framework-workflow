@@ -25,6 +25,7 @@ async def presign_upload(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> PresignResponse:
+    assert current_user.id is not None
     try:
         document, upload_url = await document_service.create_presigned_upload(
             session=session,
@@ -55,6 +56,7 @@ async def get_document(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentDetailResponse:
+    assert current_user.id is not None
     try:
         document = await document_service.get_document(
             session=session,
@@ -74,6 +76,7 @@ async def complete_upload(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
+    assert current_user.id is not None
     try:
         document = await document_service.complete_upload(
             session=session,
@@ -99,6 +102,7 @@ async def paste_transcript(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
+    assert current_user.id is not None
     try:
         document = await document_service.create_pasted_transcript(
             session=session,

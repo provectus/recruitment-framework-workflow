@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class PositionRubricResponse(BaseModel):
     position_id: int
     source_template_name: str | None
     version_number: int
-    structure: dict
+    structure: dict[str, Any]
     created_by: str
     created_at: datetime
 
