@@ -299,15 +299,6 @@ async def update_stage(
     position_id: int,
     new_stage: str,
 ) -> CandidatePosition:
-    """Update the pipeline stage for a candidate-position link.
-    Validate the new_stage is a valid PipelineStage value.
-    Validate the transition is allowed (forward-only, reject-from-any,
-    no-from-terminal).
-    Raise ValueError("Association not found") if link doesn't exist.
-    Raise ValueError("Invalid stage") if not a valid PipelineStage.
-    Raise ValueError("Invalid stage transition from X to Y")
-    if transition not allowed.
-    """
     valid_stages = {stage.value for stage in PipelineStage}
     if new_stage not in valid_stages:
         raise ValidationError("Invalid stage")
