@@ -9,9 +9,11 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { GlobalUploadMenu } from "@/widgets/documents/global-upload-menu";
+import { useOpenOnboarding } from "@/features/onboarding";
 
 interface NavItem {
   to: string;
@@ -29,6 +31,7 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const openOnboarding = useOpenOnboarding();
 
   return (
     <aside
@@ -72,6 +75,22 @@ export function Sidebar() {
       </div>
 
       <Separator />
+
+      <div className="p-2 pb-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "w-full text-muted-foreground hover:text-foreground",
+            collapsed ? "justify-center" : "justify-start px-3"
+          )}
+          onClick={openOnboarding}
+          title="Getting started guide"
+        >
+          <HelpCircle className={cn("h-4 w-4", !collapsed && "mr-3")} />
+          {!collapsed && <span className="text-sm">Getting Started</span>}
+        </Button>
+      </div>
 
       <div className="p-2">
         <Button
