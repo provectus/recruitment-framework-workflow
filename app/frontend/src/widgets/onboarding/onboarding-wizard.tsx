@@ -3,13 +3,12 @@ import {
   DialogContent,
 } from "@/shared/ui/dialog";
 import { Progress } from "@/shared/ui/progress";
+import type { WizardStep } from "@/features/onboarding";
 import { WelcomeStep } from "./steps/welcome-step";
 import { HowItWorksStep } from "./steps/how-it-works-step";
 import { CreateTeamStep } from "./steps/create-team-step";
 import { CreatePositionStep } from "./steps/create-position-step";
 import { ReadyStep } from "./steps/ready-step";
-
-type WizardStep = "welcome" | "how-it-works" | "create-team" | "create-position" | "ready";
 
 interface OnboardingWizardProps {
   isOpen: boolean;

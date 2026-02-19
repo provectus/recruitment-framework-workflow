@@ -4,7 +4,7 @@ import { usePositions } from "@/features/positions";
 
 const STORAGE_KEY = "tap-onboarding-completed";
 
-type WizardStep = "welcome" | "how-it-works" | "create-team" | "create-position" | "ready";
+export type WizardStep = "welcome" | "how-it-works" | "create-team" | "create-position" | "ready";
 
 const ALL_STEPS: WizardStep[] = [
   "welcome",
@@ -26,7 +26,7 @@ function markOnboardingCompleted(): void {
   try {
     localStorage.setItem(STORAGE_KEY, "true");
   } catch {
-    // localStorage unavailable
+    /* empty */
   }
 }
 
@@ -48,7 +48,15 @@ export function useOnboardingWizard() {
     });
   }, [hasTeams, hasPositions]);
 
-  const currentIndex = activeSteps.indexOf(currentStep);
+  const validStep = activeSteps.includes(currentStep)
+    ? currentStep
+    : activeSteps[0];
+
+  if (validStep !== currentStep) {
+    setCurrentStep(validStep);
+  }
+
+  const currentIndex = activeSteps.indexOf(validStep);
   const progressPercent = ((currentIndex + 1) / activeSteps.length) * 100;
 
   const goNext = useCallback(() => {
@@ -83,7 +91,7 @@ export function useOnboardingWizard() {
 
   return {
     isOpen,
-    currentStep,
+    currentStep: validStep,
     activeSteps,
     progressPercent,
     isFirstStep: currentIndex === 0,
