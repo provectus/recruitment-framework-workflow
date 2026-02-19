@@ -1,7 +1,5 @@
 data "aws_caller_identity" "current" {}
 
-data "aws_region" "current" {}
-
 # SNS Topic for alarm notifications
 resource "aws_sns_topic" "alerts" {
   name = "${var.project_name}-alerts"

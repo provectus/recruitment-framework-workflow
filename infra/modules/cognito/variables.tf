@@ -3,11 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "environment" {
-  description = "Environment name (poc, dev, staging, prod)"
-  type        = string
-}
-
 variable "domain" {
   description = "Custom domain for the application (e.g., tap.provectus.com)"
   type        = string
