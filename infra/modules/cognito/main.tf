@@ -114,8 +114,8 @@ resource "aws_cognito_user_pool_domain" "main" {
 
 # SSM Parameter: User Pool ID
 resource "aws_ssm_parameter" "user_pool_id" {
-  name        = "/tap/cognito/user_pool_id"
-  description = "Cognito User Pool ID for Tap application"
+  name        = "/lauter/cognito/user_pool_id"
+  description = "Cognito User Pool ID for Lauter application"
   type        = "String"
   value       = aws_cognito_user_pool.main.id
 
@@ -126,8 +126,8 @@ resource "aws_ssm_parameter" "user_pool_id" {
 
 # SSM Parameter: Client ID
 resource "aws_ssm_parameter" "client_id" {
-  name        = "/tap/cognito/client_id"
-  description = "Cognito App Client ID for Tap application"
+  name        = "/lauter/cognito/client_id"
+  description = "Cognito App Client ID for Lauter application"
   type        = "String"
   value       = aws_cognito_user_pool_client.web.id
 
@@ -138,8 +138,8 @@ resource "aws_ssm_parameter" "client_id" {
 
 # SSM Parameter: Cognito Domain
 resource "aws_ssm_parameter" "domain" {
-  name        = "/tap/cognito/domain"
-  description = "Cognito Hosted UI domain URL for Tap application"
+  name        = "/lauter/cognito/domain"
+  description = "Cognito Hosted UI domain URL for Lauter application"
   type        = "String"
   value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
 
@@ -151,7 +151,7 @@ resource "aws_ssm_parameter" "domain" {
 # Secrets Manager: Client Secret
 resource "aws_secretsmanager_secret" "client_secret" {
   name                    = "${var.project_name}/cognito/client_secret"
-  description             = "Cognito App Client Secret for Tap application"
+  description             = "Cognito App Client Secret for Lauter application"
   recovery_window_in_days = 7
 
   tags = {

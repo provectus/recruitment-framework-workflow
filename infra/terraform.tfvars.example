@@ -1,4 +1,4 @@
-# Terraform Variables Example for Tap Infrastructure
+# Terraform Variables Example for Lauter Infrastructure
 # Copy this file to terraform.tfvars and fill in actual values
 # IMPORTANT: Never commit terraform.tfvars to version control (already in .gitignore)
 
@@ -6,12 +6,12 @@
 region = "us-east-1"
 
 # Project name used as prefix for resource naming and tagging
-project_name = "tap"
+project_name = "lauter"
 
 # Environment name (poc, dev, staging, prod)
 environment = "poc"
 
-# Custom domain for the application (e.g., tap.provectus.com)
+# Custom domain for the application (e.g., lauter.provectus.com)
 # Required DNS records will need to be created after terraform apply:
 # - your-domain.com → CloudFront (serves both SPA and /api/* via path routing)
 # - ACM validation CNAME records (output by Terraform)
@@ -23,13 +23,13 @@ github_repo = "your-org/your-repo"
 
 # Google OAuth 2.0 credentials (from Google Cloud Console)
 # Create at: https://console.cloud.google.com/ → APIs & Services → Credentials
-# Authorized redirect URI: https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
+# Authorized redirect URI: https://lauter-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
 google_client_id     = "your-google-client-id.apps.googleusercontent.com"
 google_client_secret = "your-google-client-secret"
 
 # ARN of the JWT secret key in AWS Secrets Manager
-# Create with: aws secretsmanager create-secret --name tap/jwt-secret-key --secret-string "$(openssl rand -base64 64)"
-jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:tap/jwt-secret-key-AbCdEf"
+# Create with: aws secretsmanager create-secret --name lauter/jwt-secret-key --secret-string "$(openssl rand -base64 64)"
+jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:lauter/jwt-secret-key-AbCdEf"
 
 # Enable Bedrock AI model access for ECS tasks (set true after enabling model access in console)
 enable_bedrock = false

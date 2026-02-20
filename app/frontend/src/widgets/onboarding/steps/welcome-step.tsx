@@ -31,7 +31,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">Welcome to Tap</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Welcome to Lauter</h2>
         <p className="text-muted-foreground">
           Recruitment workflow automation for Provectus
         </p>

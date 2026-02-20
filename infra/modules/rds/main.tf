@@ -33,7 +33,7 @@ resource "aws_db_instance" "this" {
   storage_encrypted = true
 
   db_name                     = var.db_name
-  username                    = "tap_admin"
+  username                    = "lauter_admin"
   manage_master_user_password = true
 
   multi_az               = var.multi_az

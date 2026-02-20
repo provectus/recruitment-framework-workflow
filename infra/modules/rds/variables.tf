@@ -33,7 +33,7 @@ variable "allocated_storage" {
 variable "db_name" {
   description = "Name of the default database to create"
   type        = string
-  default     = "tap"
+  default     = "lauter"
 }
 
 variable "engine_version" {

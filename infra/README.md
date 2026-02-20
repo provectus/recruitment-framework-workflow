@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains Terraform infrastructure-as-code for **Tap** — an internal recruitment workflow automation tool for Provectus. The infrastructure provisions all AWS resources required to run the application in the `us-east-1` region, including VPC networking, RDS PostgreSQL database, S3 storage, CloudFront CDN, and authentication services.
+This directory contains Terraform infrastructure-as-code for **Lauter** — an internal recruitment workflow automation tool for Provectus. The infrastructure provisions all AWS resources required to run the application in the `us-east-1` region, including VPC networking, RDS PostgreSQL database, S3 storage, CloudFront CDN, and authentication services.
 
 Target environment: Single POC environment in AWS.
 
@@ -28,7 +28,7 @@ Replace `<ACCOUNT_ID>` with your actual AWS account ID in all commands below:
 
 ```bash
 aws s3api create-bucket \
-  --bucket tap-terraform-state-<ACCOUNT_ID> \
+  --bucket lauter-terraform-state-<ACCOUNT_ID> \
   --region us-east-1
 ```
 
@@ -36,7 +36,7 @@ Enable versioning to protect against accidental deletions:
 
 ```bash
 aws s3api put-bucket-versioning \
-  --bucket tap-terraform-state-<ACCOUNT_ID> \
+  --bucket lauter-terraform-state-<ACCOUNT_ID> \
   --versioning-configuration Status=Enabled
 ```
 
@@ -44,7 +44,7 @@ Enable server-side encryption:
 
 ```bash
 aws s3api put-bucket-encryption \
-  --bucket tap-terraform-state-<ACCOUNT_ID> \
+  --bucket lauter-terraform-state-<ACCOUNT_ID> \
   --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
 ```
 
@@ -52,7 +52,7 @@ Block public access:
 
 ```bash
 aws s3api put-public-access-block \
-  --bucket tap-terraform-state-<ACCOUNT_ID> \
+  --bucket lauter-terraform-state-<ACCOUNT_ID> \
   --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 ```
 
@@ -60,7 +60,7 @@ aws s3api put-public-access-block \
 
 ```bash
 aws dynamodb create-table \
-  --table-name tap-terraform-locks \
+  --table-name lauter-terraform-locks \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
@@ -74,10 +74,10 @@ After creating the S3 bucket and DynamoDB table, update the `bucket` value in `m
 ```hcl
 terraform {
   backend "s3" {
-    bucket         = "tap-terraform-state-<ACCOUNT_ID>"  # Replace <ACCOUNT_ID>
-    key            = "tap/terraform.tfstate"
+    bucket         = "lauter-terraform-state-<ACCOUNT_ID>"  # Replace <ACCOUNT_ID>
+    key            = "lauter/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "tap-terraform-locks"
+    dynamodb_table = "lauter-terraform-locks"
     encrypt        = true
   }
 }
@@ -92,19 +92,19 @@ Set up Google OAuth 2.0 credentials for user authentication:
 3. Click **Create Credentials → OAuth 2.0 Client ID**
 4. Configure the OAuth consent screen if prompted:
    - User Type: Internal (for corporate Workspace)
-   - App name: "Tap Recruitment Tool"
+   - App name: "Lauter Recruitment Tool"
    - User support email: your-email@provectus.com
    - Authorized domains: your-domain.com
 5. Create OAuth 2.0 Client ID:
    - Application type: **Web application**
-   - Name: "Tap OAuth Client"
-   - Authorized redirect URIs: `https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse`
+   - Name: "Lauter OAuth Client"
+   - Authorized redirect URIs: `https://lauter-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse`
      (Note: The exact URI will match the pattern `https://{cognito-domain}.auth.{region}.amazoncognito.com/oauth2/idpresponse`)
 6. Save the **Client ID** and **Client Secret** — you will need these for `terraform.tfvars`
 
 ### 3. Choose Domain and Prepare DNS
 
-Choose a custom domain for the application (e.g., `tap.provectus.com`). You will need to create DNS records after Terraform deployment:
+Choose a custom domain for the application (e.g., `lauter.provectus.com`). You will need to create DNS records after Terraform deployment:
 
 **Required DNS Records (to be created after `terraform apply`):**
 
@@ -211,13 +211,13 @@ aws ecr get-login-password --region us-east-1 | docker login --username AWS --pa
 
 # Build the backend Docker image (from repository root)
 cd app/backend
-docker build --target prod -t tap-backend .
+docker build --target prod -t lauter-backend .
 
 # Tag the image for ECR
-docker tag tap-backend:latest ${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/tap-backend:latest
+docker tag lauter-backend:latest ${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/lauter-backend:latest
 
 # Push to ECR
-docker push ${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/tap-backend:latest
+docker push ${ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/lauter-backend:latest
 ```
 
 ### 3. Run Database Migrations
@@ -237,7 +237,7 @@ aws ecs run-task \
   --task-definition ${TASK_DEF} \
   --launch-type FARGATE \
   --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[${SECURITY_GROUP}],assignPublicIp=DISABLED}" \
-  --overrides '{"containerOverrides":[{"name":"tap-backend","command":["alembic","upgrade","head"]}]}'
+  --overrides '{"containerOverrides":[{"name":"lauter-backend","command":["alembic","upgrade","head"]}]}'
 ```
 
 Monitor the task in ECS Console to confirm migrations complete successfully.
@@ -332,7 +332,7 @@ Example:
 ```bash
 export TF_VAR_db_password="your-secure-password"
 export TF_VAR_google_client_secret="your-google-client-secret"
-terraform apply -var="domain=tap.provectus.com"
+terraform apply -var="domain=lauter.provectus.com"
 ```
 
 ## State Management
@@ -398,8 +398,8 @@ View state locking status:
 
 ```bash
 aws dynamodb get-item \
-  --table-name tap-terraform-locks \
-  --key '{"LockID":{"S":"tap-terraform-state-<ACCOUNT_ID>/tap/terraform.tfstate"}}'
+  --table-name lauter-terraform-locks \
+  --key '{"LockID":{"S":"lauter-terraform-state-<ACCOUNT_ID>/lauter/terraform.tfstate"}}'
 ```
 
 Force unlock (use only if lock is stuck):

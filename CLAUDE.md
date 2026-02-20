@@ -24,7 +24,7 @@ When reviewing code or flagging issues, do NOT flag standard library/framework p
 
 ## Project Overview
 
-**Tap** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
+**Lauter** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
 
 See `context/product/` for product definition, architecture, roadmap, and POC plans.
 
@@ -86,8 +86,8 @@ docker compose up -d
 # Frontend runs outside Docker
 cd app/frontend && bun install && bun run dev
 ```
-- **Postgres:** port 5437, db `tap`, user/pass `postgres/postgres`
-- **MinIO (S3):** API port 9100, console port 9101, user/pass `minioadmin/minioadmin`, bucket `tap-files`
+- **Postgres:** port 5437, db `lauter`, user/pass `postgres/postgres`
+- **MinIO (S3):** API port 9100, console port 9101, user/pass `minioadmin/minioadmin`, bucket `lauter-files`
 - **Backend:** port 8000, hot-reload, reads `app/backend/.env`
 - **Frontend:** port 5173 (Vite default)
 

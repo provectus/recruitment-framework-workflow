@@ -1,4 +1,4 @@
-# Tap
+# Lauter
 
 Internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs and transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
 

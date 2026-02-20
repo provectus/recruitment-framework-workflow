@@ -7,11 +7,11 @@ variable "region" {
 variable "project_name" {
   description = "Project name used as prefix for resource naming and tagging"
   type        = string
-  default     = "tap"
+  default     = "lauter"
 }
 
 variable "domain" {
-  description = "Custom domain for the application (e.g., tap.provectus.com)"
+  description = "Custom domain for the application (e.g., lauter.provectus.com)"
   type        = string
 
   validation {

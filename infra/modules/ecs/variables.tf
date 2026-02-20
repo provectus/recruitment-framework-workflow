@@ -1,5 +1,5 @@
 variable "project_name" {
-  description = "Name of the project (e.g., tap)"
+  description = "Name of the project (e.g., lauter)"
   type        = string
 }
 

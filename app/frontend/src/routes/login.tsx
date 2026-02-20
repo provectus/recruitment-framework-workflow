@@ -30,7 +30,7 @@ function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-10 w-full max-w-sm px-6">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">Tap</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight">Lauter</h1>
           <p className="text-muted-foreground">
             Recruitment workflow automation
           </p>

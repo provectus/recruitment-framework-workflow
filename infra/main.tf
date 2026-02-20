@@ -10,10 +10,10 @@ terraform {
 
   backend "s3" {
     # IMPORTANT: Replace ACCOUNT_ID with your AWS account ID before initializing
-    bucket         = "tap-terraform-state-ACCOUNT_ID"
-    key            = "tap/terraform.tfstate"
+    bucket         = "lauter-terraform-state-ACCOUNT_ID"
+    key            = "lauter/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "tap-terraform-locks"
+    dynamodb_table = "lauter-terraform-locks"
     encrypt        = true
   }
 }
@@ -139,8 +139,8 @@ module "ecs" {
   db_secret_arn                = module.rds.db_master_secret_arn
   db_host                      = module.rds.db_instance_address
   db_port                      = module.rds.db_instance_port
-  db_name                      = "tap"
-  db_username                  = "tap_admin"
+  db_name                      = "lauter"
+  db_username                  = "lauter_admin"
   cognito_user_pool_id_ssm_arn = module.cognito.ssm_user_pool_id_arn
   cognito_client_id_ssm_arn    = module.cognito.ssm_client_id_arn
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn

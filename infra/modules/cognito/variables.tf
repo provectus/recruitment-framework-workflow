@@ -4,7 +4,7 @@ variable "project_name" {
 }
 
 variable "domain" {
-  description = "Custom domain for the application (e.g., tap.provectus.com)"
+  description = "Custom domain for the application (e.g., lauter.provectus.com)"
   type        = string
 }
 

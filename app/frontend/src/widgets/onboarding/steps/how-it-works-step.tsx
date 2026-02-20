@@ -33,7 +33,7 @@ export function HowItWorksStep({ onNext, onBack }: HowItWorksStepProps) {
   return (
     <div className="flex flex-col space-y-6 py-4">
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold tracking-tight">How Tap works</h2>
+        <h2 className="text-xl font-bold tracking-tight">How Lauter works</h2>
         <p className="text-sm text-muted-foreground">
           Four steps from candidate to decision
         </p>

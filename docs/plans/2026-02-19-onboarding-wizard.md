@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add a multi-step onboarding wizard that explains TAP's value and walks new users through creating their first team + position.
+**Goal:** Add a multi-step onboarding wizard that explains Lauter's value and walks new users through creating their first team + position.
 
 **Architecture:** Modal dialog wizard using the existing shadcn Dialog component. Feature hook manages step state + localStorage persistence. Widget renders steps. Mounted in the authenticated layout, triggered automatically on first login and manually via sidebar help button.
 
@@ -24,7 +24,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTeams } from "@/features/settings";
 import { usePositions } from "@/features/positions";
 
-const STORAGE_KEY = "tap-onboarding-completed";
+const STORAGE_KEY = "lauter-onboarding-completed";
 
 type WizardStep = "welcome" | "how-it-works" | "create-team" | "create-position" | "ready";
 
@@ -180,7 +180,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">Welcome to Tap</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Welcome to Lauter</h2>
         <p className="text-muted-foreground">
           Recruitment workflow automation for Provectus
         </p>
@@ -261,7 +261,7 @@ export function HowItWorksStep({ onNext, onBack }: HowItWorksStepProps) {
   return (
     <div className="flex flex-col space-y-6 py-4">
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold tracking-tight">How Tap works</h2>
+        <h2 className="text-xl font-bold tracking-tight">How Lauter works</h2>
         <p className="text-sm text-muted-foreground">
           Four steps from candidate to decision
         </p>
@@ -970,7 +970,7 @@ git commit -m "feat(onboarding): integrate wizard into authenticated layout with
 
 **Step 1: Clear localStorage and test**
 
-1. Open browser dev tools → Application → localStorage → delete `tap-onboarding-completed`
+1. Open browser dev tools → Application → localStorage → delete `lauter-onboarding-completed`
 2. Refresh the app
 3. Verify wizard auto-opens on dashboard
 4. Walk through all steps

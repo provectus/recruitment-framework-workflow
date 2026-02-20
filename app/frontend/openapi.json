@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Tap API",
+    "title": "Lauter API",
     "version": "0.1.0"
   },
   "paths": {

@@ -12,9 +12,9 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: tap-backend
-  ECS_CLUSTER: tap-cluster
-  ECS_SERVICE: tap-backend
+  ECR_REPOSITORY: lauter-backend
+  ECS_CLUSTER: lauter-cluster
+  ECS_SERVICE: lauter-backend
 
 jobs:
   test:
@@ -72,7 +72,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/tap-github-actions-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/lauter-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -135,7 +135,7 @@ jobs:
             exit 1
           fi
 
-          OVERRIDES='{"containerOverrides":[{"name":"tap-backend","command":["uv","run","alembic","upgrade","head"],"environment":[{"name":"APP_RUN_MIGRATIONS","value":"false"}]}]}'
+          OVERRIDES='{"containerOverrides":[{"name":"lauter-backend","command":["uv","run","alembic","upgrade","head"],"environment":[{"name":"APP_RUN_MIGRATIONS","value":"false"}]}]}'
 
           TASK_ARN=$(aws ecs run-task \
             --cluster $ECS_CLUSTER \

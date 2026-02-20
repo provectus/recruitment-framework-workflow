@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTeams } from "@/features/settings";
 import { usePositions } from "@/features/positions";
 
-const STORAGE_KEY = "tap-onboarding-completed";
+const STORAGE_KEY = "lauter-onboarding-completed";
 
 export type WizardStep = "welcome" | "how-it-works" | "create-team" | "create-position" | "ready";
 

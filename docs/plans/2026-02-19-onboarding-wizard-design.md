@@ -1,7 +1,7 @@
 # Onboarding Wizard Design
 
 ## Problem
-New users land on an empty dashboard with no understanding of what TAP does or what to do first. The natural workflow (team -> position -> candidate -> upload -> AI evaluation) is invisible.
+New users land on an empty dashboard with no understanding of what Lauter does or what to do first. The natural workflow (team -> position -> candidate -> upload -> AI evaluation) is invisible.
 
 ## Target Audience
 - Recruitment team: manages candidates, positions, uploads documents
@@ -13,7 +13,7 @@ Multi-step modal wizard. Auto-opens on first login. Explains value prop, shows w
 ## Wizard Steps
 
 ### Step 1: Welcome
-- Title: "Welcome to Tap"
+- Title: "Welcome to Lauter"
 - Three bullets: automate candidate eval with AI, connect hiring pipeline from CV to decision, consistent rubric-based decisions across teams
 - CTA: "Let's get started"
 
@@ -38,7 +38,7 @@ Multi-step modal wizard. Auto-opens on first login. Explains value prop, shows w
 ### Step 5: You're Ready
 - Summary of what was created (or skipped)
 - Actions: "Go to Dashboard" / "Add Your First Candidate"
-- Sets localStorage flag `tap-onboarding-completed`
+- Sets localStorage flag `lauter-onboarding-completed`
 
 ## Behavior
 - Auto-opens on first login (localStorage check)
@@ -70,7 +70,7 @@ src/
 - `Sidebar` gets help button that triggers wizard
 - Uses existing: Dialog, Progress, Button, Input, Select, Label components
 - Uses existing: `useCreateTeam`, `useCreatePosition` mutations
-- localStorage key: `tap-onboarding-completed`
+- localStorage key: `lauter-onboarding-completed`
 
 ## Existing Patterns Used
 - Multi-step dialog pattern from GlobalUploadMenu

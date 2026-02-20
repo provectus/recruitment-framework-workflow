@@ -1,6 +1,6 @@
-# Tap — Cloud Environment Rollout Runbook
+# Lauter — Cloud Environment Rollout Runbook
 
-Step-by-step guide to provision the Tap AWS environment from scratch. Assumes the `feature/infra-ci-setup` branch is merged to `main`.
+Step-by-step guide to provision the Lauter AWS environment from scratch. Assumes the `feature/infra-ci-setup` branch is merged to `main`.
 
 **Estimated wall-clock time:** ~45 minutes (excluding DNS propagation).
 **Estimated monthly cost:** ~$50–70/month for POC (see [Cost Estimate](#cost-estimate)).
@@ -18,7 +18,7 @@ Before starting, ensure you have:
 | Bun installed (for SPA build) | `bun --version` |
 | AWS credentials configured | `aws sts get-caller-identity` |
 | IAM permissions: create VPC, RDS, ECS, S3, CloudFront, Cognito, IAM roles, ACM, WAF, Secrets Manager | Check with your account admin |
-| A domain you control (e.g. `tap.provectus.com`) | Access to DNS management console |
+| A domain you control (e.g. `lauter.provectus.com`) | Access to DNS management console |
 | Google OAuth 2.0 credentials created ([instructions](#step-1-create-google-oauth-credentials)) | Client ID + Client Secret in hand |
 | Amazon Bedrock Claude model access enabled in `us-east-1` ([instructions](#step-2-enable-bedrock-model-access)) | Console shows "Access granted" |
 
@@ -36,12 +36,12 @@ echo $ACCOUNT_ID
 2. Click **Create Credentials → OAuth 2.0 Client ID**
 3. Configure OAuth consent screen if prompted:
    - User Type: **Internal** (corporate Workspace)
-   - App name: `Tap Recruitment Tool`
+   - App name: `Lauter Recruitment Tool`
    - Authorized domains: your domain (e.g. `provectus.com`)
 4. Create the client:
    - Application type: **Web application**
-   - Name: `Tap OAuth Client`
-   - Authorized redirect URI: `https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse`
+   - Name: `Lauter OAuth Client`
+   - Authorized redirect URI: `https://lauter-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse`
 5. Save the **Client ID** and **Client Secret** for Step 6
 
 
@@ -63,29 +63,29 @@ The S3 bucket and DynamoDB table must exist before `terraform init`.
 ```bash
 # S3 bucket for state storage
 aws s3api create-bucket \
-  --bucket tap-terraform-state-${ACCOUNT_ID} \
+  --bucket lauter-terraform-state-${ACCOUNT_ID} \
   --region us-east-1
 
 # Enable versioning
 aws s3api put-bucket-versioning \
-  --bucket tap-terraform-state-${ACCOUNT_ID} \
+  --bucket lauter-terraform-state-${ACCOUNT_ID} \
   --versioning-configuration Status=Enabled
 
 # Enable encryption
 aws s3api put-bucket-encryption \
-  --bucket tap-terraform-state-${ACCOUNT_ID} \
+  --bucket lauter-terraform-state-${ACCOUNT_ID} \
   --server-side-encryption-configuration \
   '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
 
 # Block public access
 aws s3api put-public-access-block \
-  --bucket tap-terraform-state-${ACCOUNT_ID} \
+  --bucket lauter-terraform-state-${ACCOUNT_ID} \
   --public-access-block-configuration \
   BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
 
 # DynamoDB table for state locking
 aws dynamodb create-table \
-  --table-name tap-terraform-locks \
+  --table-name lauter-terraform-locks \
   --attribute-definitions AttributeName=LockID,AttributeType=S \
   --key-schema AttributeName=LockID,KeyType=HASH \
   --billing-mode PAY_PER_REQUEST \
@@ -95,8 +95,8 @@ aws dynamodb create-table \
 Verify:
 
 ```bash
-aws s3api head-bucket --bucket tap-terraform-state-${ACCOUNT_ID}
-aws dynamodb describe-table --table-name tap-terraform-locks --query 'Table.TableStatus'
+aws s3api head-bucket --bucket lauter-terraform-state-${ACCOUNT_ID}
+aws dynamodb describe-table --table-name lauter-terraform-locks --query 'Table.TableStatus'
 # Expected: "ACTIVE"
 ```
 
@@ -109,8 +109,8 @@ The backend needs a JWT signing key stored in Secrets Manager. Terraform referen
 JWT_SECRET=$(openssl rand -base64 64 | tr -d '\n')
 
 JWT_SECRET_ARN=$(aws secretsmanager create-secret \
-  --name tap/jwt-secret-key \
-  --description "JWT signing key for Tap backend" \
+  --name lauter/jwt-secret-key \
+  --description "JWT signing key for Lauter backend" \
   --secret-string "${JWT_SECRET}" \
   --region us-east-1 \
   --query ARN --output text)
@@ -133,7 +133,7 @@ sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/" main.tf
 Verify the file now reads:
 
 ```hcl
-bucket = "tap-terraform-state-123456789012"  # your actual account ID
+bucket = "lauter-terraform-state-123456789012"  # your actual account ID
 ```
 
 
@@ -149,9 +149,9 @@ Edit `terraform.tfvars` with actual values:
 | Variable | Example | Notes |
 |---|---|---|
 | `region` | `"us-east-1"` | Do not change unless relocating all resources |
-| `project_name` | `"tap"` | Used in all resource name prefixes |
+| `project_name` | `"lauter"` | Used in all resource name prefixes |
 | `environment` | `"poc"` | One of: `poc`, `dev`, `staging`, `prod` |
-| `domain` | `"tap.provectus.com"` | Must match your DNS zone |
+| `domain` | `"lauter.provectus.com"` | Must match your DNS zone |
 | `github_repo` | `"provectus/recruitment-framework"` | Format: `org/repo` |
 | `google_client_id` | `"123...apps.googleusercontent.com"` | From Step 1 |
 | `google_client_secret` | `"GOCSPX-..."` | From Step 1 |
@@ -216,7 +216,7 @@ The ACM certificate will show as created but **not yet validated** — that happ
 ### Save outputs
 
 ```bash
-terraform output > /tmp/tap-outputs.txt
+terraform output > /tmp/lauter-outputs.txt
 ```
 
 
@@ -233,8 +233,8 @@ terraform output domain_validation_records
 This returns records like:
 
 ```
-domain_name           = "tap.provectus.com"
-resource_record_name  = "_abc123.tap.provectus.com."
+domain_name           = "lauter.provectus.com"
+resource_record_name  = "_abc123.lauter.provectus.com."
 resource_record_type  = "CNAME"
 resource_record_value = "_xyz789.acm-validations.aws."
 ```
@@ -260,14 +260,14 @@ echo "Create CNAME: $(terraform output -raw domain) → $(terraform output -raw 
 
 | Record | Type | Value |
 |---|---|---|
-| `tap.provectus.com` | CNAME | CloudFront domain from output |
+| `lauter.provectus.com` | CNAME | CloudFront domain from output |
 
 **Note:** If using Route53 for DNS, use an A-alias record instead of CNAME (avoids CNAME-at-apex limitation). No separate `api.` subdomain is needed — CloudFront routes `/api/*` requests to the ALB origin automatically.
 
 Wait for DNS propagation before proceeding (~5-15 minutes):
 
 ```bash
-dig tap.provectus.com +short
+dig lauter.provectus.com +short
 ```
 
 
@@ -284,10 +284,10 @@ aws ecr get-login-password --region us-east-1 | \
 
 # Build the backend image
 cd app/backend
-docker build --target prod -t tap-backend .
+docker build --target prod -t lauter-backend .
 
 # Tag and push
-docker tag tap-backend:latest ${ECR_URL}:latest
+docker tag lauter-backend:latest ${ECR_URL}:latest
 docker push ${ECR_URL}:latest
 ```
 
@@ -305,7 +305,7 @@ SG_ID=$(terraform output -raw ecs_security_group_id)
 # Get the current task definition from the service
 TASK_DEF=$(aws ecs describe-services \
   --cluster ${CLUSTER_NAME} \
-  --services tap-backend \
+  --services lauter-backend \
   --query 'services[0].taskDefinition' \
   --output text)
 
@@ -317,7 +317,7 @@ TASK_ARN=$(aws ecs run-task \
   --network-configuration \
     "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[${SG_ID}],assignPublicIp=DISABLED}" \
   --overrides \
-    '{"containerOverrides":[{"name":"tap-backend","command":["alembic","upgrade","head"]}]}' \
+    '{"containerOverrides":[{"name":"lauter-backend","command":["alembic","upgrade","head"]}]}' \
   --query 'tasks[0].taskArn' --output text)
 
 echo "Migration task: ${TASK_ARN}"
@@ -335,7 +335,7 @@ aws ecs describe-tasks \
 If the migration fails, check CloudWatch logs:
 
 ```bash
-aws logs tail /ecs/tap-backend --since 10m
+aws logs tail /ecs/lauter-backend --since 10m
 ```
 
 ### 9c. Force ECS Service Redeployment
@@ -345,12 +345,12 @@ After pushing the image and running migrations, force the service to pick up the
 ```bash
 aws ecs update-service \
   --cluster ${CLUSTER_NAME} \
-  --service tap-backend \
+  --service lauter-backend \
   --force-new-deployment
 
 aws ecs wait services-stable \
   --cluster ${CLUSTER_NAME} \
-  --services tap-backend
+  --services lauter-backend
 ```
 
 ### 9d. Upload Frontend SPA to S3
@@ -389,13 +389,13 @@ Go to **GitHub → Repository → Settings → Secrets and variables → Actions
 | `AWS_ACCOUNT_ID` | Your AWS account ID | Both deploy workflows (OIDC role ARN construction) |
 | `CLOUDFRONT_DISTRIBUTION_ID` | `terraform output -raw cloudfront_distribution_id` | `deploy-frontend.yml` |
 
-**No static AWS keys needed.** Both deploy workflows use OIDC (`role-to-assume`) with the `tap-github-actions-role` created by Terraform.
+**No static AWS keys needed.** Both deploy workflows use OIDC (`role-to-assume`) with the `lauter-github-actions-role` created by Terraform.
 
 Verify the OIDC role ARN:
 
 ```bash
 terraform output -raw github_actions_role_arn
-# Expected: arn:aws:iam::<ACCOUNT_ID>:role/tap-github-actions-role
+# Expected: arn:aws:iam::<ACCOUNT_ID>:role/lauter-github-actions-role
 ```
 
 
@@ -404,7 +404,7 @@ terraform output -raw github_actions_role_arn
 Run these checks after the first deployment:
 
 ```bash
-DOMAIN="tap.provectus.com"  # replace with your domain
+DOMAIN="lauter.provectus.com"  # replace with your domain
 ```
 
 - [ ] **API health:**
@@ -429,13 +429,13 @@ DOMAIN="tap.provectus.com"  # replace with your domain
 
 - [ ] **CloudWatch logs flowing:**
   ```bash
-  aws logs tail /ecs/tap-backend --since 5m --format short
+  aws logs tail /ecs/lauter-backend --since 5m --format short
   ```
 
 - [ ] **No ECS task failures:**
   ```bash
   aws ecs describe-services \
-    --cluster tap-cluster --services tap-backend \
+    --cluster lauter-cluster --services lauter-backend \
     --query 'services[0].{running:runningCount,desired:desiredCount,deployments:deployments[*].rolloutState}'
   # Expected: running=1, desired=1, rolloutState=COMPLETED
   ```
@@ -452,13 +452,13 @@ Internet
   │
   └─► CloudFront (domain)
         ├── WAF WebACL
-        ├── /api/* ──► ALB ──► ECS Fargate (tap-backend, 0.25 vCPU / 0.5 GB)
+        ├── /api/* ──► ALB ──► ECS Fargate (lauter-backend, 0.25 vCPU / 0.5 GB)
         │                └── WAF WebACL   ├── RDS PostgreSQL 16 (db.t4g.micro, 20 GB)
-        │                                 ├── S3 bucket (tap-files-*)
+        │                                 ├── S3 bucket (lauter-files-*)
         │                                 ├── Cognito (Google OAuth)
         │                                 ├── Secrets Manager (DB password, JWT key, Cognito secret)
         │                                 └── Bedrock (Claude models, Phase 2)
-        └── /* (default) ──► S3 bucket (tap-spa-*)
+        └── /* (default) ──► S3 bucket (lauter-spa-*)
 ```
 
 ### Module Dependency Diagram
@@ -502,7 +502,7 @@ The NAT Gateway is the largest cost driver. For a tighter budget, consider a NAT
 
 ```bash
 # Verify bucket exists
-aws s3api head-bucket --bucket tap-terraform-state-${ACCOUNT_ID}
+aws s3api head-bucket --bucket lauter-terraform-state-${ACCOUNT_ID}
 
 # Verify main.tf has the correct bucket name
 grep bucket infra/main.tf
@@ -521,12 +521,12 @@ grep bucket infra/main.tf
 ```bash
 # Check task stopped reason
 aws ecs describe-tasks \
-  --cluster tap-cluster \
-  --tasks $(aws ecs list-tasks --cluster tap-cluster --service tap-backend --query 'taskArns[0]' --output text) \
+  --cluster lauter-cluster \
+  --tasks $(aws ecs list-tasks --cluster lauter-cluster --service lauter-backend --query 'taskArns[0]' --output text) \
   --query 'tasks[0].{status:lastStatus,reason:stoppedReason,container:containers[0].reason}'
 
 # Check application logs
-aws logs tail /ecs/tap-backend --since 15m
+aws logs tail /ecs/lauter-backend --since 15m
 ```
 
 Common fixes:
@@ -551,7 +551,7 @@ If empty, complete Step 9d. If files exist, verify the CloudFront OAC is configu
 
 ```bash
 # Verify the trust policy
-aws iam get-role --role-name tap-github-actions-role \
+aws iam get-role --role-name lauter-github-actions-role \
   --query 'Role.AssumeRolePolicyDocument'
 ```
 
@@ -567,8 +567,8 @@ If a previous `terraform apply` was interrupted:
 ```bash
 # Check for lock
 aws dynamodb get-item \
-  --table-name tap-terraform-locks \
-  --key '{"LockID":{"S":"tap-terraform-state-'${ACCOUNT_ID}'/tap/terraform.tfstate"}}'
+  --table-name lauter-terraform-locks \
+  --key '{"LockID":{"S":"lauter-terraform-state-'${ACCOUNT_ID}'/lauter/terraform.tfstate"}}'
 
 # Force unlock (only if you're sure no other apply is running)
 terraform force-unlock <LOCK_ID>
@@ -580,12 +580,12 @@ terraform force-unlock <LOCK_ID>
 
 Verify the redirect URI in Google Cloud Console matches:
 ```
-https://tap-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
+https://lauter-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
 ```
 
-The Cognito hosted UI domain prefix (`tap-auth`) is set by Terraform. Check:
+The Cognito hosted UI domain prefix (`lauter-auth`) is set by Terraform. Check:
 ```bash
 aws cognito-idp describe-user-pool \
-  --user-pool-id $(aws ssm get-parameter --name /tap/poc/cognito/user-pool-id --query 'Parameter.Value' --output text) \
+  --user-pool-id $(aws ssm get-parameter --name /lauter/poc/cognito/user-pool-id --query 'Parameter.Value' --output text) \
   --query 'UserPool.Domain'
 ```
