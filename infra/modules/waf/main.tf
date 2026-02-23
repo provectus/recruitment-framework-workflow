@@ -1,3 +1,22 @@
+# WAF Logging - CloudWatch log groups (name must start with aws-waf-logs-)
+resource "aws_cloudwatch_log_group" "waf_cloudfront" {
+  name              = "aws-waf-logs-${var.project_name}-cloudfront"
+  retention_in_days = 30
+
+  tags = {
+    Name = "aws-waf-logs-${var.project_name}-cloudfront"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "waf_alb" {
+  name              = "aws-waf-logs-${var.project_name}-alb"
+  retention_in_days = 30
+
+  tags = {
+    Name = "aws-waf-logs-${var.project_name}-alb"
+  }
+}
+
 resource "aws_wafv2_web_acl" "cloudfront" {
   name        = "${var.project_name}-${var.environment}-cloudfront-waf"
   description = "WAF for CloudFront distribution"
@@ -170,4 +189,15 @@ resource "aws_wafv2_web_acl" "alb" {
     Name        = "${var.project_name}-${var.environment}-alb-waf"
     Environment = var.environment
   }
+}
+
+# WAF Logging Configurations
+resource "aws_wafv2_web_acl_logging_configuration" "cloudfront" {
+  log_destination_configs = [aws_cloudwatch_log_group.waf_cloudfront.arn]
+  resource_arn            = aws_wafv2_web_acl.cloudfront.arn
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "alb" {
+  log_destination_configs = [aws_cloudwatch_log_group.waf_alb.arn]
+  resource_arn            = aws_wafv2_web_acl.alb.arn
 }
