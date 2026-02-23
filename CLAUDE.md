@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Frontend:** TypeScript, React 19, TanStack Query, TanStack Router, shadcn/ui, Tailwind v4, hey-api for API codegen, Feature-Sliced Design (FSD) architecture
 - **Backend:** Python 3.12+, FastAPI, SQLModel, Alembic migrations, PostgreSQL, asyncpg
-- **Infrastructure:** Docker Compose for local dev, Terraform for cloud (AWS), MinIO for local S3
+- **Infrastructure:** Docker Compose for local dev, Terraform ~1.14 + AWS provider ~6.33 for cloud, MinIO for local S3
 
 ## Debugging & Bug Fixes
 
@@ -90,13 +90,17 @@ cd app/frontend && bun install && bun run dev
 - **MinIO (S3):** API port 9100, console port 9101, user/pass `minioadmin/minioadmin`, bucket `lauter-files`
 - **Backend:** port 8000, hot-reload, reads `app/backend/.env`
 - **Frontend:** port 5173 (Vite default)
+- **minio-init:** auto-creates the `lauter-files` bucket on startup — no manual setup needed
 
 The database runs via Docker Compose on localhost (not the Docker service name). The `.env` should use `localhost` for `DB_HOST` when running the app outside Docker. Always check `.env` configuration when debugging connection issues.
+
+Docker Compose overrides backend env vars (`DEBUG=true`, `DATABASE_URL`, S3 endpoints) — the `.env` file is loaded but compose values take precedence. `S3_PRESIGN_ENDPOINT_URL` (`http://localhost:9100`) is separate from `S3_ENDPOINT_URL` — presigned URLs must resolve from the browser, not from inside the container. `entrypoint.sh` auto-runs `alembic upgrade head` on container start — disable with `APP_RUN_MIGRATIONS=false`.
 
 ### Backend standalone (without Docker)
 ```bash
 cd app/backend
 cp .env.example .env                    # Edit DATABASE_URL to point at your Postgres
+uv sync                                 # Install dependencies
 uv run alembic upgrade head             # Apply migrations
 uv run fastapi dev                      # Start dev server on :8000
 ```
@@ -142,31 +146,80 @@ bun run lint                            # ESLint
 bun run preview                         # Preview production build
 bunx shadcn@latest add <component>      # Add shadcn/ui component
 bun run generate:api                    # Regenerate API client from openapi.json
+bun run generate:api:watch              # Watch running backend and auto-regenerate API client
+```
+
+### Infrastructure (`infra/`)
+
+```bash
+terraform fmt -recursive                                # Format all .tf files
+terraform init                                          # Initialize (state backend must exist first — see infra/ROLLOUT.md)
+terraform validate                                      # Validate config
+terraform plan -var-file="terraform.tfvars"              # Preview changes
+terraform apply -var-file="terraform.tfvars"             # Apply changes
+terraform output                                        # Show outputs (URLs, ARNs)
 ```
 
 ## Conventions
 
 - When creating shell scripts or entrypoint files, always set execute permissions (`chmod +x`) immediately after creating them
 
-## Key Conventions
-
 ### Backend
+
 - **Async everywhere:** all DB operations, routes, and tests use async/await
 - **Config via `.env`:** pydantic-settings `Settings` class in `config.py` — all env vars go through this
-- **Tests use SQLite:** `conftest.py` overrides the DB session with aiosqlite; uses `setup_database` autouse fixture for create/drop per test
-- **Ruff rules:** `F E W I UP B C4 SIM FA ISC ICN RET TC PTH RUF` — line length 88, Python 3.12 target
+- **DB connection: two modes** — full `DATABASE_URL` string OR decomposed `DB_HOST/DB_PORT/DB_NAME/DB_USERNAME/DB_PASSWORD` (used in ECS/prod). If both set, `DATABASE_URL` wins.
+- **Services are plain async functions** (not classes) — all take `session: AsyncSession` as first arg, imported as modules: `from app.services import candidate_service`
+- **Soft delete:** `Candidate` and `Position` use `is_archived: bool` — queries must filter `is_archived == False`
+- **`expire_on_commit=False`** — after `session.commit()`, call `session.refresh(obj)` to pick up server-generated values (timestamps, IDs)
+- **Exception → HTTP mapping is manual** — each router must catch `AppError` subclasses (`NotFoundException` → 404, `ConflictError` → 409, `ValidationError` → 422, `ForbiddenError` → 403). No global handler.
+- **`ValidationError` name collision** — `app.exceptions.ValidationError` shadows pydantic's. Alias if both needed in same file.
+- **Tests use SQLite:** `conftest.py` overrides the DB session with aiosqlite; uses `setup_database` autouse fixture for create/drop per test. Test DB is file-based (`./test.db`) — delete if you see stale data. Postgres-specific SQL (ILIKE, JSON ops) won't work in tests.
+- **`asyncio_mode = "auto"`** in pytest config — no `@pytest.mark.asyncio` needed on tests
+- **Ruff rules:** `F E W I UP B C4 SIM FA ISC ICN RET TC PTH RUF` — line length 88, Python 3.12 target. Ignores `B008` (FastAPI `Depends()` triggers it) and `ISC001`.
 - **Alembic:** async engine, `render_as_batch=True`, file template `YYYY-MM-DD_slug`, models must be imported in `models/__init__.py` for autogenerate to detect them
 - **Router pattern:** each module in `routers/` creates an `APIRouter`, registered in `main.py` via `app.include_router()`
 
+### Auth
+
+- **Cookie-only auth** — no `Authorization: Bearer` header support. Frontend uses httpOnly cookies.
+- **Debug mode skips Cognito entirely** — only dev-login (`POST /api/auth/dev-login`) works when `DEBUG=true`
+- **`COOKIE_SECURE=false`** required for local HTTP dev (defaults `true`)
+- **`ALLOWED_EMAIL_DOMAIN=provectus.com`** — hard-coded default restricts login to `@provectus.com` emails
+- **Dev-login endpoint returns 404 (not 403)** in production — intentionally hidden
+
 ### Frontend
+
 - **Path alias:** `@/` maps to `src/` (configured in vite.config.ts and tsconfig)
 - **Routing:** file-based via TanStack Router — add routes as files under `src/routes/`, `routeTree.gen.ts` is auto-generated (do not edit manually)
-- **UI components:** shadcn/ui with `components.json` config (rsc: false, baseColor: slate, cssVariables: true)
-- **Package manager:** bun (not npm/yarn)
-- **API client:** auto-generated via `@hey-api/openapi-ts` from `openapi.json` → `src/shared/api/`. Do not edit `shared/api/` manually.
-- **Layout:** features/ (domain logic), widgets/ (composite UI), shared/ (api, lib, ui components)
+- **UI components:** shadcn/ui with `components.json` config (rsc: false, baseColor: slate, cssVariables: true). Components install to `src/shared/ui/` — aliases configured in `components.json`
+- **Package manager:** bun (not npm/yarn). CI uses `bun install --frozen-lockfile` — commit `bun.lock` after adding/updating deps.
+- **API client:** auto-generated via `@hey-api/openapi-ts` from `openapi.json` → `src/shared/api/`. Uses axios (`@hey-api/client-axios`), not fetch. `src/shared/api/` is ESLint-ignored — never edit manually, always regenerate.
+- **Layout:** features/ (hooks-only domain logic: `features/{domain}/hooks/use-{noun}.ts`), widgets/ (composite UI), shared/ (api, lib, ui components)
 - **Data fetching:** TanStack React Query with generated query/mutation options from the API client
 - **Forms:** react-hook-form + zod validation
+- **No `enum` keyword** — `erasableSyntaxOnly: true` in tsconfig; use `as const` objects instead
+- **Type imports must use `import type`** — `verbatimModuleSyntax: true` enforced
+- **Unused vars/params break the build** — `noUnusedLocals` + `noUnusedParameters` are `true`
+- **Tailwind v4 CSS-only config** — no `tailwind.config.ts`; theme customization in `src/index.css` via `@theme inline {}`
+
+### Infrastructure
+
+- **Project name in infra is `lauter`** — all AWS resources prefixed `lauter-*` (cluster, service, ECR, SSM paths)
+- **Terraform ~1.14.5 + AWS provider ~6.33** — no TLS provider; OIDC thumbprint managed by AWS server-side
+- **`default_tags`** at provider level sets `Project`, `Environment`, `ManagedBy` — do NOT add these in per-resource `tags` blocks (only `Name` + functional tags like `Type`)
+- **State backend is manual** — S3 bucket + DynamoDB table must be created before `terraform init` (see `infra/ROLLOUT.md`)
+- **`terraform.tfvars` is gitignored** — copy from `terraform.tfvars.example`, never commit
+- **ECS images use `:latest` tag** — no versioned pinning; deploy workflow builds and pushes `latest`
+- **CPU architecture: X86_64** — must use `--platform linux/amd64` when building on Apple Silicon
+- **Migrations run as separate ECS task** before service update in deploy workflow
+- **CloudFront managed policies** referenced via `data` sources, not hardcoded UUIDs
+- **WAF log group names** must start with `aws-waf-logs-` (AWS requirement)
+- **RDS:** force_ssl enabled, Performance Insights on, `pg_stat_statements` preloaded
+- **S3 lifecycle rules:** files bucket (IA 90d, Glacier 365d), SPA (noncurrent 7d), logs buckets (expire 90d)
+- **`infra/ROLLOUT.md`** — cloud environment rollout runbook (state backend, Bedrock enablement, domain config)
+- **`infra/REVIEW.md`** — summary of infrastructure review changes (25 commits, 3 phases)
+- **Environment values:** `poc`, `dev`, `staging`, `prod` — deletion protection and final snapshots are prod-only
 
 ## CI/CD Workflows (`.github/workflows/`)
 
