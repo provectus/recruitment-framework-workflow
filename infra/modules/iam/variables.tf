@@ -73,6 +73,12 @@ variable "cloudfront_distribution_arn" {
   type        = string
 }
 
+variable "github_actions_branch_pattern" {
+  description = "OIDC subject claim pattern for GitHub Actions (e.g., 'ref:refs/heads/main' or '*')"
+  type        = string
+  default     = "ref:refs/heads/main"
+}
+
 variable "enable_bedrock" {
   description = "Whether to attach Bedrock InvokeModel IAM policy to the ECS task role"
   type        = bool
