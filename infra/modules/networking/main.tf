@@ -13,9 +13,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name        = "${var.project_name}-vpc"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-vpc"
   }
 }
 
@@ -24,9 +22,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = "${var.project_name}-igw"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-igw"
   }
 }
 
@@ -39,10 +35,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name        = "${var.project_name}-public-subnet-${count.index + 1}"
-    Project     = var.project_name
-    Environment = var.environment
-    Type        = "public"
+    Name = "${var.project_name}-public-subnet-${count.index + 1}"
+    Type = "public"
   }
 }
 
@@ -54,10 +48,8 @@ resource "aws_subnet" "private" {
   availability_zone = local.azs[count.index]
 
   tags = {
-    Name        = "${var.project_name}-private-subnet-${count.index + 1}"
-    Project     = var.project_name
-    Environment = var.environment
-    Type        = "private"
+    Name = "${var.project_name}-private-subnet-${count.index + 1}"
+    Type = "private"
   }
 }
 
@@ -66,9 +58,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name        = "${var.project_name}-nat-eip"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-nat-eip"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -80,9 +70,7 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name        = "${var.project_name}-nat-gateway"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-nat-gateway"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -93,10 +81,8 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = "${var.project_name}-public-rt"
-    Project     = var.project_name
-    Environment = var.environment
-    Type        = "public"
+    Name = "${var.project_name}-public-rt"
+    Type = "public"
   }
 }
 
@@ -119,10 +105,8 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name        = "${var.project_name}-private-rt"
-    Project     = var.project_name
-    Environment = var.environment
-    Type        = "private"
+    Name = "${var.project_name}-private-rt"
+    Type = "private"
   }
 }
 
@@ -171,9 +155,7 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name        = "${var.project_name}-alb-sg"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-alb-sg"
   }
 }
 
@@ -200,9 +182,7 @@ resource "aws_security_group" "ecs" {
   }
 
   tags = {
-    Name        = "${var.project_name}-ecs-sg"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-ecs-sg"
   }
 }
 
@@ -221,9 +201,7 @@ resource "aws_security_group" "rds" {
   }
 
   tags = {
-    Name        = "${var.project_name}-rds-sg"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-rds-sg"
   }
 }
 

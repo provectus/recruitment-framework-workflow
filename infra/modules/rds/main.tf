@@ -3,9 +3,7 @@ resource "aws_db_subnet_group" "this" {
   subnet_ids = var.private_subnet_ids
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-db-subnet-group"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-${var.environment}-db-subnet-group"
   }
 }
 
@@ -35,9 +33,7 @@ resource "aws_db_parameter_group" "this" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-postgres16"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-${var.environment}-postgres16"
   }
 }
 
@@ -76,8 +72,6 @@ resource "aws_db_instance" "this" {
   max_allocated_storage                 = var.max_allocated_storage
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-db"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-${var.environment}-db"
   }
 }

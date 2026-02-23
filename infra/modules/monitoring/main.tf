@@ -5,9 +5,7 @@ resource "aws_sns_topic" "alerts" {
   name = "${var.project_name}-alerts"
 
   tags = {
-    Name        = "${var.project_name}-alerts"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-alerts"
   }
 }
 
@@ -17,9 +15,7 @@ resource "aws_s3_bucket" "alb_logs" {
   force_destroy = false
 
   tags = {
-    Name        = "${var.project_name}-alb-logs"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-alb-logs"
   }
 }
 
@@ -120,9 +116,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_unhealthy_hosts" {
   ok_actions    = [aws_sns_topic.alerts.arn]
 
   tags = {
-    Name        = "${var.project_name}-ecs-unhealthy-hosts"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-ecs-unhealthy-hosts"
   }
 }
 
@@ -147,9 +141,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_high_cpu" {
   ok_actions    = [aws_sns_topic.alerts.arn]
 
   tags = {
-    Name        = "${var.project_name}-rds-high-cpu"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-rds-high-cpu"
   }
 }
 

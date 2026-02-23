@@ -5,9 +5,7 @@ resource "aws_s3_bucket" "spa" {
   bucket = "${var.project_name}-spa-${data.aws_caller_identity.current.account_id}"
 
   tags = {
-    Name        = "${var.project_name}-spa"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-spa"
   }
 }
 
@@ -82,9 +80,7 @@ resource "aws_s3_bucket" "files" {
   bucket = "${var.project_name}-files-${data.aws_caller_identity.current.account_id}"
 
   tags = {
-    Name        = "${var.project_name}-files"
-    Project     = var.project_name
-    Environment = var.environment
+    Name = "${var.project_name}-files"
   }
 }
 
