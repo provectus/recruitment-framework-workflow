@@ -215,7 +215,7 @@ export function DocumentViewer({
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground mt-3">
               <div className="flex items-center gap-1.5">
                 <CalendarIcon className="h-4 w-4" />
-                <span>Uploaded {formatDateTime(document.created_at)}</span>
+                <span className="font-mono tabular-nums">Uploaded {formatDateTime(document.created_at)}</span>
               </div>
 
               {document.uploaded_by_name && (
@@ -242,7 +242,7 @@ export function DocumentViewer({
               {isTranscript && document.interview_date && (
                 <div className="flex items-center gap-1.5">
                   <ClockIcon className="h-4 w-4" />
-                  <span>
+                  <span className="font-mono tabular-nums">
                     Interview: {formatDateTime(document.interview_date)}
                   </span>
                 </div>

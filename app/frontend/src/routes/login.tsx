@@ -30,8 +30,8 @@ function Login() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-10 w-full max-w-sm px-6">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-4xl font-extrabold tracking-tight">Lauter</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-5xl font-extrabold tracking-tighter">Lauter</h1>
+          <p className="uppercase tracking-widest text-xs text-muted-foreground">
             Recruitment workflow automation
           </p>
         </div>
@@ -45,7 +45,7 @@ function Login() {
           </Alert>
         )}
 
-        <Button onClick={handleGoogleSignIn} size="lg" className="w-full gap-2 shadow-soft-sm hover:shadow-soft-md">
+        <Button onClick={handleGoogleSignIn} size="lg" className="w-full gap-2">
           <svg
             className="h-5 w-5"
             viewBox="0 0 24 24"

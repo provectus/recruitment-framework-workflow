@@ -1,4 +1,5 @@
 import React from "react";
+import { FileText, Upload } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import {
@@ -58,8 +59,15 @@ export function DocumentList({
 
   if (!documents || documents.length === 0) {
     return (
-      <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-        No documents uploaded yet. Upload a CV or transcript to get started.
+      <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+        <div className="relative inline-flex items-center justify-center">
+          <FileText className="size-12 text-muted-foreground/30" />
+          <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+            <Upload className="size-4 text-primary" />
+          </div>
+        </div>
+        <p className="text-sm font-medium">No documents yet</p>
+        <p className="text-sm text-muted-foreground">Upload documents to get started.</p>
       </div>
     );
   }
@@ -141,7 +149,7 @@ export function DocumentList({
           )}
         </div>
       </TableCell>
-      <TableCell className="text-muted-foreground">
+      <TableCell className="text-muted-foreground font-mono tabular-nums">
         {document.type === "transcript" && document.interview_date
           ? formatDate(document.interview_date)
           : formatDate(document.created_at)}
@@ -180,7 +188,7 @@ export function DocumentList({
     const sortedStages = Array.from(transcriptsByStage.keys()).sort();
 
     return (
-      <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
+      <div className="border border-border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -215,7 +223,7 @@ export function DocumentList({
 
   if (!shouldGroupByPosition) {
     return (
-      <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
+      <div className="border border-border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -268,7 +276,7 @@ export function DocumentList({
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground font-mono tabular-nums">
                   {document.type === "transcript" && document.interview_date
                     ? formatDate(document.interview_date)
                     : formatDate(document.created_at)}

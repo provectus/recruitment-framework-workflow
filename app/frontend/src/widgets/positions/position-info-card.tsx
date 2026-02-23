@@ -138,7 +138,7 @@ export function PositionInfoCard({
   return (
     <Card>
       <CardContent className="pt-6 pb-0">
-        <div className="divide-y divide-border/40">
+        <div className="divide-y divide-border">
           {fields.map(({ name, label, value, type }) => (
             <div
               key={name}

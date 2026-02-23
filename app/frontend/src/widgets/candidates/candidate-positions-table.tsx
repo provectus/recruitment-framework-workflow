@@ -118,7 +118,7 @@ export function CandidatePositionsTable({
       {stageError && (
         <p className="text-sm text-destructive mb-2">{stageError}</p>
       )}
-      <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
+      <div className="border border-border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>

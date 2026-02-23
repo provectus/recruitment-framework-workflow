@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { Users, TrendingUp } from "lucide-react";
 import { useDashboardStats } from "@/features/dashboard";
 import { formatStage } from "@/shared/lib/stage-utils";
 import { Button } from "@/shared/ui/button";
@@ -12,10 +12,10 @@ import {
 import { Skeleton } from "@/shared/ui/skeleton";
 
 const STAGE_COLORS: Record<string, string> = {
-  new: "bg-slate-500",
-  screening: "bg-blue-500",
-  technical: "bg-violet-500",
-  offer: "bg-amber-500",
+  new: "bg-stone-400",
+  screening: "bg-amber-500",
+  technical: "bg-orange-500",
+  offer: "bg-yellow-500",
   hired: "bg-emerald-500",
   rejected: "bg-red-500",
 };
@@ -41,16 +41,21 @@ export function CandidatesPipeline() {
             <div key={item.stage} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-2 w-2 rounded-full ${STAGE_COLORS[item.stage] ?? "bg-slate-400"}`}
+                  className={`h-2 w-2 rounded-full ${STAGE_COLORS[item.stage] ?? "bg-stone-400"}`}
                 />
                 <span className="text-sm">{formatStage(item.stage)}</span>
               </div>
-              <span className="text-sm font-medium">{item.count}</span>
+              <span className="text-sm font-medium font-mono tabular-nums">{item.count}</span>
             </div>
           ))
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">
-            <Users className="h-8 w-8 text-muted-foreground" />
+            <div className="relative inline-flex items-center justify-center">
+              <Users className="size-10 text-muted-foreground/30" />
+              <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+                <TrendingUp className="size-3.5 text-primary" />
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground">No candidates yet</p>
             <Button
               variant="outline"

@@ -301,7 +301,7 @@ function PositionsPage() {
         </div>
       ) : positions && positions.items.length > 0 ? (
         <>
-        <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -332,7 +332,7 @@ function PositionsPage() {
                       {formatStatus(position.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-mono tabular-nums">
                     {position.candidate_count}
                   </TableCell>
                 </TableRow>
@@ -385,7 +385,12 @@ function PositionsPage() {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Briefcase className="h-10 w-10 text-muted-foreground/50 mb-4" />
+          <div className="relative inline-flex items-center justify-center mb-4">
+            <Briefcase className="size-12 text-muted-foreground/30" />
+            <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+              <Plus className="size-4 text-primary" />
+            </div>
+          </div>
           {hasActiveFilters ? (
             <>
               <h3 className="text-base font-semibold tracking-tight mb-2">No matches found</h3>
@@ -401,7 +406,7 @@ function PositionsPage() {
             <>
               <h3 className="text-base font-semibold tracking-tight mb-2">No positions yet</h3>
               <p className="text-muted-foreground max-w-xs mb-4">
-                Create your first position to start tracking candidates.
+                Create a position to start tracking candidates.
               </p>
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />

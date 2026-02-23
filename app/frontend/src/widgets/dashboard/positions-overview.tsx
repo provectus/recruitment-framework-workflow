@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Plus } from "lucide-react";
 import { useDashboardStats } from "@/features/dashboard";
 import { formatStatus, getStatusVariant } from "@/shared/lib/stage-utils";
 import { Badge } from "@/shared/ui/badge";
@@ -46,7 +46,7 @@ export function PositionsOverview() {
                 <Badge variant={getStatusVariant(position.status)}>
                   {formatStatus(position.status)}
                 </Badge>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground font-mono tabular-nums">
                   {position.candidate_count} candidate{position.candidate_count !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -54,7 +54,12 @@ export function PositionsOverview() {
           ))
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">
-            <Briefcase className="h-8 w-8 text-muted-foreground" />
+            <div className="relative inline-flex items-center justify-center">
+              <Briefcase className="size-10 text-muted-foreground/30" />
+              <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+                <Plus className="size-3.5 text-primary" />
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground">No positions yet</p>
             <Button
               variant="outline"

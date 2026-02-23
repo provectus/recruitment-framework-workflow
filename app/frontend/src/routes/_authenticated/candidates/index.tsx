@@ -315,7 +315,7 @@ function CandidatesPage() {
         </div>
       ) : candidates && candidates.items.length > 0 ? (
         <>
-        <div className="border border-border/50 rounded-xl shadow-soft-xs overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
@@ -389,7 +389,7 @@ function CandidatesPage() {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="font-mono tabular-nums">
                     {new Date(candidate.updated_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
@@ -442,7 +442,12 @@ function CandidatesPage() {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Users className="h-10 w-10 text-muted-foreground/50 mb-4" />
+          <div className="relative inline-flex items-center justify-center mb-4">
+            <Users className="size-12 text-muted-foreground/30" />
+            <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+              <Plus className="size-4 text-primary" />
+            </div>
+          </div>
           {hasActiveFilters ? (
             <>
               <h3 className="text-base font-semibold tracking-tight mb-2">No matches found</h3>
@@ -460,7 +465,7 @@ function CandidatesPage() {
                 No candidates yet
               </h3>
               <p className="text-muted-foreground max-w-xs mb-4">
-                Add your first candidate to start tracking applications.
+                Add your first candidate to get started.
               </p>
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />

@@ -142,7 +142,7 @@ function SettingsPage() {
             {teams.map((team) => (
               <div
                 key={team.id}
-                className="flex items-center justify-between p-4 border rounded-xl shadow-soft-xs"
+                className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <span className="font-medium">{team.name}</span>
                 <Button

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Clock } from "lucide-react";
+import { Clock, UserPlus } from "lucide-react";
 import { useDashboardStats } from "@/features/dashboard";
 import { formatStage, getStageVariant } from "@/shared/lib/stage-utils";
 import { Badge } from "@/shared/ui/badge";
@@ -48,7 +48,7 @@ export function RecentActivity() {
                     {formatStage(candidate.stage)}
                   </Badge>
                 )}
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground font-mono tabular-nums">
                   {new Date(candidate.updated_at).toLocaleDateString()}
                 </span>
               </div>
@@ -56,7 +56,12 @@ export function RecentActivity() {
           ))
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">
-            <Clock className="h-8 w-8 text-muted-foreground" />
+            <div className="relative inline-flex items-center justify-center">
+              <Clock className="size-10 text-muted-foreground/30" />
+              <div className="absolute -bottom-1.5 -right-1.5 rounded-full bg-card p-1">
+                <UserPlus className="size-3.5 text-primary" />
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground">No recent activity</p>
             <Button
               variant="outline"

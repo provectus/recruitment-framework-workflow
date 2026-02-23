@@ -42,7 +42,7 @@ export function HowItWorksStep({ onNext, onBack }: HowItWorksStepProps) {
       <div className="space-y-2">
         {WORKFLOW_STEPS.map((step, index) => (
           <div key={step.label}>
-            <div className="flex items-center gap-3 rounded-lg border border-border/50 p-3">
+            <div className="flex items-center gap-3 rounded-lg border border-border p-3">
               <div className="rounded-lg bg-primary/10 p-2 shrink-0">
                 <step.icon className="h-5 w-5 text-primary" />
               </div>
