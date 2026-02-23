@@ -291,8 +291,7 @@ resource "aws_iam_role_policy" "github_actions_ecs" {
         Effect = "Allow"
         Action = [
           "ecs:ListTasks",
-          "ecs:DescribeTasks",
-          "ecs:StopTask"
+          "ecs:DescribeTasks"
         ]
         Resource = "*"
         Condition = {
