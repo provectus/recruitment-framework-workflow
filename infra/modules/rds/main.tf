@@ -18,6 +18,22 @@ resource "aws_db_parameter_group" "this" {
     value = "1"
   }
 
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "1000"
+  }
+
+  parameter {
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "pg_stat_statements.track"
+    value = "all"
+  }
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-postgres16"
     Project     = var.project_name
