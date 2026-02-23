@@ -23,6 +23,16 @@ variable "db_instance_id" {
   type        = string
 }
 
+variable "ecs_cluster_name" {
+  description = "ECS cluster name for CloudWatch alarm dimensions"
+  type        = string
+}
+
+variable "ecs_service_name" {
+  description = "ECS service name for CloudWatch alarm dimensions"
+  type        = string
+}
+
 variable "alert_email" {
   description = "Email address for SNS alarm notifications (empty = no subscription)"
   type        = string
