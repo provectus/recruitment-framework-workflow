@@ -38,6 +38,21 @@ resource "aws_s3_bucket_public_access_block" "spa" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "spa" {
+  bucket = aws_s3_bucket.spa.id
+
+  rule {
+    id     = "expire-noncurrent-versions"
+    status = "Enabled"
+
+    filter {}
+
+    noncurrent_version_expiration {
+      noncurrent_days = 7
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "spa_cloudfront_oac" {
   count  = var.cloudfront_distribution_arn != "" ? 1 : 0
   bucket = aws_s3_bucket.spa.id
@@ -98,6 +113,31 @@ resource "aws_s3_bucket_public_access_block" "files" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "files" {
+  bucket = aws_s3_bucket.files.id
+
+  rule {
+    id     = "transition-to-ia"
+    status = "Enabled"
+
+    filter {}
+
+    transition {
+      days          = 90
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 365
+      storage_class = "GLACIER"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "files_deny_insecure" {
