@@ -135,6 +135,24 @@ variable "allowed_email_domain" {
   default     = "provectus.com"
 }
 
+variable "task_cpu" {
+  description = "CPU units for the ECS task (256, 512, 1024, 2048, 4096)"
+  type        = string
+  default     = "256"
+}
+
+variable "task_memory" {
+  description = "Memory in MiB for the ECS task"
+  type        = string
+  default     = "512"
+}
+
+variable "image_tag" {
+  description = "Docker image tag for the backend container"
+  type        = string
+  default     = "latest"
+}
+
 variable "autoscaling_min_capacity" {
   description = "Minimum number of ECS tasks"
   type        = number
