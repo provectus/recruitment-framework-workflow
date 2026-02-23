@@ -13,6 +13,11 @@ resource "aws_db_parameter_group" "this" {
   name   = "${var.project_name}-${var.environment}-postgres16"
   family = "postgres16"
 
+  parameter {
+    name  = "rds.force_ssl"
+    value = "1"
+  }
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-postgres16"
     Project     = var.project_name

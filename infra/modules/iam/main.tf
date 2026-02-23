@@ -166,40 +166,6 @@ resource "aws_iam_role_policy" "ecs_task_bedrock" {
   })
 }
 
-resource "aws_iam_role_policy" "ecs_task_secrets" {
-  name = "${var.project_name}-ecs-task-secrets-policy"
-  role = aws_iam_role.ecs_task.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = [
-          var.db_secret_arn,
-          var.cognito_client_secret_arn,
-          var.jwt_secret_key_arn
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters"
-        ]
-        Resource = [
-          var.cognito_user_pool_id_ssm_arn,
-          var.cognito_client_id_ssm_arn,
-          var.cognito_domain_ssm_arn
-        ]
-      }
-    ]
-  })
-}
-
 # GitHub Actions Role - used for CI/CD deployments
 resource "aws_iam_role" "github_actions" {
   name = "${var.project_name}-github-actions-role"
