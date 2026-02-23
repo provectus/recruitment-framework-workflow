@@ -48,6 +48,12 @@ variable "engine_version" {
   default     = "16"
 }
 
+variable "max_allocated_storage" {
+  description = "Maximum storage in GB for autoscaling (0 to disable)"
+  type        = number
+  default     = 100
+}
+
 variable "multi_az" {
   description = "Enable Multi-AZ deployment for RDS"
   type        = bool

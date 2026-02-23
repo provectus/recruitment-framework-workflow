@@ -54,6 +54,11 @@ resource "aws_db_instance" "this" {
   apply_immediately     = var.environment != "prod"
   copy_tags_to_snapshot = true
 
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 7
+  enabled_cloudwatch_logs_exports       = ["postgresql", "upgrade"]
+  max_allocated_storage                 = var.max_allocated_storage
+
   tags = {
     Name        = "${var.project_name}-${var.environment}-db"
     Project     = var.project_name
