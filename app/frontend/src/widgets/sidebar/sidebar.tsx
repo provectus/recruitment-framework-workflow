@@ -36,7 +36,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "border-r border-border/30 bg-sidebar transition-all duration-300 ease-out flex flex-col",
+        "border-r border-border bg-sidebar transition-all duration-200 ease-out flex flex-col",
         collapsed ? "w-16" : "w-60"
       )}
     >
@@ -61,7 +61,7 @@ export function Sidebar() {
                       "w-full justify-start text-muted-foreground hover:text-foreground transition-colors",
                       collapsed ? "px-2" : "px-3",
                       (isActive || linkActive) &&
-                        "bg-primary/8 text-primary font-semibold"
+                        "bg-primary/10 text-primary font-semibold"
                     )}
                   >
                     <Icon className={cn("h-5 w-5", !collapsed && "mr-3")} />

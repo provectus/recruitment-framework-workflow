@@ -13,7 +13,7 @@ function RootLayout() {
   return (
     <>
       <div className="min-h-screen">
-        <header className="sticky top-0 z-40 border-b border-border/40 px-6 py-3 flex items-center justify-between bg-background/80 backdrop-blur-md">
+        <header className="sticky top-0 z-40 border-b border-border px-6 py-3 flex items-center justify-between bg-background">
           <span className="text-lg font-bold tracking-tight">Lauter</span>
           {isAuthenticated && <UserMenu />}
         </header>
