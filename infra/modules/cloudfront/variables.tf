@@ -34,6 +34,12 @@ variable "web_acl_arn" {
   default     = ""
 }
 
+variable "access_logs_bucket_domain_name" {
+  description = "Domain name of the S3 bucket for CloudFront access logs"
+  type        = string
+  default     = ""
+}
+
 variable "alb_domain_name" {
   description = "DNS name of the ALB for API origin"
   type        = string

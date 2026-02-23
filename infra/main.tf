@@ -80,6 +80,7 @@ module "cloudfront" {
   certificate_arn                 = module.acm.certificate_arn
   web_acl_arn                     = module.waf.cloudfront_web_acl_arn
   alb_domain_name                 = module.ecs.alb_dns_name
+  access_logs_bucket_domain_name  = module.s3.cloudfront_logs_bucket_domain_name
 }
 
 # IAM Module - Roles and permissions for ECS, GitHub Actions, and OIDC

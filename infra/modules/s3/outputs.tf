@@ -22,3 +22,8 @@ output "files_bucket_arn" {
   description = "Files bucket ARN"
   value       = aws_s3_bucket.files.arn
 }
+
+output "cloudfront_logs_bucket_domain_name" {
+  description = "Domain name of the CloudFront access logs bucket"
+  value       = aws_s3_bucket.cloudfront_logs.bucket_domain_name
+}

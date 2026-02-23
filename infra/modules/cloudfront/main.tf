@@ -118,6 +118,15 @@ resource "aws_cloudfront_distribution" "spa" {
     error_caching_min_ttl = 10
   }
 
+  dynamic "logging_config" {
+    for_each = var.access_logs_bucket_domain_name != "" ? [1] : []
+    content {
+      bucket          = var.access_logs_bucket_domain_name
+      include_cookies = false
+      prefix          = "cf-logs/"
+    }
+  }
+
   restrictions {
     geo_restriction {
       restriction_type = "none"
