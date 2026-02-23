@@ -14,7 +14,7 @@ resource "aws_sns_topic" "alerts" {
 # S3 Bucket for ALB access logs
 resource "aws_s3_bucket" "alb_logs" {
   bucket        = "${var.project_name}-alb-logs-${data.aws_caller_identity.current.account_id}"
-  force_destroy = true
+  force_destroy = false
 
   tags = {
     Name        = "${var.project_name}-alb-logs"
