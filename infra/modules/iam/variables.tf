@@ -79,6 +79,12 @@ variable "github_actions_branch_pattern" {
   default     = "ref:refs/heads/main"
 }
 
+variable "enable_ecs_exec" {
+  description = "Whether to attach SSM permissions for ECS Exec on the task role"
+  type        = bool
+  default     = false
+}
+
 variable "enable_bedrock" {
   description = "Whether to attach Bedrock InvokeModel IAM policy to the ECS task role"
   type        = bool

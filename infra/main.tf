@@ -102,6 +102,7 @@ module "iam" {
   ecs_service_arn              = module.ecs.service_arn
   cloudfront_distribution_arn  = module.cloudfront.distribution_arn
   enable_bedrock               = var.enable_bedrock
+  enable_ecs_exec              = var.environment != "prod"
 }
 
 # Cognito Module - User Pool with Google OAuth federation

@@ -147,6 +147,28 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
   })
 }
 
+resource "aws_iam_role_policy" "ecs_task_exec" {
+  count = var.enable_ecs_exec ? 1 : 0
+  name  = "${var.project_name}-ecs-task-exec-policy"
+  role  = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "ecs_task_bedrock" {
   count = var.enable_bedrock ? 1 : 0
   name  = "${var.project_name}-ecs-task-bedrock-policy"
