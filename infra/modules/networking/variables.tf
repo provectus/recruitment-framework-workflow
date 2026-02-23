@@ -42,12 +42,7 @@ variable "private_subnet_cidrs" {
 }
 
 variable "availability_zones" {
-  description = "List of availability zones for subnet placement"
+  description = "List of availability zones for subnet placement. If null, auto-selects first 2 available AZs in the region."
   type        = list(string)
-  default     = ["us-east-1a", "us-east-1b"]
-
-  validation {
-    condition     = length(var.availability_zones) >= 2
-    error_message = "At least 2 availability zones are required for high availability."
-  }
+  default     = null
 }
