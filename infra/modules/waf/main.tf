@@ -92,6 +92,28 @@ resource "aws_wafv2_web_acl" "cloudfront" {
     }
   }
 
+  rule {
+    name     = "AWSManagedRulesAmazonIpReputationList"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesAmazonIpReputationList"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-${var.environment}-cloudfront-ip-reputation"
+      sampled_requests_enabled   = true
+    }
+  }
+
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "${var.project_name}-${var.environment}-cloudfront-waf"
@@ -175,6 +197,50 @@ resource "aws_wafv2_web_acl" "alb" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${var.project_name}-${var.environment}-alb-rate-limit"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesAmazonIpReputationList"
+    priority = 4
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesAmazonIpReputationList"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-${var.environment}-alb-ip-reputation"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "AWSManagedRulesSQLiRuleSet"
+    priority = 5
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesSQLiRuleSet"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-${var.environment}-alb-sqli"
       sampled_requests_enabled   = true
     }
   }
