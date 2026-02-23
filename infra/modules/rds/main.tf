@@ -6,7 +6,6 @@ resource "aws_db_subnet_group" "this" {
     Name        = "${var.project_name}-${var.environment}-db-subnet-group"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -18,7 +17,6 @@ resource "aws_db_parameter_group" "this" {
     Name        = "${var.project_name}-${var.environment}-postgres16"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -55,6 +53,5 @@ resource "aws_db_instance" "this" {
     Name        = "${var.project_name}-${var.environment}-db"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }

@@ -8,7 +8,6 @@ resource "aws_s3_bucket" "spa" {
     Name        = "${var.project_name}-spa"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -71,7 +70,6 @@ resource "aws_s3_bucket" "files" {
     Name        = "${var.project_name}-files"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 

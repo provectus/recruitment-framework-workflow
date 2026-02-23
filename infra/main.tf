@@ -109,6 +109,7 @@ module "cognito" {
   source = "./modules/cognito"
 
   project_name         = var.project_name
+  environment          = var.environment
   domain               = var.domain
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret

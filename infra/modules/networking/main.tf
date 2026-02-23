@@ -8,7 +8,6 @@ resource "aws_vpc" "main" {
     Name        = "${var.project_name}-vpc"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -20,7 +19,6 @@ resource "aws_internet_gateway" "main" {
     Name        = "${var.project_name}-igw"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -36,7 +34,6 @@ resource "aws_subnet" "public" {
     Name        = "${var.project_name}-public-subnet-${count.index + 1}"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
     Type        = "public"
   }
 }
@@ -52,7 +49,6 @@ resource "aws_subnet" "private" {
     Name        = "${var.project_name}-private-subnet-${count.index + 1}"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
     Type        = "private"
   }
 }
@@ -65,7 +61,6 @@ resource "aws_eip" "nat" {
     Name        = "${var.project_name}-nat-eip"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -80,7 +75,6 @@ resource "aws_nat_gateway" "main" {
     Name        = "${var.project_name}-nat-gateway"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -94,7 +88,6 @@ resource "aws_route_table" "public" {
     Name        = "${var.project_name}-public-rt"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
     Type        = "public"
   }
 }
@@ -121,7 +114,6 @@ resource "aws_route_table" "private" {
     Name        = "${var.project_name}-private-rt"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
     Type        = "private"
   }
 }
@@ -174,7 +166,6 @@ resource "aws_security_group" "alb" {
     Name        = "${var.project_name}-alb-sg"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -204,7 +195,6 @@ resource "aws_security_group" "ecs" {
     Name        = "${var.project_name}-ecs-sg"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -226,6 +216,5 @@ resource "aws_security_group" "rds" {
     Name        = "${var.project_name}-rds-sg"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }

@@ -16,7 +16,6 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
     Name        = "${var.project_name}-github-oidc-provider"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -41,7 +40,6 @@ resource "aws_iam_role" "ecs_execution" {
     Name        = "${var.project_name}-ecs-execution-role"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -119,7 +117,6 @@ resource "aws_iam_role" "ecs_task" {
     Name        = "${var.project_name}-ecs-task-role"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -232,7 +229,6 @@ resource "aws_iam_role" "github_actions" {
     Name        = "${var.project_name}-github-actions-role"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
@@ -390,7 +386,6 @@ resource "aws_ecr_repository" "backend" {
     Name        = "${var.project_name}-backend"
     Project     = var.project_name
     Environment = var.environment
-    ManagedBy   = "terraform"
   }
 }
 
