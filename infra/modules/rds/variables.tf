@@ -36,6 +36,12 @@ variable "db_name" {
   default     = "lauter"
 }
 
+variable "db_username" {
+  description = "Master username for the RDS PostgreSQL instance"
+  type        = string
+  default     = "lauter_admin"
+}
+
 variable "engine_version" {
   description = "PostgreSQL engine version"
   type        = string

@@ -59,6 +59,24 @@ variable "jwt_secret_key_arn" {
   sensitive   = true
 }
 
+variable "db_name" {
+  description = "Name of the PostgreSQL database"
+  type        = string
+  default     = "lauter"
+}
+
+variable "db_username" {
+  description = "Master username for the RDS PostgreSQL instance"
+  type        = string
+  default     = "lauter_admin"
+}
+
+variable "allowed_email_domain" {
+  description = "Email domain allowed for user authentication (e.g., provectus.com)"
+  type        = string
+  default     = "provectus.com"
+}
+
 variable "enable_bedrock" {
   description = "Enable Bedrock AI model access for ECS tasks (Phase 2 feature)"
   type        = bool

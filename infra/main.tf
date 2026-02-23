@@ -46,6 +46,8 @@ module "rds" {
   environment           = var.environment
   private_subnet_ids    = module.networking.private_subnet_ids
   rds_security_group_id = module.networking.rds_security_group_id
+  db_name               = var.db_name
+  db_username           = var.db_username
 }
 
 # S3 Module - Storage buckets for SPA and files
@@ -139,8 +141,8 @@ module "ecs" {
   db_secret_arn                = module.rds.db_master_secret_arn
   db_host                      = module.rds.db_instance_address
   db_port                      = module.rds.db_instance_port
-  db_name                      = "lauter"
-  db_username                  = "lauter_admin"
+  db_name                      = var.db_name
+  db_username                  = var.db_username
   cognito_user_pool_id_ssm_arn = module.cognito.ssm_user_pool_id_arn
   cognito_client_id_ssm_arn    = module.cognito.ssm_client_id_arn
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
@@ -148,7 +150,7 @@ module "ecs" {
   jwt_secret_key_arn           = var.jwt_secret_key_arn
   cognito_redirect_uri         = "https://${var.domain}/api/auth/callback"
   files_bucket_name            = module.s3.files_bucket_id
-  allowed_email_domain         = "provectus.com"
+  allowed_email_domain         = var.allowed_email_domain
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
 }
 
