@@ -1,8 +1,6 @@
 # GitHub OIDC Provider for GitHub Actions authentication
-data "tls_certificate" "github_actions" {
-  url = "https://token.actions.githubusercontent.com"
-}
-
+# AWS manages the thumbprint for GitHub Actions OIDC server-side;
+# the client-provided value is ignored but the field is required.
 resource "aws_iam_openid_connect_provider" "github_actions" {
   url = "https://token.actions.githubusercontent.com"
 
@@ -11,7 +9,7 @@ resource "aws_iam_openid_connect_provider" "github_actions" {
   ]
 
   thumbprint_list = [
-    data.tls_certificate.github_actions.certificates[0].sha1_fingerprint
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   ]
 
   tags = {

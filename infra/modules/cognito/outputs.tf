@@ -15,7 +15,7 @@ output "client_id" {
 
 output "user_pool_domain" {
   description = "Full Cognito Hosted UI domain URL"
-  value       = "https://${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
+  value       = "https://${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.region}.amazoncognito.com"
 }
 
 output "ssm_user_pool_id_arn" {

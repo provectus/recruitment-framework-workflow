@@ -141,7 +141,7 @@ resource "aws_ssm_parameter" "domain" {
   name        = "/lauter/cognito/domain"
   description = "Cognito Hosted UI domain URL for Lauter application"
   type        = "String"
-  value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
+  value       = "${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.region}.amazoncognito.com"
 
   tags = {
     Name = "${var.project_name}-cognito-domain"
