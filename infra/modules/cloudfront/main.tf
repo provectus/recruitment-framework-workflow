@@ -1,3 +1,16 @@
+# Managed cache and origin request policy lookups
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 resource "aws_cloudfront_response_headers_policy" "security_headers" {
   name = "${var.project_name}-security-headers"
 
@@ -77,8 +90,8 @@ resource "aws_cloudfront_distribution" "spa" {
     target_origin_id         = "ALB-api"
     viewer_protocol_policy   = "redirect-to-https"
     compress                 = true
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
-    origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3"
+    cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
   }
 
   default_cache_behavior {
@@ -87,7 +100,7 @@ resource "aws_cloudfront_distribution" "spa" {
     target_origin_id           = "S3-${var.spa_bucket_id}"
     viewer_protocol_policy     = "redirect-to-https"
     compress                   = true
-    cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_optimized.id
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
   }
 
