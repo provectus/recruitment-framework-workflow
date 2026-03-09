@@ -5,18 +5,21 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aioboto3>=13.2",
     "alembic>=1.14",
     "asyncpg>=0.30",
     "fastapi[standard]>=0.128.6",
     "greenlet>=3.3.1",
     "httpx>=0.28.1",
     "pydantic-settings>=2.0",
-    "python-jose[cryptography]>=3.5.0",
+    "PyJWT[crypto]>=2.9.0",
     "sqlmodel>=0.0.22",
 ]
 
 [dependency-groups]
 dev = [
+    "bandit>=1.7",
+    "mypy>=1.11",
     "ruff>=0.9",
 ]
 test = [
@@ -29,6 +32,18 @@ test = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "app.services.*"
+disable_error_code = ["call-overload", "arg-type", "attr-defined", "union-attr", "no-any-return", "type-arg", "import-untyped"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
 
 [tool.ruff]
 target-version = "py312"

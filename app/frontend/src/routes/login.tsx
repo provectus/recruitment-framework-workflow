@@ -1,7 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Button } from "@/shared/ui/button";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth, useDevLogin } from "@/features/auth";
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -26,10 +28,10 @@ function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-8 w-full max-w-sm px-4">
+      <div className="flex flex-col items-center gap-10 w-full max-w-sm px-6">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-4xl font-bold tracking-tight">Tap</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-5xl font-extrabold tracking-tighter">Lauter</h1>
+          <p className="uppercase tracking-widest text-xs text-muted-foreground">
             Recruitment workflow automation
           </p>
         </div>
@@ -43,7 +45,7 @@ function Login() {
           </Alert>
         )}
 
-        <Button onClick={handleGoogleSignIn} size="lg" className="gap-2">
+        <Button onClick={handleGoogleSignIn} size="lg" className="w-full gap-2">
           <svg
             className="h-5 w-5"
             viewBox="0 0 24 24"
@@ -69,7 +71,64 @@ function Login() {
           </svg>
           Sign in with Google
         </Button>
+
+        {import.meta.env.DEV && <DevLoginForm redirectTo={redirectTo} />}
       </div>
     </div>
+  );
+}
+
+function DevLoginForm({ redirectTo }: { redirectTo?: string }) {
+  const [email, setEmail] = useState("dev@provectus.com");
+  const [name, setName] = useState("Dev User");
+  const navigate = useNavigate();
+  const devLogin = useDevLogin();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: redirectTo ?? "/" });
+    }
+  }, [isAuthenticated, navigate, redirectTo]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    devLogin.mutate({ body: { email, name } });
+  };
+
+  return (
+    <>
+      <div className="flex w-full items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground">DEV ONLY</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+          className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          required
+          className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <Button type="submit" variant="outline" disabled={devLogin.isPending}>
+          {devLogin.isPending ? "Signing in..." : "Dev Login"}
+        </Button>
+        {devLogin.isError && (
+          <p className="text-sm text-destructive">
+            {devLogin.error.message}
+          </p>
+        )}
+      </form>
+    </>
   );
 }

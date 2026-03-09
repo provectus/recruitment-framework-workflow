@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated API client (regenerate with: bun run generate:api)
+src/shared/api/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

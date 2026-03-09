@@ -1,0 +1,47 @@
+"""add_rubric_templates_table
+
+Revision ID: 6ab559edd7eb
+Revises: 8cab1f3271ca
+Create Date: 2026-02-17 18:47:10.607549
+
+"""
+
+from collections.abc import Sequence
+
+import sqlalchemy as sa
+from alembic import op
+
+revision: str = "6ab559edd7eb"
+down_revision: str | Sequence[str] | None = "8cab1f3271ca"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+def upgrade() -> None:
+    """Upgrade schema."""
+    op.create_table(
+        "rubric_templates",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("structure", sa.JSON(), nullable=False),
+        sa.Column("is_archived", sa.Boolean(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
+
+def downgrade() -> None:
+    """Downgrade schema."""
+    op.drop_table("rubric_templates")

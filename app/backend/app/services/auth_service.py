@@ -1,15 +1,22 @@
+import asyncio
 import base64
 import hashlib
 import hmac
 import secrets
+import time
+from typing import Any
 from urllib.parse import urlencode
 
 import httpx
-from jose import jwt
+import jwt
+from jwt import PyJWK
 
 from app.config import settings
 
-_jwks_cache: dict | None = None
+_jwks_cache: dict[str, Any] | None = None
+_jwks_cache_time: float = 0.0
+_jwks_cache_lock = asyncio.Lock()
+JWKS_CACHE_TTL = 3600
 
 
 async def build_cognito_auth_url(
@@ -29,7 +36,7 @@ async def build_cognito_auth_url(
     return f"https://{settings.cognito_domain}/oauth2/authorize?{urlencode(params)}"
 
 
-async def exchange_code_for_tokens(code: str) -> dict:
+async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
     data = {
         "grant_type": "authorization_code",
         "code": code,
@@ -47,38 +54,50 @@ async def exchange_code_for_tokens(code: str) -> dict:
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result
 
 
-async def get_jwks() -> dict:
-    global _jwks_cache
-    if _jwks_cache is not None:
+async def get_jwks() -> dict[str, Any]:
+    global _jwks_cache, _jwks_cache_time
+    cache_fresh = (time.monotonic() - _jwks_cache_time) < JWKS_CACHE_TTL
+    if _jwks_cache is not None and cache_fresh:
         return _jwks_cache
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(settings.cognito_jwks_url)
-        response.raise_for_status()
-        _jwks_cache = response.json()
-        return _jwks_cache
+    async with _jwks_cache_lock:
+        cache_fresh = (time.monotonic() - _jwks_cache_time) < JWKS_CACHE_TTL
+        if _jwks_cache is not None and cache_fresh:
+            return _jwks_cache
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(settings.cognito_jwks_url)
+            response.raise_for_status()
+            _jwks_cache = response.json()
+            _jwks_cache_time = time.monotonic()
+            return _jwks_cache
 
 
-async def validate_cognito_id_token(id_token: str) -> dict:
+def _invalidate_jwks_cache() -> None:
+    global _jwks_cache, _jwks_cache_time
+    _jwks_cache = None
+    _jwks_cache_time = 0.0
+
+
+async def validate_cognito_id_token(id_token: str) -> dict[str, Any]:
     unverified_header = jwt.get_unverified_header(id_token)
     kid = unverified_header.get("kid")
 
     jwks = await get_jwks()
     key_dict = next((k for k in jwks["keys"] if k["kid"] == kid), None)
     if not key_dict:
-        msg = "Public key not found in JWKS"
-        raise ValueError(msg)
+        _invalidate_jwks_cache()
+        jwks = await get_jwks()
+        key_dict = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+        if not key_dict:
+            msg = "Public key not found in JWKS"
+            raise ValueError(msg)
 
-    public_key = {
-        "kty": key_dict["kty"],
-        "kid": key_dict["kid"],
-        "use": key_dict["use"],
-        "n": key_dict["n"],
-        "e": key_dict["e"],
-    }
+    public_key = PyJWK(key_dict).key
 
     claims = jwt.decode(
         id_token,
@@ -106,7 +125,7 @@ def compute_secret_hash(username: str) -> str:
     return base64.b64encode(dig).decode()
 
 
-async def refresh_tokens(refresh_token: str) -> dict:
+async def refresh_tokens(refresh_token: str) -> dict[str, Any]:
     data = {
         "grant_type": "refresh_token",
         "refresh_token": refresh_token,
@@ -123,4 +142,5 @@ async def refresh_tokens(refresh_token: str) -> dict:
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         response.raise_for_status()
-        return response.json()
+        result: dict[str, Any] = response.json()
+        return result

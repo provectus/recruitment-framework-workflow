@@ -1,0 +1,114 @@
+import { useState } from "react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
+import {
+  LayoutDashboard,
+  Users,
+  Briefcase,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+} from "lucide-react";
+import { cn } from "@/shared/lib/utils";
+import { GlobalUploadMenu } from "@/widgets/documents/global-upload-menu";
+import { useOpenOnboarding } from "@/features/onboarding";
+
+interface NavItem {
+  to: string;
+  icon: typeof LayoutDashboard;
+  label: string;
+}
+
+const navItems: NavItem[] = [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/candidates", icon: Users, label: "Candidates" },
+  { to: "/positions", icon: Briefcase, label: "Positions" },
+  { to: "/settings", icon: Settings, label: "Settings" },
+];
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const openOnboarding = useOpenOnboarding();
+
+  return (
+    <aside
+      className={cn(
+        "border-r border-border bg-sidebar transition-all duration-200 ease-out flex flex-col",
+        collapsed ? "w-16" : "w-60"
+      )}
+    >
+      <div className="flex-1 p-2 pt-4">
+        <div className="mb-4">
+          <GlobalUploadMenu collapsed={collapsed} />
+        </div>
+
+        <Separator className="mb-4" />
+
+        <nav className="space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.to;
+
+            return (
+              <Link key={item.to} to={item.to}>
+                {({ isActive: linkActive }) => (
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start text-muted-foreground hover:text-foreground transition-colors",
+                      collapsed ? "px-2" : "px-3",
+                      (isActive || linkActive) &&
+                        "bg-primary/10 text-primary font-semibold"
+                    )}
+                  >
+                    <Icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Button>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      <Separator />
+
+      <div className="p-2 pb-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "w-full text-muted-foreground hover:text-foreground",
+            collapsed ? "justify-center" : "justify-start px-3"
+          )}
+          onClick={openOnboarding}
+          title="Getting started guide"
+        >
+          <HelpCircle className={cn("h-4 w-4", !collapsed && "mr-3")} />
+          {!collapsed && <span className="text-sm">Getting Started</span>}
+        </Button>
+      </div>
+
+      <div className="p-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-center"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              <span className="text-sm">Collapse</span>
+            </>
+          )}
+        </Button>
+      </div>
+    </aside>
+  );
+}
