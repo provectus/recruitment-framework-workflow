@@ -68,6 +68,29 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
 
+  evaluator:
+    build:
+      context: ./app/lambdas
+      dockerfile: Dockerfile.local
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: lauter
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET_NAME: lauter-files
+      MOCK_BEDROCK: "true"
+      MOCK_BEDROCK_DELAY_SECONDS: "3"
+      MOCK_EVALUATION_FAILURES: ""
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+
 volumes:
   postgres_data:
   minio_data:
