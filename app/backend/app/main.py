@@ -10,6 +10,7 @@ from app.routers import (
     candidates,
     dashboard,
     documents,
+    evaluations,
     health,
     position_rubrics,
     positions,
@@ -44,3 +45,4 @@ app.include_router(users.router)
 app.include_router(documents.router)
 app.include_router(rubric_templates.router)
 app.include_router(position_rubrics.router)
+app.include_router(evaluations.router)

@@ -34,3 +34,18 @@ class InterviewStage(enum.StrEnum):
 class InputMethod(enum.StrEnum):
     file = "file"
     paste = "paste"
+
+
+class EvaluationStepType(enum.StrEnum):
+    cv_analysis = "cv_analysis"
+    screening_eval = "screening_eval"
+    technical_eval = "technical_eval"
+    recommendation = "recommendation"
+    feedback_gen = "feedback_gen"
+
+
+class EvaluationStatus(enum.StrEnum):
+    pending = "pending"
+    running = "running"
+    completed = "completed"
+    failed = "failed"

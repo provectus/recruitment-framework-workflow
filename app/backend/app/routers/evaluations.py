@@ -1,0 +1,162 @@
+import asyncio
+import json
+from collections.abc import AsyncGenerator
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sse_starlette.sse import EventSourceResponse
+
+from app.database import async_session_factory, get_session
+from app.dependencies.auth import get_current_user
+from app.exceptions import NotFoundException
+from app.models.enums import EvaluationStatus
+from app.models.user import User
+from app.schemas.evaluations import (
+    EvaluationHistoryResponse,
+    EvaluationListResponse,
+    EvaluationResponse,
+)
+from app.services import evaluation_service
+
+router = APIRouter(prefix="/api/evaluations", tags=["evaluations"])
+
+TERMINAL_STATUSES = {EvaluationStatus.completed, EvaluationStatus.failed}
+POLL_INTERVAL_SECONDS = 2
+KEEPALIVE_INTERVAL_POLLS = 15
+
+
+@router.get("/{candidate_position_id}/stream")
+async def stream_evaluation_status(
+    candidate_position_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> EventSourceResponse:
+    async def event_generator() -> AsyncGenerator[dict[str, str], None]:
+        last_known_statuses: dict[str, str] = {}
+        keepalive_counter = 0
+
+        while True:
+            if await request.is_disconnected():
+                break
+
+            async with async_session_factory() as poll_session:
+                evaluations = await evaluation_service.get_evaluations(
+                    poll_session, candidate_position_id
+                )
+
+            for evaluation in evaluations:
+                eval_key = str(evaluation.id)
+                current_status = evaluation.status
+
+                if (
+                    eval_key not in last_known_statuses
+                    or last_known_statuses[eval_key] != current_status
+                ):
+                    last_known_statuses[eval_key] = current_status
+                    yield {
+                        "event": "status_change",
+                        "data": json.dumps(
+                            {
+                                "evaluation_id": evaluation.id,
+                                "step_type": evaluation.step_type,
+                                "status": current_status,
+                            }
+                        ),
+                    }
+
+            if evaluations and all(e.status in TERMINAL_STATUSES for e in evaluations):
+                yield {"event": "done", "data": "{}"}
+                break
+
+            if not evaluations and last_known_statuses:
+                yield {"event": "done", "data": "{}"}
+                break
+
+            keepalive_counter += 1
+            if keepalive_counter >= KEEPALIVE_INTERVAL_POLLS:
+                keepalive_counter = 0
+                yield {"comment": "keepalive"}
+
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+
+    return EventSourceResponse(event_generator())
+
+
+@router.get("/{candidate_position_id}", response_model=EvaluationListResponse)
+async def list_evaluations(
+    candidate_position_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> EvaluationListResponse:
+    evaluations = await evaluation_service.get_evaluations(
+        session=session,
+        candidate_position_id=candidate_position_id,
+    )
+    return EvaluationListResponse(
+        items=[EvaluationResponse.model_validate(e) for e in evaluations]
+    )
+
+
+@router.post(
+    "/{candidate_position_id}/{step_type}/rerun",
+    response_model=EvaluationListResponse,
+)
+async def rerun_evaluation(
+    candidate_position_id: int,
+    step_type: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> EvaluationListResponse:
+    try:
+        evaluations = await evaluation_service.rerun_evaluation(
+            session=session,
+            candidate_position_id=candidate_position_id,
+            step_type=step_type,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
+    return EvaluationListResponse(
+        items=[EvaluationResponse.model_validate(e) for e in evaluations]
+    )
+
+
+@router.get(
+    "/{candidate_position_id}/{step_type}/history",
+    response_model=EvaluationHistoryResponse,
+)
+async def get_evaluation_history(
+    candidate_position_id: int,
+    step_type: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> EvaluationHistoryResponse:
+    evaluations = await evaluation_service.get_evaluation_history(
+        session=session,
+        candidate_position_id=candidate_position_id,
+        step_type=step_type,
+    )
+    return EvaluationHistoryResponse(
+        step_type=step_type,
+        items=[EvaluationResponse.model_validate(e) for e in evaluations],
+    )
+
+
+@router.get(
+    "/{candidate_position_id}/{step_type}",
+    response_model=EvaluationResponse,
+)
+async def get_evaluation_by_step(
+    candidate_position_id: int,
+    step_type: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> EvaluationResponse:
+    try:
+        evaluation = await evaluation_service.get_evaluation_by_step(
+            session=session,
+            candidate_position_id=candidate_position_id,
+            step_type=step_type,
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
+    return EvaluationResponse.model_validate(evaluation)

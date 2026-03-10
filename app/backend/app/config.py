@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     s3_endpoint_url: str | None = None
     s3_presign_endpoint_url: str | None = None
 
+    evaluation_event_bus_name: str = ""
+
     @property
     def cognito_region(self) -> str:
         return (

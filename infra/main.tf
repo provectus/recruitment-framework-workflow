@@ -155,6 +155,7 @@ module "ecs" {
   files_bucket_name            = module.s3.files_bucket_id
   allowed_email_domain         = var.allowed_email_domain
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
+  evaluation_event_bus_name    = aws_cloudwatch_event_bus.evaluation.name
 }
 
 # Associate WAF with ALB

@@ -2,7 +2,18 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.enums import DocumentType
+from app.models.enums import DocumentType, InterviewStage
+
+VALID_INTERVIEW_STAGES = {s.value for s in InterviewStage}
+
+
+def _normalize_interview_stage(v: str) -> str:
+    normalized = v.lower()
+    if normalized not in VALID_INTERVIEW_STAGES:
+        msg = f"interview_stage must be one of: {', '.join(sorted(VALID_INTERVIEW_STAGES))}"
+        raise ValueError(msg)
+    return normalized
+
 
 ALLOWED_CONTENT_TYPES = {
     "application/pdf",
@@ -24,6 +35,13 @@ class PresignRequest(BaseModel):
     interviewer_id: int | None = None
     interview_date: date | None = None
     notes: str | None = None
+
+    @field_validator("interview_stage", mode="before")
+    @classmethod
+    def validate_interview_stage(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return _normalize_interview_stage(v)
 
     @field_validator("type")
     @classmethod
@@ -84,6 +102,11 @@ class PasteTranscriptRequest(BaseModel):
     interviewer_id: int
     interview_date: date
     notes: str | None = None
+
+    @field_validator("interview_stage", mode="before")
+    @classmethod
+    def validate_interview_stage(cls, v: str) -> str:
+        return _normalize_interview_stage(v)
 
 
 class DocumentResponse(BaseModel):

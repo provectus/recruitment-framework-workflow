@@ -2,6 +2,7 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useAuth, type AuthState } from "@/features/auth";
 import { UserMenu } from "@/widgets/user-menu";
+import { Toaster } from "@/shared/ui/sonner";
 
 interface RouterContext {
   auth: AuthState;
@@ -22,6 +23,7 @@ function RootLayout() {
         </main>
       </div>
       <TanStackRouterDevtools />
+      <Toaster />
     </>
   );
 }

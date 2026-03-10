@@ -1,0 +1,6 @@
+sqlalchemy
+psycopg2-binary
+boto3
+pypdf
+python-docx
+sqlmodel

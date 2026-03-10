@@ -88,3 +88,9 @@ variable "alert_email" {
   type        = string
   default     = ""
 }
+
+variable "bedrock_model_id" {
+  description = "Amazon Bedrock model ID used by evaluation Lambda functions"
+  type        = string
+  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+}

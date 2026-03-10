@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import date
 from uuid import uuid4
@@ -9,13 +10,96 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.exceptions import ConflictError, ForbiddenError, NotFoundException
 from app.models.candidate_position import CandidatePosition
 from app.models.document import Document
-from app.models.enums import DocumentStatus, DocumentType, InputMethod
+from app.models.enums import DocumentStatus, DocumentType, InputMethod, InterviewStage
 from app.models.position import Position
+from app.models.position_rubric import PositionRubric, PositionRubricVersion
 from app.models.user import User
-from app.services import storage_service
+from app.services import evaluation_service, storage_service
+
+logger = logging.getLogger(__name__)
 
 MAX_FILE_NAME_LENGTH = 255
 _UNSAFE_CHARS = re.compile(r"[/\\:\x00-\x1f\x7f]")
+
+
+async def _get_latest_rubric_version_id(
+    session: AsyncSession, position_id: int
+) -> int | None:
+    rubric_stmt = select(PositionRubric).where(
+        PositionRubric.position_id == position_id
+    )
+    rubric_result = await session.exec(rubric_stmt)
+    rubric = rubric_result.first()
+    if rubric is None:
+        return None
+
+    version_stmt = (
+        select(PositionRubricVersion)
+        .where(PositionRubricVersion.position_rubric_id == rubric.id)
+        .order_by(PositionRubricVersion.version_number.desc())
+        .limit(1)
+    )
+    version_result = await session.exec(version_stmt)
+    version = version_result.first()
+    return version.id if version is not None else None
+
+
+async def _maybe_trigger_evaluation(session: AsyncSession, document: Document) -> None:
+    doc_type = document.type
+    interview_stage = document.interview_stage
+
+    if doc_type == DocumentType.cv:
+        step_type = "cv_analysis"
+        rubric_version_id = None
+    elif (
+        doc_type == DocumentType.transcript
+        and interview_stage == InterviewStage.screening
+    ):
+        step_type = "screening_eval"
+        rubric_version_id = None
+    elif (
+        doc_type == DocumentType.transcript
+        and interview_stage == InterviewStage.technical
+    ):
+        candidate_position = await session.get(
+            CandidatePosition, document.candidate_position_id
+        )
+        if candidate_position is None:
+            logger.warning(
+                "Skipping evaluation trigger: candidate_position %s not found",
+                document.candidate_position_id,
+            )
+            return
+
+        rubric_version_id = await _get_latest_rubric_version_id(
+            session, candidate_position.position_id
+        )
+        if rubric_version_id is None:
+            logger.info(
+                "Skipping technical_eval trigger: no rubric assigned to position %s",
+                candidate_position.position_id,
+            )
+            return
+
+        step_type = "technical_eval"
+    else:
+        return
+
+    try:
+        await evaluation_service.trigger_evaluation(
+            session=session,
+            candidate_position_id=document.candidate_position_id,
+            step_type=step_type,
+            source_document_id=document.id,
+            rubric_version_id=rubric_version_id,
+        )
+    except Exception:
+        logger.warning(
+            "Failed to trigger evaluation for document %s step_type=%s",
+            document.id,
+            step_type,
+            exc_info=True,
+        )
 
 
 async def _user_can_access_candidate_documents(
@@ -140,6 +224,8 @@ async def complete_upload(
     await session.commit()
     await session.refresh(document)
 
+    await _maybe_trigger_evaluation(session, document)
+
     return document
 
 
@@ -185,6 +271,9 @@ async def create_pasted_transcript(
     await storage_service.put_text_object(s3_key, content, "text/plain")
 
     await session.commit()
+    await session.refresh(document)
+
+    await _maybe_trigger_evaluation(session, document)
 
     return document
 
