@@ -10,7 +10,8 @@ VALID_INTERVIEW_STAGES = {s.value for s in InterviewStage}
 def _normalize_interview_stage(v: str) -> str:
     normalized = v.lower()
     if normalized not in VALID_INTERVIEW_STAGES:
-        msg = f"interview_stage must be one of: {', '.join(sorted(VALID_INTERVIEW_STAGES))}"
+        valid_stages = ", ".join(sorted(VALID_INTERVIEW_STAGES))
+        msg = f"interview_stage must be one of: {valid_stages}"
         raise ValueError(msg)
     return normalized
 
