@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -7,22 +6,17 @@ from typing import Any
 sys.path.insert(0, "/opt/python")
 sys.path.insert(0, "/var/task")
 
+from sqlalchemy import select
+
 from shared import bedrock as bedrock_module
 from shared import db as db_module
 from shared.models import CandidatePosition, Evaluation, Position
 from shared.prompts.recommendation import build_recommendation_prompt
+from shared.utils import strip_markdown_fences
 
 VALID_RECOMMENDATIONS = {"hire", "no_hire", "needs_discussion"}
 VALID_CONFIDENCE_LEVELS = {"high", "medium", "low"}
 UPSTREAM_STEP_TYPES = ("cv_analysis", "screening_eval", "technical_eval")
-
-
-def _strip_markdown_fences(text: str) -> str:
-    pattern = r"^```(?:json)?\s*\n?(.*?)\n?```\s*$"
-    match = re.match(pattern, text.strip(), re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
 
 
 def _fetch_latest_completed_results(
@@ -31,18 +25,19 @@ def _fetch_latest_completed_results(
     results: dict[str, dict[str, Any] | None] = dict.fromkeys(UPSTREAM_STEP_TYPES)
 
     for step_type in UPSTREAM_STEP_TYPES:
-        rows = (
-            session.query(Evaluation)
-            .filter(
+        stmt = (
+            select(Evaluation)
+            .where(
                 Evaluation.candidate_position_id == candidate_position_id,
                 Evaluation.step_type == step_type,
                 Evaluation.status == "completed",
             )
             .order_by(Evaluation.version.desc())
-            .all()
+            .limit(1)
         )
-        if rows:
-            results[step_type] = rows[0].result
+        row = session.execute(stmt).scalar_one_or_none()
+        if row is not None:
+            results[step_type] = row.result
 
     return results
 
@@ -125,7 +120,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 step_type="recommendation",
             )
 
-            cleaned = _strip_markdown_fences(raw_response)
+            cleaned = strip_markdown_fences(raw_response)
             result = json.loads(cleaned)
 
             result = _validate_and_fix_result(result, missing_step_types)

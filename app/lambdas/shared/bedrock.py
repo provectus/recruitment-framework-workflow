@@ -47,7 +47,12 @@ def invoke_claude(
                 accept="application/json",
             )
             payload = json.loads(response["body"].read())
-            return payload["content"][0]["text"]
+            content = payload.get("content", [])
+            if not content or "text" not in content[0]:
+                raise RuntimeError(
+                    f"Unexpected Bedrock response shape: {payload}"
+                )
+            return content[0]["text"]
         except client.exceptions.ThrottlingException as exc:
             last_error = exc
         except client.exceptions.ModelTimeoutException as exc:

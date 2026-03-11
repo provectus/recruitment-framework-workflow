@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -12,14 +11,7 @@ from shared import db as db_module
 from shared import s3 as s3_module
 from shared.models import CandidatePosition, Document, Evaluation, Position
 from shared.prompts.cv_analysis import build_cv_analysis_prompt
-
-
-def _strip_markdown_fences(text: str) -> str:
-    pattern = r"^```(?:json)?\s*\n?(.*?)\n?```\s*$"
-    match = re.match(pattern, text.strip(), re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
+from shared.utils import strip_markdown_fences
 
 
 def _extract_required_skills(position: Position) -> list[str]:
@@ -91,7 +83,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 step_type="cv_analysis",
             )
 
-            cleaned = _strip_markdown_fences(raw_response)
+            cleaned = strip_markdown_fences(raw_response)
             result = json.loads(cleaned)
 
             evaluation.status = "completed"

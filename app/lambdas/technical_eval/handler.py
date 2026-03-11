@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -18,14 +17,7 @@ from shared.models import (
     PositionRubricVersion,
 )
 from shared.prompts.technical_eval import build_technical_eval_prompt
-
-
-def _strip_markdown_fences(text: str) -> str:
-    pattern = r"^```(?:json)?\s*\n?(.*?)\n?```\s*$"
-    match = re.match(pattern, text.strip(), re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
+from shared.utils import strip_markdown_fences
 
 
 def _calculate_weighted_total(criteria_scores: list[dict[str, Any]]) -> float:
@@ -80,7 +72,9 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                     f"Position {candidate_position.position_id} not found"
                 )
 
-            rubric_version = session.get(PositionRubricVersion, evaluation.rubric_version_id)
+            rubric_version = session.get(
+                PositionRubricVersion, evaluation.rubric_version_id
+            )
             if rubric_version is None:
                 raise ValueError(
                     f"PositionRubricVersion {evaluation.rubric_version_id} not found"
@@ -101,7 +95,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 step_type="technical_eval",
             )
 
-            cleaned = _strip_markdown_fences(raw_response)
+            cleaned = strip_markdown_fences(raw_response)
             result = json.loads(cleaned)
 
             result["weighted_total"] = _calculate_weighted_total(

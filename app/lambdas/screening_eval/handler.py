@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -12,6 +11,7 @@ from shared import db as db_module
 from shared import s3 as s3_module
 from shared.models import CandidatePosition, Document, Evaluation, Position
 from shared.prompts.screening_eval import build_screening_eval_prompt
+from shared.utils import strip_markdown_fences
 
 REQUIRED_RESULT_SECTIONS = {
     "key_topics",
@@ -24,26 +24,21 @@ REQUIRED_RESULT_SECTIONS = {
 MIN_TRANSCRIPT_WORDS = 100
 
 
-def _strip_markdown_fences(text: str) -> str:
-    pattern = r"^```(?:json)?\s*\n?(.*?)\n?```\s*$"
-    match = re.match(pattern, text.strip(), re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
-
-
 def _validate_transcript_length(text: str) -> None:
     word_count = len(text.split())
     if word_count < MIN_TRANSCRIPT_WORDS:
         raise ValueError(
-            f"Transcript too short for meaningful analysis ({word_count} words, minimum {MIN_TRANSCRIPT_WORDS})"
+            f"Transcript too short for meaningful analysis "
+            f"({word_count} words, minimum {MIN_TRANSCRIPT_WORDS})"
         )
 
 
 def _validate_result_sections(result: dict[str, Any]) -> None:
     missing = REQUIRED_RESULT_SECTIONS - result.keys()
     if missing:
-        raise ValueError(f"Bedrock response missing required sections: {sorted(missing)}")
+        raise ValueError(
+            f"Bedrock response missing required sections: {sorted(missing)}"
+        )
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
@@ -102,7 +97,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 step_type="screening_eval",
             )
 
-            cleaned = _strip_markdown_fences(raw_response)
+            cleaned = strip_markdown_fences(raw_response)
             result = json.loads(cleaned)
             _validate_result_sections(result)
 

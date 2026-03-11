@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 from datetime import UTC, datetime
 from typing import Any
@@ -13,17 +12,12 @@ from shared import bedrock as bedrock_module
 from shared import db as db_module
 from shared.models import Evaluation
 from shared.prompts.feedback_gen import build_feedback_gen_prompt
+from shared.utils import strip_markdown_fences
 
 
-def _strip_markdown_fences(text: str) -> str:
-    pattern = r"^```(?:json)?\s*\n?(.*?)\n?```\s*$"
-    match = re.match(pattern, text.strip(), re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
-
-
-def _collect_completed_evaluations(session: Any, candidate_position_id: int) -> dict[str, Any]:
+def _collect_completed_evaluations(
+    session: Any, candidate_position_id: int
+) -> dict[str, Any]:
     relevant_step_types = ("cv_analysis", "screening_eval", "technical_eval")
     results: dict[str, Any] = {}
 
@@ -84,11 +78,13 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
                 step_type="feedback_gen",
             )
 
-            cleaned = _strip_markdown_fences(raw_response)
+            cleaned = strip_markdown_fences(raw_response)
             result = json.loads(cleaned)
 
             if "feedback_text" not in result:
-                raise ValueError("Bedrock response missing required field: feedback_text")
+                raise ValueError(
+                    "Bedrock response missing required field: feedback_text"
+                )
 
             result["rejection_stage"] = rejection_stage
 
