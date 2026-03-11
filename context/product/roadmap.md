@@ -106,3 +106,19 @@ _Deferred until the POC evaluation pipeline is proven. No specific phase assigne
 - [ ] **Feedback Form Drafting & Review**
   - [ ] **AI Feedback Drafting:** LLM fills in Lever feedback form fields based on interview transcript analysis — generates draft per interviewer assignee for both recruitment and technical stages
   - [ ] **Review & Approval UI:** Reviewer sees AI-drafted feedback in the SPA, can edit any field, and explicitly approves before submission to Lever
+
+---
+
+### Future: AI Candidate Analyst (Chat)
+
+_Conversational AI assistant for recruiters — powered by Claude Agent SDK. Lets recruiters ask freeform questions about any candidate with full context (position, CV, transcripts, evaluation results) loaded automatically. Claude decides which data to pull and how to synthesize answers._
+
+- [ ] **Chat Widget & Backend**
+  - [ ] **Conversational Interface:** Chat widget in the SPA for recruiters to ask questions about a candidate in natural language
+  - [ ] **Agent Backend:** Long-running Agent SDK service (ECS Fargate) with custom MCP tools for querying evaluations, fetching CVs/transcripts, searching candidates, and retrieving position details
+  - [ ] **Session Persistence:** Recruiter can leave and resume a conversation with full context retained
+
+- [ ] **Context-Aware Analysis**
+  - [ ] **Cross-Signal Synthesis:** Answer questions that span multiple evaluation steps — "How does their screening align with the technical assessment?"
+  - [ ] **Candidate Comparison:** Compare candidates against each other or against position requirements on demand
+  - [ ] **Draft Generation:** Generate rejection emails, interview prep notes, or hiring committee summaries from conversation context

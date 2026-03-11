@@ -23,6 +23,7 @@
 
 **Future (deferred):**
 - **ATS (Applicant Tracking):** Lever API — pull candidate data + feedback form schemas, push evaluation notes + approved feedback forms back. Timing depends on POC results and Lever access readiness.
+- **AI Candidate Analyst:** Claude Agent SDK (ECS Fargate) — conversational recruiter assistant with custom MCP tools for querying evaluations, fetching CVs/transcripts, and comparing candidates
 
 ---
 
@@ -210,6 +211,43 @@ Each step is a Task state invoking its corresponding Lambda. Error handling via 
 | Lever deferred | Future phase, not POC | Reduces external dependencies; POC validates AI evaluation value before integration work |
 | Slack bot removed | SPA replaces it | Single upload path simplifies architecture |
 | S3 watched folder removed | API writes to S3 | Upload triggered by API, not by file appearance |
+
+---
+
+## 9. Future: AI Candidate Analyst (Chat)
+
+_Planned addition — conversational AI assistant for recruiters, powered by Claude Agent SDK._
+
+```
+┌─────────────────┐     WebSocket/SSE      ┌──────────────────┐
+│  React SPA      │◄─────────────────────►  │  FastAPI (ECS)   │
+│  Chat Widget    │                         │  /api/chat/*     │
+└─────────────────┘                         └────────┬─────────┘
+                                                     │
+                                            ┌────────┴─────────┐
+                                            │  Agent SDK       │
+                                            │  (ECS Fargate)   │
+                                            │                  │
+                                            │  MCP Tools:      │
+                                            │  - query_evals   │
+                                            │  - get_cv_text   │
+                                            │  - get_transcript │
+                                            │  - search_cands  │
+                                            │  - get_position  │
+                                            └───┬────┬────┬────┘
+                                                │    │    │
+                                       ┌────────┘    │    └────────┐
+                                       ▼             ▼             ▼
+                                  ┌─────────┐  ┌─────────┐  ┌──────────┐
+                                  │   RDS   │  │   S3    │  │ Bedrock  │
+                                  │Postgres │  │ (files) │  │ (Claude) │
+                                  └─────────┘  └─────────┘  └──────────┘
+```
+
+- **Hosting:** ECS Fargate (long-running container) — Agent SDK requires persistent processes for session management and multi-turn agentic loops
+- **Protocol:** WebSocket or SSE for streaming responses to the SPA chat widget
+- **Session persistence:** Agent SDK `session_id` allows recruiters to leave and resume conversations
+- **Not Lambda-compatible:** Agent SDK's agentic loop (perceive → decide → execute tools → observe → repeat) requires long-running processes, unlike the pipeline's single-shot Bedrock calls
 
 ---
 
