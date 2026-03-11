@@ -3035,6 +3035,17 @@
             ],
             "title": "Requirements"
           },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
+          },
           "team_id": {
             "type": "integer",
             "title": "Team Id"
@@ -3072,6 +3083,17 @@
               }
             ],
             "title": "Requirements"
+          },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
           },
           "status": {
             "type": "string",
@@ -3118,6 +3140,7 @@
           "id",
           "title",
           "requirements",
+          "evaluation_instructions",
           "status",
           "team_id",
           "team_name",
@@ -3189,6 +3212,17 @@
             ],
             "title": "Requirements"
           },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -3211,6 +3245,7 @@
           "id",
           "title",
           "requirements",
+          "evaluation_instructions",
           "status",
           "team_id",
           "hiring_manager_id",
@@ -3452,6 +3487,17 @@
               }
             ],
             "title": "Requirements"
+          },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
           },
           "team_id": {
             "anyOf": [

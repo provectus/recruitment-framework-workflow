@@ -19,6 +19,7 @@ import { formatStatus } from "@/shared/lib/stage-utils";
 type EditableField =
   | "title"
   | "requirements"
+  | "evaluation_instructions"
   | "team_id"
   | "hiring_manager_id"
   | "status";
@@ -33,6 +34,7 @@ interface PositionInfoCardProps {
   positionId: number;
   title: string;
   requirements: string | null;
+  evaluationInstructions: string | null;
   teamId: number;
   teamName: string;
   hiringManagerId: number;
@@ -46,6 +48,7 @@ export function PositionInfoCard({
   positionId,
   title,
   requirements,
+  evaluationInstructions,
   teamId,
   teamName,
   hiringManagerId,
@@ -63,13 +66,14 @@ export function PositionInfoCard({
   const startEditing = (field: EditableField) => {
     if (field === "title") setEditValue(title);
     else if (field === "requirements") setEditValue(requirements ?? "");
+    else if (field === "evaluation_instructions") setEditValue(evaluationInstructions ?? "");
     setEditingField(field);
   };
 
   const cancelEditing = () => setEditingField(null);
 
-  const saveTextField = async (field: "title" | "requirements") => {
-    const currentValue = field === "title" ? title : (requirements ?? "");
+  const saveTextField = async (field: "title" | "requirements" | "evaluation_instructions") => {
+    const currentValue = field === "title" ? title : field === "requirements" ? (requirements ?? "") : (evaluationInstructions ?? "");
     if (editValue === currentValue) {
       setEditingField(null);
       return;
@@ -120,6 +124,12 @@ export function PositionInfoCard({
       value: requirements ?? "",
       type: "textarea",
     },
+    {
+      name: "evaluation_instructions",
+      label: "Evaluation Instructions",
+      value: evaluationInstructions ?? "",
+      type: "textarea",
+    },
     { name: "team_id", label: "Team", value: teamName, type: "select" },
     {
       name: "hiring_manager_id",
@@ -156,7 +166,7 @@ export function PositionInfoCard({
                   setEditValue={setEditValue}
                   isPending={updatePosition.isPending}
                   onSave={() =>
-                    saveTextField(name as "title" | "requirements")
+                    saveTextField(name as "title" | "requirements" | "evaluation_instructions")
                   }
                   onCancel={cancelEditing}
                   onSelectChange={(val) =>
