@@ -49,6 +49,12 @@ export function useEvaluationStream(
       invalidateEvaluations();
     });
 
+    es.onerror = () => {
+      es.close();
+      esRef.current = null;
+      invalidateEvaluations();
+    };
+
     es.addEventListener("done", () => {
       es.close();
       esRef.current = null;

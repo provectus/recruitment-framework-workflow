@@ -11,8 +11,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/shared/ui/alert-dialog";
-import { Textarea } from "@/shared/ui/textarea";
-import { Label } from "@/shared/ui/label";
 import { Loader2 } from "lucide-react";
 
 interface HmDecisionGateProps {
@@ -103,8 +101,6 @@ function ConfirmDialog({
   onConfirm,
   isPending,
 }: ConfirmDialogProps) {
-  const [notes, setNotes] = useState("");
-
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -112,16 +108,6 @@ function ConfirmDialog({
           <AlertDialogTitle>{action.title}</AlertDialogTitle>
           <AlertDialogDescription>{action.description}</AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="decision-notes">Notes (optional)</Label>
-          <Textarea
-            id="decision-notes"
-            placeholder="Add any notes about this decision..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-          />
-        </div>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <Button

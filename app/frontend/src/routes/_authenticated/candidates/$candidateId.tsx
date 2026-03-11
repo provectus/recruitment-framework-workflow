@@ -172,7 +172,7 @@ function CandidateDetailPage() {
         </CardContent>
       </Card>
 
-      {activeCandidatePositionId !== null && (
+      {activeCandidatePositionId !== null && activePosition !== null && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -200,8 +200,8 @@ function CandidateDetailPage() {
             <EvaluationResults
                 candidatePositionId={activeCandidatePositionId}
                 candidateId={candidateIdNum}
-                positionId={activePosition?.position_id ?? 0}
-                currentStage={activePosition?.stage}
+                positionId={activePosition.position_id}
+                currentStage={activePosition.stage}
               />
           </CardContent>
         </Card>
