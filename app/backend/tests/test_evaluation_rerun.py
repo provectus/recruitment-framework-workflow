@@ -133,7 +133,7 @@ class TestRerunEvaluation:
         )
 
     @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_rerun_cv_analysis_with_completed_technical_cascades_rec(
+    async def test_rerun_does_not_cascade_to_recommendation(
         self,
         mock_publish: AsyncMock,
         session: AsyncSession,
@@ -149,43 +149,6 @@ class TestRerunEvaluation:
             candidate_position.id,
             EvaluationStepType.technical_eval,
             status=EvaluationStatus.completed,
-        )
-
-        result = await evaluation_service.rerun_evaluation(
-            session=session,
-            candidate_position_id=candidate_position.id,
-            step_type=EvaluationStepType.cv_analysis,
-        )
-
-        assert len(result) == 2
-        step_types = {e.step_type for e in result}
-        assert EvaluationStepType.cv_analysis in step_types
-        assert EvaluationStepType.recommendation in step_types
-
-        rec = next(
-            e for e in result if e.step_type == EvaluationStepType.recommendation
-        )
-        assert rec.status == EvaluationStatus.pending
-        assert rec.version == 1
-        assert mock_publish.call_count == 2
-
-    @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_rerun_cv_analysis_without_completed_technical_eval_no_cascade(
-        self,
-        mock_publish: AsyncMock,
-        session: AsyncSession,
-        candidate_position: CandidatePosition,
-    ) -> None:
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.cv_analysis,
-        )
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.technical_eval,
-            status=EvaluationStatus.pending,
         )
 
         result = await evaluation_service.rerun_evaluation(
@@ -197,92 +160,6 @@ class TestRerunEvaluation:
         assert len(result) == 1
         assert result[0].step_type == EvaluationStepType.cv_analysis
         mock_publish.assert_called_once()
-
-    @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_rerun_screening_eval_with_completed_technical_cascades_rec(
-        self,
-        mock_publish: AsyncMock,
-        session: AsyncSession,
-        candidate_position: CandidatePosition,
-    ) -> None:
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.screening_eval,
-        )
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.technical_eval,
-            status=EvaluationStatus.completed,
-        )
-
-        result = await evaluation_service.rerun_evaluation(
-            session=session,
-            candidate_position_id=candidate_position.id,
-            step_type=EvaluationStepType.screening_eval,
-        )
-
-        assert len(result) == 2
-        step_types = {e.step_type for e in result}
-        assert EvaluationStepType.screening_eval in step_types
-        assert EvaluationStepType.recommendation in step_types
-
-    @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_rerun_technical_eval_always_cascades_recommendation(
-        self,
-        mock_publish: AsyncMock,
-        session: AsyncSession,
-        candidate_position: CandidatePosition,
-    ) -> None:
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.technical_eval,
-        )
-
-        result = await evaluation_service.rerun_evaluation(
-            session=session,
-            candidate_position_id=candidate_position.id,
-            step_type=EvaluationStepType.technical_eval,
-        )
-
-        assert len(result) == 2
-        step_types = {e.step_type for e in result}
-        assert EvaluationStepType.technical_eval in step_types
-        assert EvaluationStepType.recommendation in step_types
-        assert mock_publish.call_count == 2
-
-    @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_rerun_technical_eval_cascade_increments_existing_rec_version(
-        self,
-        mock_publish: AsyncMock,
-        session: AsyncSession,
-        candidate_position: CandidatePosition,
-    ) -> None:
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.technical_eval,
-        )
-        await _seed_evaluation(
-            session,
-            candidate_position.id,
-            EvaluationStepType.recommendation,
-            source_document_id=None,
-            rubric_version_id=None,
-        )
-
-        result = await evaluation_service.rerun_evaluation(
-            session=session,
-            candidate_position_id=candidate_position.id,
-            step_type=EvaluationStepType.technical_eval,
-        )
-
-        rec = next(
-            e for e in result if e.step_type == EvaluationStepType.recommendation
-        )
-        assert rec.version == 2
 
     @patch(_PUBLISH_PATH, new_callable=AsyncMock)
     async def test_rerun_recommendation_has_no_cascade(
@@ -430,7 +307,7 @@ class TestRerunEvaluationEndpoint:
         assert response.status_code == 401
 
     @patch(_PUBLISH_PATH, new_callable=AsyncMock)
-    async def test_post_rerun_technical_eval_returns_two_items_with_cascade(
+    async def test_post_rerun_technical_eval_returns_single_item_no_cascade(
         self,
         mock_publish: AsyncMock,
         authenticated_client: AsyncClient,
@@ -449,10 +326,8 @@ class TestRerunEvaluationEndpoint:
 
         assert response.status_code == 200
         data = response.json()
-        assert len(data["items"]) == 2
-        step_types = {item["step_type"] for item in data["items"]}
-        assert EvaluationStepType.technical_eval in step_types
-        assert EvaluationStepType.recommendation in step_types
+        assert len(data["items"]) == 1
+        assert data["items"][0]["step_type"] == EvaluationStepType.technical_eval
 
     @patch(_PUBLISH_PATH, new_callable=AsyncMock)
     async def test_history_endpoint_shows_all_versions_after_rerun(

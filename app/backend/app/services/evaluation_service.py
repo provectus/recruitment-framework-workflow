@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -6,6 +8,8 @@ from app.models.candidate_position import CandidatePosition
 from app.models.enums import EvaluationStatus, EvaluationStepType
 from app.models.evaluation import Evaluation
 from app.services import eventbridge_service
+
+logger = logging.getLogger(__name__)
 
 
 async def get_evaluations(
@@ -131,13 +135,26 @@ async def trigger_evaluation(
         rubric_version_id=rubric_version_id,
     )
 
-    await eventbridge_service.publish_evaluation_event(
-        evaluation_id=evaluation.id,
-        candidate_position_id=candidate_position_id,
-        step_type=step_type,
-        source_document_id=source_document_id,
-        rubric_version_id=rubric_version_id,
-    )
+    try:
+        await eventbridge_service.publish_evaluation_event(
+            evaluation_id=evaluation.id,
+            candidate_position_id=candidate_position_id,
+            step_type=step_type,
+            source_document_id=source_document_id,
+            rubric_version_id=rubric_version_id,
+        )
+    except Exception:
+        evaluation.status = EvaluationStatus.failed
+        evaluation.error_message = "Failed to publish evaluation event"
+        session.add(evaluation)
+        await session.commit()
+        await session.refresh(evaluation)
+        logger.error(
+            "Failed to publish event for evaluation_id=%s step_type=%s — marked failed",
+            evaluation.id,
+            step_type,
+            exc_info=True,
+        )
 
     return evaluation
 
@@ -151,22 +168,6 @@ async def trigger_feedback_gen(
         candidate_position_id=candidate_position_id,
         step_type=EvaluationStepType.feedback_gen,
     )
-
-
-_RECOMMENDATION_CASCADES_FROM: frozenset[EvaluationStepType] = frozenset(
-    {
-        EvaluationStepType.cv_analysis,
-        EvaluationStepType.screening_eval,
-        EvaluationStepType.technical_eval,
-    }
-)
-
-_REQUIRES_COMPLETED_TECHNICAL_EVAL: frozenset[EvaluationStepType] = frozenset(
-    {
-        EvaluationStepType.cv_analysis,
-        EvaluationStepType.screening_eval,
-    }
-)
 
 
 async def _latest_evaluation_for_step(
@@ -199,7 +200,7 @@ async def rerun_evaluation(
             f"on candidate position {candidate_position_id}"
         )
 
-    rerun = await create_evaluation(
+    rerun = await trigger_evaluation(
         session=session,
         candidate_position_id=candidate_position_id,
         step_type=step_type,
@@ -207,55 +208,4 @@ async def rerun_evaluation(
         rubric_version_id=latest.rubric_version_id,
     )
 
-    await eventbridge_service.publish_evaluation_event(
-        evaluation_id=rerun.id,
-        candidate_position_id=candidate_position_id,
-        step_type=step_type,
-        source_document_id=rerun.source_document_id,
-        rubric_version_id=rerun.rubric_version_id,
-    )
-
-    created = [rerun]
-
-    if step not in _RECOMMENDATION_CASCADES_FROM:
-        return created
-
-    should_cascade = step == EvaluationStepType.technical_eval
-
-    if not should_cascade:
-        completed_technical = await _latest_evaluation_for_step(
-            session, candidate_position_id, EvaluationStepType.technical_eval
-        )
-        should_cascade = (
-            completed_technical is not None
-            and completed_technical.status == EvaluationStatus.completed
-        )
-
-    if not should_cascade:
-        return created
-
-    latest_recommendation = await _latest_evaluation_for_step(
-        session, candidate_position_id, EvaluationStepType.recommendation
-    )
-    cascaded = await create_evaluation(
-        session=session,
-        candidate_position_id=candidate_position_id,
-        step_type=EvaluationStepType.recommendation,
-        source_document_id=latest_recommendation.source_document_id
-        if latest_recommendation
-        else None,
-        rubric_version_id=latest_recommendation.rubric_version_id
-        if latest_recommendation
-        else None,
-    )
-
-    await eventbridge_service.publish_evaluation_event(
-        evaluation_id=cascaded.id,
-        candidate_position_id=candidate_position_id,
-        step_type=EvaluationStepType.recommendation,
-        source_document_id=cascaded.source_document_id,
-        rubric_version_id=cascaded.rubric_version_id,
-    )
-
-    created.append(cascaded)
-    return created
+    return [rerun]

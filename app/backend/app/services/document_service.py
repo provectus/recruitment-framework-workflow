@@ -85,21 +85,13 @@ async def _maybe_trigger_evaluation(session: AsyncSession, document: Document) -
     else:
         return
 
-    try:
-        await evaluation_service.trigger_evaluation(
-            session=session,
-            candidate_position_id=document.candidate_position_id,
-            step_type=step_type,
-            source_document_id=document.id,
-            rubric_version_id=rubric_version_id,
-        )
-    except Exception:
-        logger.warning(
-            "Failed to trigger evaluation for document %s step_type=%s",
-            document.id,
-            step_type,
-            exc_info=True,
-        )
+    await evaluation_service.trigger_evaluation(
+        session=session,
+        candidate_position_id=document.candidate_position_id,
+        step_type=step_type,
+        source_document_id=document.id,
+        rubric_version_id=rubric_version_id,
+    )
 
 
 async def _user_can_access_candidate_documents(

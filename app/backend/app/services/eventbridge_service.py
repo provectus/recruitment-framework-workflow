@@ -26,23 +26,15 @@ async def publish_evaluation_event(
         "rubric_version_id": rubric_version_id,
     }
 
-    try:
-        session = aioboto3.Session()
-        async with session.client("events", region_name=settings.s3_region) as client:
-            await client.put_events(
-                Entries=[
-                    {
-                        "Source": "lauter.api",
-                        "DetailType": "evaluation.requested",
-                        "Detail": json.dumps(detail),
-                        "EventBusName": settings.evaluation_event_bus_name,
-                    }
-                ]
-            )
-    except Exception:
-        logger.warning(
-            "Failed to publish evaluation event for evaluation_id=%s step_type=%s",
-            evaluation_id,
-            step_type,
-            exc_info=True,
+    session = aioboto3.Session()
+    async with session.client("events", region_name=settings.s3_region) as client:
+        await client.put_events(
+            Entries=[
+                {
+                    "Source": "lauter.api",
+                    "DetailType": "evaluation.requested",
+                    "Detail": json.dumps(detail),
+                    "EventBusName": settings.evaluation_event_bus_name,
+                }
+            ]
         )
