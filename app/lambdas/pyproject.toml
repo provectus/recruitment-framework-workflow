@@ -2,11 +2,18 @@
 name = "lauter-lambdas"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "boto3>=1.42.63",
+    "psycopg2-binary>=2.9.11",
+    "pypdf>=6.7.5",
+    "python-docx>=1.2.0",
+    "sqlalchemy>=2.0.48",
+    "sqlmodel>=0.0.37",
+]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8.0",
+    "pytest>=8.0",
 ]
 
 [tool.ruff]
@@ -22,13 +29,6 @@ ignore = ["ISC001"]
 
 [dependency-groups]
 dev = [
-    "boto3>=1.42.63",
     "pdfminer-six>=20260107",
-    "psycopg2-binary>=2.9.11",
-    "pypdf>=6.7.5",
-    "pypdf2>=3.0.1",
     "pytest>=9.0.2",
-    "python-docx>=1.2.0",
-    "sqlalchemy>=2.0.48",
-    "sqlmodel>=0.0.37",
 ]
