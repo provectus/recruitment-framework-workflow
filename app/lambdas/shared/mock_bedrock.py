@@ -35,6 +35,14 @@ MOCK_RESPONSES: dict[str, dict] = {
         ],
         "communication_quality": "The candidate communicated clearly and professionally throughout the screening. Responses were well-structured, concise, and demonstrated strong active listening skills.",
         "motivation_culture_fit": "Genuine interest in the company's mission and growth trajectory. Values alignment with the team's collaborative culture was evident. Expressed interest in mentoring junior engineers, which aligns with team needs.",
+        "requirements_alignment": [
+            {"requirement": "Python", "status": "met", "evidence": "Discussed 5 years of professional Python experience across multiple roles."},
+            {"requirement": "AWS", "status": "met", "evidence": "Mentioned working with EC2, S3, and Lambda in previous positions."},
+            {"requirement": "PostgreSQL", "status": "met", "evidence": "Confirmed as primary database in recent work."},
+            {"requirement": "Docker", "status": "partially_met", "evidence": "Mentioned using Docker for local development but depth unclear."},
+            {"requirement": "TypeScript", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
+            {"requirement": "CI/CD", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
+        ],
     },
     "technical_eval": {
         "criteria_scores": [
@@ -85,6 +93,17 @@ MOCK_RESPONSES: dict[str, dict] = {
             "Deeper knowledge of distributed systems consistency patterns",
             "Could explore more advanced system design topics like CQRS and event sourcing",
         ],
+        "cv_alignment": "Interview performance strongly confirms CV claims. The candidate's stated 5 years of Python experience was evident in their fluent use of language features and library knowledge during the coding challenge. Their AWS experience aligned with the system design discussion. No contradictions found between CV claims and demonstrated ability.",
+        "screening_consistency": "Technical interview is consistent with screening signals. The communication strengths noted in screening were confirmed — the candidate explained complex concepts clearly throughout. The concern about limited industry vertical experience was partially addressed, as the candidate demonstrated strong transferable problem-solving skills.",
+        "skill_gaps": [
+            "Distributed systems consistency patterns (eventual consistency, CQRS) — gap between role requirements and demonstrated depth",
+            "Event-driven architecture — mentioned briefly but lacked hands-on examples",
+        ],
+        "follow_up_questions": [
+            "Can you walk through a scenario where you had to handle data consistency across multiple microservices?",
+            "Describe your experience with event-driven architectures — what messaging systems have you used and what challenges did you face?",
+            "How would you approach debugging a distributed system where data is inconsistent across services?",
+        ],
     },
     "recommendation": {
         "recommendation": "hire",
@@ -110,3 +129,16 @@ def mock_invoke_claude(step_type: str) -> str:
         raise ValueError(f"No mock response defined for step type: {step_type}")
 
     return json.dumps(response)
+
+
+def mock_invoke_claude_structured(step_type: str) -> dict:
+    time.sleep(config.MOCK_BEDROCK_DELAY_SECONDS)
+
+    if step_type in config.MOCK_EVALUATION_FAILURES:
+        raise RuntimeError(f"Mock Bedrock failure for {step_type}")
+
+    response = MOCK_RESPONSES.get(step_type)
+    if response is None:
+        raise ValueError(f"No mock response defined for step type: {step_type}")
+
+    return response

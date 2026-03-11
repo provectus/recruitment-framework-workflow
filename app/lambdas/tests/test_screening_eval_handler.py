@@ -1,4 +1,3 @@
-import json
 import os
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
@@ -17,6 +16,10 @@ SAMPLE_RESULT = {
     "concerns": ["Limited team leadership experience"],
     "communication_quality": "Candidate articulated ideas clearly and concisely throughout the interview.",
     "motivation_culture_fit": "Expressed genuine interest in the product domain and aligned with async-first culture.",
+    "requirements_alignment": [
+        {"requirement": "Python", "status": "met", "evidence": "Discussed strong async Python background."},
+        {"requirement": "AWS", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
+    ],
 }
 
 LONG_TRANSCRIPT = " ".join(["word"] * 150)
@@ -99,9 +102,8 @@ class TestScreeningEvalHandlerSuccess:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -111,8 +113,8 @@ class TestScreeningEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -135,9 +137,8 @@ class TestScreeningEvalHandlerSuccess:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -147,8 +148,8 @@ class TestScreeningEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -158,40 +159,6 @@ class TestScreeningEvalHandlerSuccess:
         assert evaluation.status == "completed"
         assert evaluation.result == SAMPLE_RESULT
         assert evaluation.completed_at is not None
-        assert result == SAMPLE_RESULT
-
-    def test_handles_markdown_wrapped_json(self):
-        from screening_eval import handler as handler_module
-
-        evaluation = _make_mock_evaluation()
-        document = _make_mock_document()
-        candidate_position = _make_mock_candidate_position()
-        position = _make_mock_position()
-        session = _make_session_mock(evaluation, document, candidate_position, position)
-
-        wrapped = f"```json\n{json.dumps(SAMPLE_RESULT)}\n```"
-
-        with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
-                return_value=_mock_session(session),
-            ),
-            patch.object(
-                handler_module.s3_module,
-                "get_document_text",
-                return_value=LONG_TRANSCRIPT,
-            ),
-            patch.object(
-                handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=wrapped,
-            ),
-        ):
-            result = handler_module.handler(
-                {"detail": {"evaluation_id": 1}}, context=None
-            )
-
         assert result == SAMPLE_RESULT
 
 
@@ -208,9 +175,8 @@ class TestScreeningEvalHandlerFailure:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -237,9 +203,8 @@ class TestScreeningEvalHandlerFailure:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -249,7 +214,7 @@ class TestScreeningEvalHandlerFailure:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
             ) as mock_bedrock,
             pytest.raises(ValueError),
         ):
@@ -269,9 +234,8 @@ class TestScreeningEvalHandlerFailure:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -281,7 +245,7 @@ class TestScreeningEvalHandlerFailure:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
                 side_effect=RuntimeError("Bedrock throttled after retries"),
             ),
             pytest.raises(RuntimeError),
@@ -308,9 +272,8 @@ class TestScreeningEvalHandlerFailure:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -320,8 +283,8 @@ class TestScreeningEvalHandlerFailure:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(incomplete_result),
+                "invoke_claude_structured",
+                return_value=incomplete_result,
             ),
             pytest.raises(ValueError, match="missing required sections"),
         ):

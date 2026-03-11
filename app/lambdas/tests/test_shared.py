@@ -188,16 +188,13 @@ class TestCvAnalysisPromptBuilder:
         assert "PostgreSQL" in user_prompt
         assert "Experienced developer" in user_prompt
 
-    def test_system_prompt_instructs_json(self):
-        from shared.prompts.cv_analysis import build_cv_analysis_prompt
+    def test_tool_schema_defines_output_structure(self):
+        from shared.prompts.cv_analysis import TOOL_NAME, TOOL_SCHEMA
 
-        system_prompt, _ = build_cv_analysis_prompt(
-            position_title="Role",
-            position_description="Desc",
-            required_skills=[],
-            cv_text="CV",
-        )
-
-        assert "JSON" in system_prompt
-        assert "skills_match" in system_prompt
-        assert "overall_fit" in system_prompt
+        assert TOOL_NAME == "cv_analysis"
+        assert "properties" in TOOL_SCHEMA
+        props = TOOL_SCHEMA["properties"]
+        assert "skills_match" in props
+        assert "overall_fit" in props
+        assert "experience_relevance" in props
+        assert "thinking" in props

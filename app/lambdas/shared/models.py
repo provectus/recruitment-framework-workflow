@@ -53,6 +53,9 @@ class Position(SQLModel, table=True):
     requirements: str | None = Field(
         default=None, sa_column=Column(Text, nullable=True)
     )
+    evaluation_instructions: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
     status: str = Field(default="open", sa_column=Column(String, nullable=False))
     team_id: int = Field(
         sa_column=Column(Integer, ForeignKey("teams.id"), nullable=False)

@@ -1,4 +1,3 @@
-import json
 import os
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
@@ -99,9 +98,8 @@ class TestCvAnalysisHandlerSuccess:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -111,8 +109,8 @@ class TestCvAnalysisHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -142,9 +140,8 @@ class TestCvAnalysisHandlerSuccess:
         session.add.side_effect = tracking_add
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -154,8 +151,8 @@ class TestCvAnalysisHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_RESULT,
             ),
         ):
             handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
@@ -164,40 +161,6 @@ class TestCvAnalysisHandlerSuccess:
         running_idx = status_sequence.index("running")
         completed_idx = status_sequence.index("completed")
         assert running_idx < completed_idx
-
-    def test_handles_markdown_wrapped_json(self):
-        from cv_analysis import handler as handler_module
-
-        evaluation = _make_mock_evaluation()
-        document = _make_mock_document()
-        candidate_position = _make_mock_candidate_position()
-        position = _make_mock_position()
-        session = _make_session_mock(evaluation, document, candidate_position, position)
-
-        wrapped = f"```json\n{json.dumps(SAMPLE_RESULT)}\n```"
-
-        with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
-                return_value=_mock_session(session),
-            ),
-            patch.object(
-                handler_module.s3_module,
-                "get_document_text",
-                return_value="CV text",
-            ),
-            patch.object(
-                handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=wrapped,
-            ),
-        ):
-            result = handler_module.handler(
-                {"detail": {"evaluation_id": 1}}, context=None
-            )
-
-        assert result == SAMPLE_RESULT
 
     def test_event_without_detail_wrapper(self):
         from cv_analysis import handler as handler_module
@@ -209,9 +172,8 @@ class TestCvAnalysisHandlerSuccess:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -221,8 +183,8 @@ class TestCvAnalysisHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_RESULT,
             ),
         ):
             result = handler_module.handler({"evaluation_id": 1}, context=None)
@@ -243,9 +205,8 @@ class TestCvAnalysisHandlerFailure:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -273,9 +234,8 @@ class TestCvAnalysisHandlerFailure:
         session = _make_session_mock(evaluation, document, candidate_position, position)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -285,7 +245,7 @@ class TestCvAnalysisHandlerFailure:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
                 side_effect=RuntimeError("Bedrock throttled after retries"),
             ),
             pytest.raises(RuntimeError),
@@ -314,9 +274,8 @@ class TestCvAnalysisHandlerFailure:
         session.commit.side_effect = counting_commit
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(

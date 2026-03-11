@@ -1,4 +1,3 @@
-import json
 import os
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
@@ -107,13 +106,13 @@ def _make_session_with_upstream(
     screening_result: dict | None,
     technical_result: dict | None,
 ) -> MagicMock:
-    """Build a session mock that routes query().filter().order_by().all() calls
-    to the appropriate per-step result.
+    """Build a session mock that intercepts session.execute(stmt).scalar_one_or_none()
+    calls for upstream evaluation lookups.
 
-    The handler calls this chain once per step type in UPSTREAM_STEP_TYPES order
-    (cv_analysis, screening_eval, technical_eval). We capture the step_type from
-    the SQLAlchemy BinaryExpression argument passed to filter() and return the
-    matching result row.
+    The handler calls _fetch_latest_completed_results which runs one
+    select(Evaluation).where(...) per step type in UPSTREAM_STEP_TYPES order
+    (cv_analysis, screening_eval, technical_eval). We return the matching
+    result row or None based on whether the test provides a result dict.
     """
     session = MagicMock()
 
@@ -137,36 +136,27 @@ def _make_session_with_upstream(
     step_order = ["cv_analysis", "screening_eval", "technical_eval"]
     call_index = [0]
 
-    def query_side_effect(model_class):
-        query_mock = MagicMock()
+    def execute_side_effect(stmt):
+        result_proxy = MagicMock()
+        current_index = call_index[0]
+        call_index[0] += 1
 
-        def filter_side_effect(*args, **kwargs):
-            filter_mock = MagicMock()
-            current_index = call_index[0]
-            call_index[0] += 1
+        step = step_order[current_index % 3]
+        step_result = results_by_step.get(step)
 
-            order_mock = MagicMock()
+        if step_result is None:
+            result_proxy.scalar_one_or_none.return_value = None
+        else:
+            row = MagicMock()
+            row.step_type = step
+            row.status = "completed"
+            row.result = step_result
+            row.version = 1
+            result_proxy.scalar_one_or_none.return_value = row
 
-            def all_side_effect(captured_index=current_index):
-                step = step_order[captured_index % 3]
-                result = results_by_step.get(step)
-                if result is None:
-                    return []
-                row = MagicMock()
-                row.step_type = step
-                row.status = "completed"
-                row.result = result
-                row.version = 1
-                return [row]
+        return result_proxy
 
-            order_mock.all.side_effect = all_side_effect
-            filter_mock.order_by.return_value = order_mock
-            return filter_mock
-
-        query_mock.filter.side_effect = filter_side_effect
-        return query_mock
-
-    session.query.side_effect = query_side_effect
+    session.execute.side_effect = execute_side_effect
     return session
 
 
@@ -192,15 +182,14 @@ class TestRecommendationHandlerAllInputsPresent:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(FULL_RECOMMENDATION_RESULT),
+                "invoke_claude_structured",
+                return_value=FULL_RECOMMENDATION_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -236,15 +225,14 @@ class TestRecommendationHandlerAllInputsPresent:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(bedrock_response),
+                "invoke_claude_structured",
+                return_value=bedrock_response,
             ),
         ):
             result = handler_module.handler(
@@ -278,15 +266,14 @@ class TestRecommendationHandlerAllInputsPresent:
         session.add.side_effect = tracking_add
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(FULL_RECOMMENDATION_RESULT),
+                "invoke_claude_structured",
+                return_value=FULL_RECOMMENDATION_RESULT,
             ),
         ):
             handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
@@ -320,15 +307,14 @@ class TestRecommendationHandlerMissingInputs:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(bedrock_response),
+                "invoke_claude_structured",
+                return_value=bedrock_response,
             ),
         ):
             result = handler_module.handler(
@@ -356,15 +342,14 @@ class TestRecommendationHandlerMissingInputs:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(PARTIAL_RECOMMENDATION_RESULT),
+                "invoke_claude_structured",
+                return_value=PARTIAL_RECOMMENDATION_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -390,15 +375,14 @@ class TestRecommendationHandlerMissingInputs:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(NO_INPUT_RECOMMENDATION_RESULT),
+                "invoke_claude_structured",
+                return_value=NO_INPUT_RECOMMENDATION_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -434,15 +418,14 @@ class TestRecommendationHandlerMissingInputs:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(bedrock_ignores_instruction),
+                "invoke_claude_structured",
+                return_value=bedrock_ignores_instruction,
             ),
         ):
             result = handler_module.handler(
@@ -476,15 +459,14 @@ class TestRecommendationHandlerValidation:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(invalid_response),
+                "invoke_claude_structured",
+                return_value=invalid_response,
             ),
         ):
             result = handler_module.handler(
@@ -517,15 +499,14 @@ class TestRecommendationHandlerValidation:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(invalid_response),
+                "invoke_claude_structured",
+                return_value=invalid_response,
             ),
         ):
             result = handler_module.handler(
@@ -553,14 +534,13 @@ class TestRecommendationHandlerValidation:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
                 side_effect=RuntimeError("Bedrock throttled after retries"),
             ),
             pytest.raises(RuntimeError),
@@ -570,37 +550,3 @@ class TestRecommendationHandlerValidation:
         assert evaluation.status == "failed"
         assert "Bedrock" in evaluation.error_message
 
-    def test_handles_markdown_wrapped_json(self):
-        from recommendation import handler as handler_module
-
-        evaluation = _make_mock_evaluation()
-        candidate_position = _make_mock_candidate_position()
-        position = _make_mock_position()
-        session = _make_session_with_upstream(
-            evaluation,
-            candidate_position,
-            position,
-            cv_result=CV_ANALYSIS_RESULT,
-            screening_result=SCREENING_EVAL_RESULT,
-            technical_result=TECHNICAL_EVAL_RESULT,
-        )
-
-        wrapped = f"```json\n{json.dumps(FULL_RECOMMENDATION_RESULT)}\n```"
-
-        with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
-                return_value=_mock_session(session),
-            ),
-            patch.object(
-                handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=wrapped,
-            ),
-        ):
-            result = handler_module.handler(
-                {"detail": {"evaluation_id": 1}}, context=None
-            )
-
-        assert result["recommendation"] == "hire"

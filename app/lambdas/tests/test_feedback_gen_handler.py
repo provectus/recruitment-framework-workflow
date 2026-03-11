@@ -1,4 +1,3 @@
-import json
 import os
 import re
 from contextlib import contextmanager
@@ -123,15 +122,14 @@ class TestFeedbackGenHandlerSuccess:
         session = _make_session_mock(evaluation, completed_evals)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_LLM_FEEDBACK),
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_FEEDBACK,
             ),
         ):
             result = handler_module.handler(
@@ -166,15 +164,14 @@ class TestFeedbackGenHandlerSuccess:
         session = _make_session_mock(evaluation, completed_evals)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(technical_feedback),
+                "invoke_claude_structured",
+                return_value=technical_feedback,
             ),
         ):
             result = handler_module.handler(
@@ -200,15 +197,14 @@ class TestFeedbackGenHandlerSuccess:
         }
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(minimal_feedback),
+                "invoke_claude_structured",
+                return_value=minimal_feedback,
             ),
         ):
             result = handler_module.handler(
@@ -233,15 +229,14 @@ class TestFeedbackGenHandlerSuccess:
         session.add.side_effect = tracking_add
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_LLM_FEEDBACK),
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_FEEDBACK,
             ),
         ):
             handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
@@ -269,15 +264,14 @@ class TestFeedbackDoesNotExposeInternalDetails:
         session = _make_session_mock(evaluation, completed_evals)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(feedback_with_no_scores),
+                "invoke_claude_structured",
+                return_value=feedback_with_no_scores,
             ),
         ):
             result = handler_module.handler(
@@ -312,15 +306,14 @@ class TestFeedbackDoesNotExposeInternalDetails:
         session = _make_session_mock(evaluation, completed_evals)
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(rubric_criterion_feedback),
+                "invoke_claude_structured",
+                return_value=rubric_criterion_feedback,
             ),
         ):
             result = handler_module.handler(
@@ -344,14 +337,13 @@ class TestFeedbackGenHandlerFailure:
         session = _make_session_mock(evaluation, completed_evals={})
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
                 side_effect=RuntimeError("Bedrock throttled after retries"),
             ),
             pytest.raises(RuntimeError),
@@ -370,9 +362,8 @@ class TestFeedbackGenHandlerFailure:
         session.get.return_value = None
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             pytest.raises(ValueError, match="not found"),

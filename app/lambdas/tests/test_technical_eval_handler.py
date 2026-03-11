@@ -1,4 +1,3 @@
-import json
 import os
 from contextlib import contextmanager
 from typing import Any
@@ -42,6 +41,23 @@ SAMPLE_RUBRIC_STRUCTURE = {
     ]
 }
 
+SAMPLE_CV_ANALYSIS_RESULT: dict[str, Any] = {
+    "skills_match": [
+        {"skill": "Python", "present": True, "notes": "5 years experience."},
+        {"skill": "AWS", "present": True, "notes": "EC2, S3, Lambda."},
+        {"skill": "TypeScript", "present": False, "notes": "Not mentioned."},
+    ],
+    "experience_relevance": "6 years backend engineering.",
+    "overall_fit": "Strong technical match.",
+}
+
+SAMPLE_SCREENING_RESULT: dict[str, Any] = {
+    "strengths": ["Well-prepared", "Concrete examples"],
+    "concerns": ["Salary expectations above range"],
+    "communication_quality": "Clear and professional.",
+    "motivation_culture_fit": "Genuine interest in company mission.",
+}
+
 SAMPLE_LLM_RESULT: dict[str, Any] = {
     "criteria_scores": [
         {
@@ -75,6 +91,10 @@ SAMPLE_LLM_RESULT: dict[str, Any] = {
     "weighted_total": 99.9,
     "strengths_summary": ["Strong system design instincts", "Excellent communication"],
     "improvement_areas": ["Coding optimization"],
+    "cv_alignment": "Interview confirms CV claims about Python experience.",
+    "screening_consistency": "Consistent with screening signals.",
+    "skill_gaps": ["Distributed systems consistency patterns"],
+    "follow_up_questions": ["Describe your experience with eventual consistency."],
 }
 
 
@@ -126,12 +146,34 @@ def _make_mock_rubric_version(rubric_version_id: int = 7) -> MagicMock:
     return rv
 
 
+def _make_mock_cv_analysis_evaluation(
+    result: dict[str, Any] | None = None,
+) -> MagicMock:
+    ev = MagicMock()
+    ev.step_type = "cv_analysis"
+    ev.status = "completed"
+    ev.result = result if result is not None else SAMPLE_CV_ANALYSIS_RESULT
+    return ev
+
+
+def _make_mock_screening_evaluation(
+    result: dict[str, Any] | None = None,
+) -> MagicMock:
+    ev = MagicMock()
+    ev.step_type = "screening_eval"
+    ev.status = "completed"
+    ev.result = result if result is not None else SAMPLE_SCREENING_RESULT
+    return ev
+
+
 def _make_session_mock(
     evaluation: MagicMock,
     document: MagicMock,
     candidate_position: MagicMock,
     position: MagicMock,
     rubric_version: MagicMock | None = None,
+    cv_analysis_eval: MagicMock | None = None,
+    screening_eval: MagicMock | None = None,
 ) -> MagicMock:
     session = MagicMock()
 
@@ -148,7 +190,16 @@ def _make_session_mock(
             return rubric_version
         return None
 
+    execute_results = iter([cv_analysis_eval, screening_eval])
+
+    def session_execute(stmt):
+        row = next(execute_results, None)
+        result_mock = MagicMock()
+        result_mock.scalar_one_or_none.return_value = row
+        return result_mock
+
     session.get.side_effect = session_get
+    session.execute.side_effect = session_execute
     return session
 
 
@@ -171,9 +222,8 @@ class TestTechnicalEvalHandlerSuccess:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -183,8 +233,8 @@ class TestTechnicalEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_LLM_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -235,9 +285,8 @@ class TestTechnicalEvalHandlerSuccess:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -247,8 +296,8 @@ class TestTechnicalEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(llm_result),
+                "invoke_claude_structured",
+                return_value=llm_result,
             ),
         ):
             result = handler_module.handler(
@@ -271,9 +320,8 @@ class TestTechnicalEvalHandlerSuccess:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -283,8 +331,8 @@ class TestTechnicalEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_LLM_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_RESULT,
             ),
         ):
             result = handler_module.handler(
@@ -318,9 +366,8 @@ class TestTechnicalEvalHandlerSuccess:
         session.add.side_effect = tracking_add
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -330,8 +377,8 @@ class TestTechnicalEvalHandlerSuccess:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
-                return_value=json.dumps(SAMPLE_LLM_RESULT),
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_RESULT,
             ),
         ):
             handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
@@ -355,9 +402,8 @@ class TestTechnicalEvalHandlerFailure:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             pytest.raises(ValueError, match="No rubric assigned"),
@@ -382,9 +428,8 @@ class TestTechnicalEvalHandlerFailure:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -414,9 +459,8 @@ class TestTechnicalEvalHandlerFailure:
         )
 
         with (
-            patch.object(
-                handler_module.db_module,
-                "get_session",
+            patch(
+                "shared.db.get_session",
                 return_value=_mock_session(session),
             ),
             patch.object(
@@ -426,7 +470,7 @@ class TestTechnicalEvalHandlerFailure:
             ),
             patch.object(
                 handler_module.bedrock_module,
-                "invoke_claude",
+                "invoke_claude_structured",
                 side_effect=RuntimeError("Bedrock throttled after retries"),
             ),
             pytest.raises(RuntimeError),
@@ -435,3 +479,192 @@ class TestTechnicalEvalHandlerFailure:
 
         assert evaluation.status == "failed"
         assert "Bedrock" in evaluation.error_message
+
+
+class TestTechnicalEvalContextEnrichment:
+    def test_screening_data_included_in_prompt(self):
+        from technical_eval import handler as handler_module
+
+        evaluation = _make_mock_evaluation()
+        document = _make_mock_document()
+        candidate_position = _make_mock_candidate_position()
+        position = _make_mock_position()
+        rubric_version = _make_mock_rubric_version()
+        cv_eval = _make_mock_cv_analysis_evaluation()
+        screening_eval = _make_mock_screening_evaluation()
+        session = _make_session_mock(
+            evaluation,
+            document,
+            candidate_position,
+            position,
+            rubric_version,
+            cv_analysis_eval=cv_eval,
+            screening_eval=screening_eval,
+        )
+
+        captured_prompt = {}
+
+        def capture_bedrock_call(**kwargs):
+            captured_prompt["user_prompt"] = kwargs.get("prompt", "")
+            return SAMPLE_LLM_RESULT
+
+        with (
+            patch(
+                "shared.db.get_session",
+                return_value=_mock_session(session),
+            ),
+            patch.object(
+                handler_module.s3_module,
+                "get_document_text",
+                return_value="Transcript.",
+            ),
+            patch.object(
+                handler_module.bedrock_module,
+                "invoke_claude_structured",
+                side_effect=capture_bedrock_call,
+            ),
+        ):
+            handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
+
+        prompt = captured_prompt["user_prompt"]
+        assert "Candidate Background" in prompt
+        assert "CV Analysis Results:" in prompt
+        assert "Python" in prompt
+        assert "Prior Screening Signals" in prompt
+        assert "Screening Interview Results:" in prompt
+        assert "Well-prepared" in prompt
+
+    def test_screening_absent_handler_proceeds(self):
+        from technical_eval import handler as handler_module
+
+        evaluation = _make_mock_evaluation()
+        document = _make_mock_document()
+        candidate_position = _make_mock_candidate_position()
+        position = _make_mock_position()
+        rubric_version = _make_mock_rubric_version()
+        cv_eval = _make_mock_cv_analysis_evaluation()
+        session = _make_session_mock(
+            evaluation,
+            document,
+            candidate_position,
+            position,
+            rubric_version,
+            cv_analysis_eval=cv_eval,
+            screening_eval=None,
+        )
+
+        captured_prompt = {}
+
+        def capture_bedrock_call(**kwargs):
+            captured_prompt["user_prompt"] = kwargs.get("prompt", "")
+            return SAMPLE_LLM_RESULT
+
+        with (
+            patch(
+                "shared.db.get_session",
+                return_value=_mock_session(session),
+            ),
+            patch.object(
+                handler_module.s3_module,
+                "get_document_text",
+                return_value="Transcript.",
+            ),
+            patch.object(
+                handler_module.bedrock_module,
+                "invoke_claude_structured",
+                side_effect=capture_bedrock_call,
+            ),
+        ):
+            result = handler_module.handler(
+                {"detail": {"evaluation_id": 1}}, context=None
+            )
+
+        assert evaluation.status == "completed"
+        prompt = captured_prompt["user_prompt"]
+        assert "Prior Screening Signals" not in prompt
+        assert "screening_consistency" in result
+
+    def test_cv_fetch_failure_proceeds_gracefully(self):
+        from technical_eval import handler as handler_module
+
+        evaluation = _make_mock_evaluation()
+        document = _make_mock_document()
+        candidate_position = _make_mock_candidate_position()
+        position = _make_mock_position()
+        rubric_version = _make_mock_rubric_version()
+
+        session = _make_session_mock(
+            evaluation, document, candidate_position, position, rubric_version
+        )
+        session.execute.side_effect = RuntimeError("DB connection lost")
+
+        with (
+            patch(
+                "shared.db.get_session",
+                return_value=_mock_session(session),
+            ),
+            patch.object(
+                handler_module.s3_module,
+                "get_document_text",
+                return_value="Transcript.",
+            ),
+            patch.object(
+                handler_module.bedrock_module,
+                "invoke_claude_structured",
+                return_value=SAMPLE_LLM_RESULT,
+            ),
+        ):
+            result = handler_module.handler(
+                {"detail": {"evaluation_id": 1}}, context=None
+            )
+
+        assert evaluation.status == "completed"
+        assert "weighted_total" in result
+
+    def test_no_context_produces_minimal_prompt(self):
+        from technical_eval import handler as handler_module
+
+        evaluation = _make_mock_evaluation()
+        document = _make_mock_document()
+        candidate_position = _make_mock_candidate_position()
+        position = _make_mock_position()
+        rubric_version = _make_mock_rubric_version()
+        session = _make_session_mock(
+            evaluation,
+            document,
+            candidate_position,
+            position,
+            rubric_version,
+            cv_analysis_eval=None,
+            screening_eval=None,
+        )
+
+        captured_prompt = {}
+
+        def capture_bedrock_call(**kwargs):
+            captured_prompt["user_prompt"] = kwargs.get("prompt", "")
+            return SAMPLE_LLM_RESULT
+
+        with (
+            patch(
+                "shared.db.get_session",
+                return_value=_mock_session(session),
+            ),
+            patch.object(
+                handler_module.s3_module,
+                "get_document_text",
+                return_value="Transcript.",
+            ),
+            patch.object(
+                handler_module.bedrock_module,
+                "invoke_claude_structured",
+                side_effect=capture_bedrock_call,
+            ),
+        ):
+            handler_module.handler({"detail": {"evaluation_id": 1}}, context=None)
+
+        prompt = captured_prompt["user_prompt"]
+        assert "Candidate Background" not in prompt
+        assert "Prior Screening Signals" not in prompt
+        assert "Evaluation Rubric" in prompt
+        assert "Interview Transcript" in prompt

@@ -1,39 +1,33 @@
-import json
 import sys
-from datetime import UTC, datetime
 from typing import Any
 
 sys.path.insert(0, "/opt/python")
 sys.path.insert(0, "/var/task")
 
-from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from shared import bedrock as bedrock_module
-from shared import db as db_module
-from shared.models import Evaluation
-from shared.prompts.feedback_gen import build_feedback_gen_prompt
-from shared.utils import strip_markdown_fences
+from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
+from shared.prompts.feedback_gen import (
+    TOOL_NAME,
+    TOOL_SCHEMA,
+    build_feedback_gen_prompt,
+)
+from shared.queries import fetch_latest_completed_result
+
+_UPSTREAM_STEP_TYPES = ("cv_analysis", "screening_eval", "technical_eval")
 
 
 def _collect_completed_evaluations(
-    session: Any, candidate_position_id: int
+    session: Session, candidate_position_id: int
 ) -> dict[str, Any]:
-    relevant_step_types = ("cv_analysis", "screening_eval", "technical_eval")
     results: dict[str, Any] = {}
-
-    for step_type in relevant_step_types:
-        stmt = (
-            select(Evaluation)
-            .where(Evaluation.candidate_position_id == candidate_position_id)
-            .where(Evaluation.step_type == step_type)
-            .where(Evaluation.status == "completed")
-            .order_by(Evaluation.version.desc())
-            .limit(1)
+    for step_type in _UPSTREAM_STEP_TYPES:
+        result = fetch_latest_completed_result(
+            session, candidate_position_id, step_type
         )
-        row = session.execute(stmt).scalar_one_or_none()
-        if row is not None and row.result:
-            results[step_type] = row.result
-
+        if result is not None:
+            results[step_type] = result
     return results
 
 
@@ -49,57 +43,32 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
 
-    with db_module.get_session() as session:
-        evaluation = session.get(Evaluation, evaluation_id)
-        if evaluation is None:
-            raise ValueError(f"Evaluation {evaluation_id} not found")
+    with run_evaluation(evaluation_id) as (session, evaluation):
+        evaluation_results = _collect_completed_evaluations(
+            session, evaluation.candidate_position_id
+        )
 
-        try:
-            evaluation.status = "running"
-            evaluation.started_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
-            session.refresh(evaluation)
+        rejection_stage = _determine_rejection_stage(evaluation_results)
 
-            evaluation_results = _collect_completed_evaluations(
-                session, evaluation.candidate_position_id
+        system_prompt, user_prompt = build_feedback_gen_prompt(
+            evaluation_results=evaluation_results,
+            rejection_stage=rejection_stage,
+        )
+
+        result = bedrock_module.invoke_claude_structured(
+            prompt=user_prompt,
+            tool_name=TOOL_NAME,
+            tool_schema=TOOL_SCHEMA,
+            system_prompt=system_prompt,
+            step_type="feedback_gen",
+        )
+
+        if "feedback_text" not in result:
+            raise ValueError(
+                "Bedrock response missing required field: feedback_text"
             )
 
-            rejection_stage = _determine_rejection_stage(evaluation_results)
+        result["rejection_stage"] = rejection_stage
 
-            system_prompt, user_prompt = build_feedback_gen_prompt(
-                evaluation_results=evaluation_results,
-                rejection_stage=rejection_stage,
-            )
-
-            raw_response = bedrock_module.invoke_claude(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                step_type="feedback_gen",
-            )
-
-            cleaned = strip_markdown_fences(raw_response)
-            result = json.loads(cleaned)
-
-            if "feedback_text" not in result:
-                raise ValueError(
-                    "Bedrock response missing required field: feedback_text"
-                )
-
-            result["rejection_stage"] = rejection_stage
-
-            evaluation.status = "completed"
-            evaluation.result = result
-            evaluation.completed_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
-
-            return result
-
-        except Exception as exc:
-            evaluation.status = "failed"
-            evaluation.error_message = str(exc)
-            evaluation.completed_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
-            raise
+        complete_evaluation(session, evaluation, result)
+        return result

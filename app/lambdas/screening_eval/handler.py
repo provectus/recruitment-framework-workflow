@@ -1,17 +1,18 @@
-import json
 import sys
-from datetime import UTC, datetime
 from typing import Any
 
 sys.path.insert(0, "/opt/python")
 sys.path.insert(0, "/var/task")
 
 from shared import bedrock as bedrock_module
-from shared import db as db_module
 from shared import s3 as s3_module
-from shared.models import CandidatePosition, Document, Evaluation, Position
-from shared.prompts.screening_eval import build_screening_eval_prompt
-from shared.utils import strip_markdown_fences
+from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
+from shared.models import CandidatePosition, Document, Position
+from shared.prompts.screening_eval import (
+    TOOL_NAME,
+    TOOL_SCHEMA,
+    build_screening_eval_prompt,
+)
 
 REQUIRED_RESULT_SECTIONS = {
     "key_topics",
@@ -19,6 +20,7 @@ REQUIRED_RESULT_SECTIONS = {
     "concerns",
     "communication_quality",
     "motivation_culture_fit",
+    "requirements_alignment",
 }
 
 MIN_TRANSCRIPT_WORDS = 100
@@ -45,74 +47,50 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
 
-    with db_module.get_session() as session:
-        evaluation = session.get(Evaluation, evaluation_id)
-        if evaluation is None:
-            raise ValueError(f"Evaluation {evaluation_id} not found")
-
-        try:
-            evaluation.status = "running"
-            evaluation.started_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
-            session.refresh(evaluation)
-
-            if evaluation.source_document_id is None:
-                raise ValueError(
-                    f"Evaluation {evaluation_id} has no source_document_id"
-                )
-
-            document = session.get(Document, evaluation.source_document_id)
-            if document is None:
-                raise ValueError(
-                    f"Document {evaluation.source_document_id} not found"
-                )
-
-            candidate_position = session.get(
-                CandidatePosition, evaluation.candidate_position_id
-            )
-            if candidate_position is None:
-                raise ValueError(
-                    f"CandidatePosition {evaluation.candidate_position_id} not found"
-                )
-
-            position = session.get(Position, candidate_position.position_id)
-            if position is None:
-                raise ValueError(
-                    f"Position {candidate_position.position_id} not found"
-                )
-
-            transcript_text = s3_module.get_document_text(document.s3_key)
-            _validate_transcript_length(transcript_text)
-
-            system_prompt, user_prompt = build_screening_eval_prompt(
-                position_title=position.title,
-                position_description=position.requirements or "",
-                transcript_text=transcript_text,
+    with run_evaluation(evaluation_id) as (session, evaluation):
+        if evaluation.source_document_id is None:
+            raise ValueError(
+                f"Evaluation {evaluation_id} has no source_document_id"
             )
 
-            raw_response = bedrock_module.invoke_claude(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                step_type="screening_eval",
+        document = session.get(Document, evaluation.source_document_id)
+        if document is None:
+            raise ValueError(
+                f"Document {evaluation.source_document_id} not found"
             )
 
-            cleaned = strip_markdown_fences(raw_response)
-            result = json.loads(cleaned)
-            _validate_result_sections(result)
+        candidate_position = session.get(
+            CandidatePosition, evaluation.candidate_position_id
+        )
+        if candidate_position is None:
+            raise ValueError(
+                f"CandidatePosition {evaluation.candidate_position_id} not found"
+            )
 
-            evaluation.status = "completed"
-            evaluation.result = result
-            evaluation.completed_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
+        position = session.get(Position, candidate_position.position_id)
+        if position is None:
+            raise ValueError(
+                f"Position {candidate_position.position_id} not found"
+            )
 
-            return result
+        transcript_text = s3_module.get_document_text(document.s3_key)
+        _validate_transcript_length(transcript_text)
 
-        except Exception as exc:
-            evaluation.status = "failed"
-            evaluation.error_message = str(exc)
-            evaluation.completed_at = datetime.now(tz=UTC)
-            session.add(evaluation)
-            session.commit()
-            raise
+        system_prompt, user_prompt = build_screening_eval_prompt(
+            position_title=position.title,
+            position_description=position.requirements or "",
+            transcript_text=transcript_text,
+            evaluation_instructions=position.evaluation_instructions or "",
+        )
+
+        result = bedrock_module.invoke_claude_structured(
+            prompt=user_prompt,
+            tool_name=TOOL_NAME,
+            tool_schema=TOOL_SCHEMA,
+            system_prompt=system_prompt,
+            step_type="screening_eval",
+        )
+        _validate_result_sections(result)
+
+        complete_evaluation(session, evaluation, result)
+        return result
