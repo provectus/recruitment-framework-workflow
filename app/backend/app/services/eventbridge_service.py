@@ -34,9 +34,7 @@ async def publish_evaluation_event(
         "rubric_version_id": rubric_version_id,
     }
 
-    async with _session.client(
-        "events", region_name=settings.s3_region
-    ) as client:
+    async with _session.client("events", region_name=settings.s3_region) as client:
         await client.put_events(
             Entries=[
                 {
