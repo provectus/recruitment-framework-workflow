@@ -9,7 +9,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.database import async_session_factory, get_session
 from app.dependencies.auth import get_current_user
 from app.exceptions import NotFoundException
-from app.models.enums import EvaluationStatus
+from app.models.enums import EvaluationStatus, EvaluationStepType
 from app.models.user import User
 from app.schemas.evaluations import (
     EvaluationHistoryResponse,
@@ -23,6 +23,20 @@ router = APIRouter(prefix="/api/evaluations", tags=["evaluations"])
 TERMINAL_STATUSES = {EvaluationStatus.completed, EvaluationStatus.failed}
 POLL_INTERVAL_SECONDS = 2
 KEEPALIVE_INTERVAL_POLLS = 15
+MAX_POLL_DURATION_SECONDS = 300
+
+VALID_STEP_TYPES = {member.value for member in EvaluationStepType}
+
+
+def _validate_step_type(step_type: str) -> None:
+    if step_type not in VALID_STEP_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Invalid step_type '{step_type}'. "
+                f"Must be one of: {sorted(VALID_STEP_TYPES)}"
+            ),
+        )
 
 
 @router.get("/{candidate_position_id}/stream")
@@ -34,8 +48,14 @@ async def stream_evaluation_status(
     async def event_generator() -> AsyncGenerator[dict[str, str], None]:
         last_known_statuses: dict[str, str] = {}
         keepalive_counter = 0
+        started_at = asyncio.get_event_loop().time()
 
         while True:
+            elapsed = asyncio.get_event_loop().time() - started_at
+            if elapsed >= MAX_POLL_DURATION_SECONDS:
+                yield {"event": "done", "data": "{}"}
+                break
+
             if await request.is_disconnected():
                 break
 
@@ -107,6 +127,7 @@ async def rerun_evaluation(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
+    _validate_step_type(step_type)
     try:
         evaluations = await evaluation_service.rerun_evaluation(
             session=session,
@@ -130,6 +151,7 @@ async def get_evaluation_history(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationHistoryResponse:
+    _validate_step_type(step_type)
     evaluations = await evaluation_service.get_evaluation_history(
         session=session,
         candidate_position_id=candidate_position_id,
@@ -151,6 +173,7 @@ async def get_evaluation_by_step(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationResponse:
+    _validate_step_type(step_type)
     try:
         evaluation = await evaluation_service.get_evaluation_by_step(
             session=session,

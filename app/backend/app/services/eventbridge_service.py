@@ -7,6 +7,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+_session = aioboto3.Session()
+
 
 async def publish_evaluation_event(
     evaluation_id: int,
@@ -26,8 +28,9 @@ async def publish_evaluation_event(
         "rubric_version_id": rubric_version_id,
     }
 
-    session = aioboto3.Session()
-    async with session.client("events", region_name=settings.s3_region) as client:
+    async with _session.client(
+        "events", region_name=settings.s3_region
+    ) as client:
         await client.put_events(
             Entries=[
                 {
