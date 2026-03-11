@@ -1,4 +1,7 @@
+import os
 from collections.abc import AsyncGenerator
+
+os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-tests-only-32chars")
 
 import pytest
 from httpx import ASGITransport, AsyncClient
