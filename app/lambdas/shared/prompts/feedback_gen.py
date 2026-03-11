@@ -9,7 +9,7 @@ You must respond with a single valid JSON object — no markdown code fences, no
 The JSON must conform exactly to this structure:
 {
   "feedback_text": "<full feedback message as a professional letter>",
-  "rejection_stage": "<the stage at which the candidate was rejected: 'screening' or 'technical'>"
+  "rejection_stage": "<the stage at which the candidate was rejected: 'cv_review', 'screening', or 'technical'>"
 }
 
 Strict rules you MUST follow:

@@ -46,7 +46,9 @@ def _collect_completed_evaluations(session: Any, candidate_position_id: int) -> 
 def _determine_rejection_stage(evaluation_results: dict[str, Any]) -> str:
     if "technical_eval" in evaluation_results:
         return "technical"
-    return "screening"
+    if "screening_eval" in evaluation_results:
+        return "screening"
+    return "cv_review"
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:

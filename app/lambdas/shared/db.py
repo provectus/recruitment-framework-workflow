@@ -2,6 +2,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session
 
 from shared import config
@@ -12,9 +13,13 @@ _engine = None
 def get_engine():
     global _engine
     if _engine is None:
-        url = (
-            f"postgresql+psycopg2://{config.DB_USERNAME}:{config.DB_PASSWORD}"
-            f"@{config.DB_HOST}:{config.DB_PORT}/{config.DB_NAME}"
+        url = URL.create(
+            drivername="postgresql+psycopg2",
+            username=config.DB_USERNAME,
+            password=config.DB_PASSWORD,
+            host=config.DB_HOST,
+            port=int(config.DB_PORT),
+            database=config.DB_NAME,
         )
         _engine = create_engine(url, pool_size=1, max_overflow=0)
     return _engine
@@ -23,5 +28,5 @@ def get_engine():
 @contextmanager
 def get_session() -> Generator[Session, None, None]:
     engine = get_engine()
-    with Session(engine) as session:
+    with Session(engine, expire_on_commit=False) as session:
         yield session

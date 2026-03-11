@@ -31,4 +31,5 @@ ignore = ["ISC001"]
 dev = [
     "pdfminer-six>=20260107",
     "pytest>=9.0.2",
+    "ruff>=0.15.5",
 ]
