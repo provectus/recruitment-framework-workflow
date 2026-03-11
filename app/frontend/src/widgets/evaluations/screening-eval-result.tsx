@@ -64,14 +64,13 @@ function CollapsibleSection({
     );
   }
 
-  const visibleItems = open ? items : items.slice(0, COLLAPSE_THRESHOLD);
-
   return (
     <div>
       <SectionLabel>{label}</SectionLabel>
       <Collapsible open={open} onOpenChange={setOpen}>
-        <BulletList items={visibleItems} className={listClassName} />
+        <BulletList items={items.slice(0, COLLAPSE_THRESHOLD)} className={listClassName} />
         <CollapsibleContent>
+          <BulletList items={items.slice(COLLAPSE_THRESHOLD)} className={listClassName} />
         </CollapsibleContent>
         <CollapsibleTrigger className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
           {open ? (

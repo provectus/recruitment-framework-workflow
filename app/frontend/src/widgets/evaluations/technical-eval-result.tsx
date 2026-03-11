@@ -76,10 +76,16 @@ function ExpandableCell({ content }: { content: string }) {
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="text-sm text-muted-foreground whitespace-normal">
-        {open ? content : `${content.slice(0, 80)}…`}
-      </div>
-      <CollapsibleContent />
+      {!open && (
+        <div className="line-clamp-2 text-sm text-muted-foreground whitespace-normal">
+          {content}
+        </div>
+      )}
+      <CollapsibleContent>
+        <div className="text-sm text-muted-foreground whitespace-normal">
+          {content}
+        </div>
+      </CollapsibleContent>
       <CollapsibleTrigger className="mt-1 flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
         {open ? (
           <>
