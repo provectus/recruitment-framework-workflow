@@ -220,7 +220,7 @@ async def complete_upload(
         await _maybe_trigger_evaluation(session, document)
     except Exception:
         logger.exception(
-            "Failed to trigger evaluation for document %s — document saved successfully",
+            "Failed to trigger evaluation for document %s",
             document.id,
         )
 
@@ -275,7 +275,7 @@ async def create_pasted_transcript(
         await _maybe_trigger_evaluation(session, document)
     except Exception:
         logger.exception(
-            "Failed to trigger evaluation for document %s — document saved successfully",
+            "Failed to trigger evaluation for document %s",
             document.id,
         )
 

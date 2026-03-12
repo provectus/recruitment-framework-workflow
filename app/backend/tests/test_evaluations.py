@@ -3,52 +3,10 @@ from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.exceptions import NotFoundException
-from app.models.candidate import Candidate
 from app.models.candidate_position import CandidatePosition
 from app.models.enums import EvaluationStatus, EvaluationStepType
 from app.models.evaluation import Evaluation
-from app.models.position import Position
-from app.models.team import Team
-from app.models.user import User
 from app.services import evaluation_service
-
-
-@pytest.fixture
-async def candidate_position(session: AsyncSession) -> CandidatePosition:
-    candidate = Candidate(full_name="Alice Johnson", email="alice@example.com")
-    session.add(candidate)
-    await session.flush()
-
-    team = Team(name="Engineering")
-    session.add(team)
-    await session.flush()
-
-    user = User(
-        email="hm@provectus.com",
-        google_id="hm-eval-123",
-        full_name="Hiring Manager",
-    )
-    session.add(user)
-    await session.flush()
-
-    position = Position(
-        title="Backend Engineer",
-        team_id=team.id,
-        hiring_manager_id=user.id,
-        status="open",
-    )
-    session.add(position)
-    await session.flush()
-
-    cp = CandidatePosition(
-        candidate_id=candidate.id,
-        position_id=position.id,
-        stage="new",
-    )
-    session.add(cp)
-    await session.commit()
-    await session.refresh(cp)
-    return cp
 
 
 class TestEvaluationModel:

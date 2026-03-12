@@ -49,10 +49,10 @@ async def stream_evaluation_status(
         last_known_statuses: dict[str, str] = {}
         keepalive_counter = 0
         access_verified = False
-        started_at = asyncio.get_event_loop().time()
+        started_at = asyncio.get_running_loop().time()
 
         while True:
-            elapsed = asyncio.get_event_loop().time() - started_at
+            elapsed = asyncio.get_running_loop().time() - started_at
             if elapsed >= MAX_POLL_DURATION_SECONDS:
                 yield {"event": "done", "data": "{}"}
                 break

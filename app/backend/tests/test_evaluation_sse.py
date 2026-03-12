@@ -4,55 +4,12 @@ import json
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from httpx import AsyncClient
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.candidate import Candidate
 from app.models.candidate_position import CandidatePosition
 from app.models.enums import EvaluationStatus, EvaluationStepType
 from app.models.evaluation import Evaluation
-from app.models.position import Position
-from app.models.team import Team
-from app.models.user import User
-
-
-@pytest.fixture
-async def candidate_position(session: AsyncSession) -> CandidatePosition:
-    candidate = Candidate(full_name="Stream Tester", email="stream@example.com")
-    session.add(candidate)
-    await session.flush()
-
-    team = Team(name="StreamTeam")
-    session.add(team)
-    await session.flush()
-
-    user = User(
-        email="hm@provectus.com",
-        google_id="hm-sse-123",
-        full_name="Hiring Manager SSE",
-    )
-    session.add(user)
-    await session.flush()
-
-    position = Position(
-        title="SSE Engineer",
-        team_id=team.id,
-        hiring_manager_id=user.id,
-        status="open",
-    )
-    session.add(position)
-    await session.flush()
-
-    cp = CandidatePosition(
-        candidate_id=candidate.id,
-        position_id=position.id,
-        stage="new",
-    )
-    session.add(cp)
-    await session.commit()
-    await session.refresh(cp)
-    return cp
 
 
 def _parse_sse_events(raw: str) -> list[dict[str, str]]:

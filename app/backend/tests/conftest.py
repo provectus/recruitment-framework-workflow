@@ -13,6 +13,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.database import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
+from app.models.candidate import Candidate
+from app.models.candidate_position import CandidatePosition
+from app.models.position import Position
+from app.models.team import Team
 from app.models.user import User
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
@@ -62,9 +66,7 @@ async def client(session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture
-async def authenticated_client(
-    session: AsyncSession,
-) -> AsyncGenerator[AsyncClient, None]:
+async def test_user(session: AsyncSession) -> User:
     user = User(
         email="test@example.com",
         google_id="test-google-id",
@@ -73,12 +75,19 @@ async def authenticated_client(
     session.add(user)
     await session.commit()
     await session.refresh(user)
+    return user
 
+
+@pytest.fixture
+async def authenticated_client(
+    session: AsyncSession,
+    test_user: User,
+) -> AsyncGenerator[AsyncClient, None]:
     async def get_session_override() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
     async def get_current_user_override() -> User:
-        return user
+        return test_user
 
     app.dependency_overrides[get_session] = get_session_override
     app.dependency_overrides[get_current_user] = get_current_user_override
@@ -90,3 +99,35 @@ async def authenticated_client(
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def candidate_position(
+    session: AsyncSession, test_user: User
+) -> CandidatePosition:
+    candidate = Candidate(full_name="Alice Johnson", email="alice@example.com")
+    session.add(candidate)
+    await session.flush()
+
+    team = Team(name="Engineering")
+    session.add(team)
+    await session.flush()
+
+    position = Position(
+        title="Backend Engineer",
+        team_id=team.id,
+        hiring_manager_id=test_user.id,
+        status="open",
+    )
+    session.add(position)
+    await session.flush()
+
+    cp = CandidatePosition(
+        candidate_id=candidate.id,
+        position_id=position.id,
+        stage="new",
+    )
+    session.add(cp)
+    await session.commit()
+    await session.refresh(cp)
+    return cp
