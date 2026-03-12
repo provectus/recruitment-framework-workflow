@@ -1,53 +1,66 @@
 variable "project_name" {
-  type = string
+  description = "Project name used as prefix for resource naming"
+  type        = string
 }
 
 variable "vpc_id" {
-  type = string
+  description = "VPC ID for Lambda security group"
+  type        = string
 }
 
 variable "private_subnet_ids" {
-  type = list(string)
+  description = "Private subnet IDs for Lambda VPC attachment"
+  type        = list(string)
 }
 
 variable "rds_security_group_id" {
-  type = string
+  description = "Security group ID for RDS access from Lambdas"
+  type        = string
 }
 
 variable "rds_instance_address" {
-  type = string
+  description = "RDS instance hostname"
+  type        = string
 }
 
 variable "rds_instance_port" {
-  type = number
+  description = "RDS instance port"
+  type        = number
 }
 
 variable "db_name" {
-  type = string
+  description = "PostgreSQL database name"
+  type        = string
 }
 
 variable "db_username" {
-  type = string
+  description = "PostgreSQL master username"
+  type        = string
 }
 
 variable "db_master_secret_arn" {
-  type = string
+  description = "ARN of Secrets Manager secret containing the RDS master password"
+  type        = string
 }
 
 variable "files_bucket_arn" {
-  type = string
+  description = "ARN of the S3 bucket storing candidate files"
+  type        = string
 }
 
 variable "files_bucket_id" {
-  type = string
+  description = "Name/ID of the S3 bucket storing candidate files"
+  type        = string
 }
 
 variable "bedrock_model_id_heavy" {
-  type = string
+  description = "Bedrock model for complex evaluation tasks (screening, technical, recommendation)"
+  type        = string
 }
 
 variable "bedrock_model_id_light" {
-  type = string
+  description = "Bedrock model for simpler tasks (CV analysis, feedback generation)"
+  type        = string
 }
 
 variable "lambdas_source_path" {
