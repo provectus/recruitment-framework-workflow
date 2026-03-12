@@ -11,7 +11,8 @@ import { TranscriptUploadDialog } from "@/widgets/documents/transcript-upload-di
 import { DocumentList } from "@/widgets/documents/document-list";
 import { DocumentViewer, CvVersionHistory } from "@/widgets/documents";
 import { CandidatePositionsTable, AddToPositionDialog, CandidateInfoCard } from "@/widgets/candidates";
-import { EvaluationResults } from "@/widgets/evaluations";
+import { EvaluationResults, EvaluationSummaryBanner } from "@/widgets/evaluations";
+import { useEvaluations } from "@/features/evaluations";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,10 @@ function CandidateDetailPage() {
     (p) => p.candidate_position_id === activeCandidatePositionId
   ) ?? null;
 
+  const { data: evaluationsData } = useEvaluations(activeCandidatePositionId ?? 0, {
+    enabled: activeCandidatePositionId !== null,
+  });
+
   if (isLoading) {
     return (
       <div className="p-8 space-y-8">
@@ -120,6 +125,10 @@ function CandidateDetailPage() {
           Archive
         </Button>
       </div>
+
+      {activeCandidatePositionId && (
+        <EvaluationSummaryBanner evaluations={evaluationsData?.items ?? []} />
+      )}
 
       <CandidateInfoCard
         candidateId={candidateIdNum}

@@ -1,4 +1,5 @@
 export { EvaluationResults } from "./evaluation-results";
+export { EvaluationSummaryBanner } from "./evaluation-summary-banner";
 export { EvaluationStepCard } from "./evaluation-step-card";
 export { EvaluationHistoryDialog } from "./evaluation-history-dialog";
 export { HmDecisionGate } from "./hm-decision-gate";
