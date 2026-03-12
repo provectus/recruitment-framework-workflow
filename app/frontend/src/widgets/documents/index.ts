@@ -7,3 +7,4 @@ export { TranscriptUploadDialog } from "./transcript-upload-dialog";
 export { GlobalUploadMenu } from "./global-upload-menu";
 export { UploadZone } from "./upload-zone";
 export type { FileWithStatus } from "./upload-zone";
+export { InlineTranscriptViewer } from "./inline-transcript-viewer";
