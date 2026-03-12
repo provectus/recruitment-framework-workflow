@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Any
 
@@ -5,6 +6,8 @@ sys.path.insert(0, "/opt/python")
 sys.path.insert(0, "/var/task")
 
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from shared import bedrock as bedrock_module
 from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
@@ -63,6 +66,9 @@ def _validate_and_fix_result(
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
+    logger.info(
+        "recommendation handler started", extra={"evaluation_id": evaluation_id}
+    )
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         candidate_position = session.get(
@@ -107,4 +113,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         result = _validate_and_fix_result(result, missing_step_types)
 
         complete_evaluation(session, evaluation, result)
+        logger.info(
+            "recommendation handler completed",
+            extra={"evaluation_id": evaluation_id},
+        )
         return result

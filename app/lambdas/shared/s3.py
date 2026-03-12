@@ -8,6 +8,8 @@ from shared import config
 
 _client = None
 
+_MAX_DOCUMENT_SIZE_BYTES = 50 * 1024 * 1024
+
 
 def get_client():
     global _client
@@ -23,6 +25,13 @@ def get_document_text(s3_key: str) -> str:
     client = get_client()
     try:
         response = client.get_object(Bucket=config.S3_BUCKET_NAME, Key=s3_key)
+        content_length = int(response.get("ContentLength", 0))
+        if content_length > _MAX_DOCUMENT_SIZE_BYTES:
+            raise ValueError(
+                f"Document exceeds maximum allowed size of "
+                f"{_MAX_DOCUMENT_SIZE_BYTES // (1024 * 1024)}MB: "
+                f"key={s3_key} size={content_length}"
+            )
         body = response["Body"].read()
     except client.exceptions.NoSuchKey as exc:
         raise FileNotFoundError(

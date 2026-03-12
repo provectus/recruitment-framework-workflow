@@ -1,3 +1,12 @@
+"""
+Lambda-local DB model definitions.
+
+These models intentionally duplicate app/backend/app/models/ to keep Lambda
+packages fully self-contained and independently deployable. The backend models
+are the canonical source of truth — any schema change there must be mirrored
+here manually.
+"""
+
 from datetime import datetime
 from typing import Any
 

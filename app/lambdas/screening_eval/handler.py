@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Any
 
@@ -13,6 +14,8 @@ from shared.prompts.screening_eval import (
     TOOL_SCHEMA,
     build_screening_eval_prompt,
 )
+
+logger = logging.getLogger(__name__)
 
 REQUIRED_RESULT_SECTIONS = {
     "key_topics",
@@ -46,6 +49,9 @@ def _validate_result_sections(result: dict[str, Any]) -> None:
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
+    logger.info(
+        "screening_eval handler started", extra={"evaluation_id": evaluation_id}
+    )
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         if evaluation.source_document_id is None:
@@ -93,4 +99,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         _validate_result_sections(result)
 
         complete_evaluation(session, evaluation, result)
+        logger.info(
+            "screening_eval handler completed",
+            extra={"evaluation_id": evaluation_id},
+        )
         return result

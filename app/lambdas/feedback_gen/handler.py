@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Any
 
@@ -5,6 +6,8 @@ sys.path.insert(0, "/opt/python")
 sys.path.insert(0, "/var/task")
 
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from shared import bedrock as bedrock_module
 from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
@@ -42,6 +45,9 @@ def _determine_rejection_stage(evaluation_results: dict[str, Any]) -> str:
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
+    logger.info(
+        "feedback_gen handler started", extra={"evaluation_id": evaluation_id}
+    )
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         evaluation_results = _collect_completed_evaluations(
@@ -71,4 +77,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         result["rejection_stage"] = rejection_stage
 
         complete_evaluation(session, evaluation, result)
+        logger.info(
+            "feedback_gen handler completed",
+            extra={"evaluation_id": evaluation_id},
+        )
         return result

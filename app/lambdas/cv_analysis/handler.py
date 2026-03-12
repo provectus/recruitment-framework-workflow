@@ -1,3 +1,4 @@
+import logging
 import sys
 from typing import Any
 
@@ -9,6 +10,8 @@ from shared import s3 as s3_module
 from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
 from shared.models import CandidatePosition, Document, Position
 from shared.prompts.cv_analysis import TOOL_NAME, TOOL_SCHEMA, build_cv_analysis_prompt
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_required_skills(position: Position) -> list[str]:
@@ -26,6 +29,7 @@ def _extract_required_skills(position: Position) -> list[str]:
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
+    logger.info("cv_analysis handler started", extra={"evaluation_id": evaluation_id})
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         if evaluation.source_document_id is None:
@@ -73,4 +77,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         )
 
         complete_evaluation(session, evaluation, result)
+        logger.info(
+            "cv_analysis handler completed", extra={"evaluation_id": evaluation_id}
+        )
         return result

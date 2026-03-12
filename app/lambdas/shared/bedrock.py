@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 import boto3
+import botocore.exceptions
 
 from shared import config
 
@@ -11,6 +12,7 @@ _client = None
 
 _RETRIES = 3
 _INITIAL_DELAY = 1.0
+_RETRIABLE_STATUS_CODES = {429, 500, 502, 503, 529}
 
 
 def get_client():
@@ -18,6 +20,11 @@ def get_client():
     if _client is None:
         _client = boto3.client("bedrock-runtime", region_name=config.AWS_REGION)
     return _client
+
+
+def _is_retriable_client_error(exc: botocore.exceptions.ClientError) -> bool:
+    status_code = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode", 0)
+    return status_code in _RETRIABLE_STATUS_CODES
 
 
 def _invoke_with_retry[T](fn: Callable[[], T]) -> T:
@@ -30,6 +37,19 @@ def _invoke_with_retry[T](fn: Callable[[], T]) -> T:
         except client.exceptions.ThrottlingException as exc:
             last_error = exc
         except client.exceptions.ModelTimeoutException as exc:
+            last_error = exc
+        except client.exceptions.ModelNotReadyException as exc:
+            last_error = exc
+        except client.exceptions.ServiceUnavailableException as exc:
+            last_error = exc
+        except botocore.exceptions.ClientError as exc:
+            if not _is_retriable_client_error(exc):
+                raise
+            last_error = exc
+        except (
+            botocore.exceptions.EndpointConnectionError,
+            botocore.exceptions.ReadTimeoutError,
+        ) as exc:
             last_error = exc
 
         if attempt < _RETRIES - 1:
