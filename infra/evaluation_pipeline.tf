@@ -1,4 +1,3 @@
-data "aws_caller_identity" "eval_pipeline" {}
 data "aws_region" "eval_pipeline" {}
 
 locals {
@@ -227,7 +226,6 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
           aws_ssm_parameter.db_port.arn,
           aws_ssm_parameter.db_name.arn,
           aws_ssm_parameter.db_username.arn,
-          module.rds.db_master_secret_arn,
         ]
       },
       {
@@ -318,10 +316,6 @@ resource "aws_lambda_function" "cv_analysis" {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id_light
       S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_HOST                = module.rds.db_instance_address
-      DB_PORT                = tostring(module.rds.db_instance_port)
-      DB_NAME                = var.db_name
-      DB_USERNAME            = var.db_username
       DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
@@ -378,10 +372,6 @@ resource "aws_lambda_function" "screening_eval" {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
       S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_HOST                = module.rds.db_instance_address
-      DB_PORT                = tostring(module.rds.db_instance_port)
-      DB_NAME                = var.db_name
-      DB_USERNAME            = var.db_username
       DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
@@ -438,10 +428,6 @@ resource "aws_lambda_function" "technical_eval" {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
       S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_HOST                = module.rds.db_instance_address
-      DB_PORT                = tostring(module.rds.db_instance_port)
-      DB_NAME                = var.db_name
-      DB_USERNAME            = var.db_username
       DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
@@ -498,10 +484,6 @@ resource "aws_lambda_function" "recommendation" {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
       S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_HOST                = module.rds.db_instance_address
-      DB_PORT                = tostring(module.rds.db_instance_port)
-      DB_NAME                = var.db_name
-      DB_USERNAME            = var.db_username
       DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
@@ -558,10 +540,6 @@ resource "aws_lambda_function" "feedback_gen" {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id_light
       S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_HOST                = module.rds.db_instance_address
-      DB_PORT                = tostring(module.rds.db_instance_port)
-      DB_NAME                = var.db_name
-      DB_USERNAME            = var.db_username
       DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
@@ -637,7 +615,7 @@ resource "aws_iam_role_policy" "sfn_evaluation_pipeline" {
         ]
       },
       {
-        Sid    = "CloudWatchLogs"
+        Sid    = "CloudWatchLogsDelivery"
         Effect = "Allow"
         Action = [
           "logs:CreateLogDelivery",
@@ -645,12 +623,20 @@ resource "aws_iam_role_policy" "sfn_evaluation_pipeline" {
           "logs:UpdateLogDelivery",
           "logs:DeleteLogDelivery",
           "logs:ListLogDeliveries",
-          "logs:PutLogEvents",
           "logs:PutResourcePolicy",
           "logs:DescribeResourcePolicies",
           "logs:DescribeLogGroups",
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "CloudWatchLogsPut"
+        Effect = "Allow"
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream",
+        ]
+        Resource = "${aws_cloudwatch_log_group.sfn_evaluation_pipeline.arn}:*"
       }
     ]
   })

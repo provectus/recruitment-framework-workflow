@@ -90,3 +90,8 @@ variable "enable_bedrock" {
   type        = bool
   default     = false
 }
+
+variable "evaluation_event_bus_arn" {
+  description = "ARN of the evaluation EventBridge bus for ECS task PutEvents permission"
+  type        = string
+}

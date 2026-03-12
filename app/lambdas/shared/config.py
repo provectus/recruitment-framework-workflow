@@ -6,10 +6,26 @@ import boto3
 
 logger = logging.getLogger(__name__)
 
-DB_HOST: str = os.environ.get("DB_HOST", "localhost")
-DB_PORT: str = os.environ.get("DB_PORT", "5432")
-DB_NAME: str = os.environ.get("DB_NAME", "lauter")
-DB_USERNAME: str = os.environ.get("DB_USERNAME", "postgres")
+_ssm_cache: dict[str, str] = {}
+
+
+def _read_ssm_param(name: str) -> str:
+    if name in _ssm_cache:
+        return _ssm_cache[name]
+    prefix = os.environ.get("DB_SSM_PREFIX", "")
+    if not prefix:
+        return ""
+    client = boto3.client("ssm")
+    resp = client.get_parameter(Name=f"{prefix}/{name}")
+    value: str = resp["Parameter"]["Value"]
+    _ssm_cache[name] = value
+    return value
+
+
+DB_HOST: str = os.environ.get("DB_HOST") or _read_ssm_param("host") or "localhost"
+DB_PORT: str = os.environ.get("DB_PORT") or _read_ssm_param("port") or "5432"
+DB_NAME: str = os.environ.get("DB_NAME") or _read_ssm_param("name") or "lauter"
+DB_USERNAME: str = os.environ.get("DB_USERNAME") or _read_ssm_param("username") or "postgres"
 DB_PASSWORD_SECRET_ARN: str = os.environ.get("DB_PASSWORD_SECRET_ARN", "")
 
 

@@ -6,6 +6,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.33"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.7"
+    }
   }
 
   backend "s3" {
@@ -104,6 +112,7 @@ module "iam" {
   cloudfront_distribution_arn  = module.cloudfront.distribution_arn
   enable_bedrock               = var.enable_bedrock
   enable_ecs_exec              = var.environment != "prod"
+  evaluation_event_bus_arn     = aws_cloudwatch_event_bus.evaluation.arn
 }
 
 # Cognito Module - User Pool with Google OAuth federation
