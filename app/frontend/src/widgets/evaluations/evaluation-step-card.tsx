@@ -72,11 +72,12 @@ export function EvaluationStepCard({
     <Collapsible open={isOpen} onOpenChange={() => onToggle()}>
       <Card>
         <CardHeader className="pb-3">
-          <CollapsibleTrigger
-            className="w-full cursor-pointer rounded-md hover:bg-muted/50 -mx-1 px-1 py-0.5 transition-colors"
-            asChild={false}
-          >
-            <div className="flex items-center justify-between gap-2">
+          <CollapsibleTrigger asChild>
+            <div
+              role="button"
+              tabIndex={0}
+              className="w-full cursor-pointer rounded-md hover:bg-muted/50 -mx-1 px-1 py-0.5 transition-colors flex items-center justify-between gap-2"
+            >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <Badge variant={statusVariant} className="shrink-0">
                   {statusLabel}
@@ -85,7 +86,7 @@ export function EvaluationStepCard({
                 {summary.metric !== "—" && (
                   <>
                     <span className="text-muted-foreground shrink-0">·</span>
-                    <span className="text-sm shrink-0">{summary.metric}</span>
+                    <span className="text-sm truncate max-w-[200px]">{summary.metric}</span>
                   </>
                 )}
                 {truncatedOneLiner !== "—" && (

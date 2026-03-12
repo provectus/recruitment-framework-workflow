@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useEvaluations, useEvaluationStream } from "@/features/evaluations";
 import { EvaluationStepCard } from "./evaluation-step-card";
@@ -46,10 +46,6 @@ export function EvaluationResults({
       return next;
     });
   };
-
-  useEffect(() => {
-    setOpenPanels(new Set());
-  }, [candidatePositionId]);
 
   if (isLoading) {
     return (

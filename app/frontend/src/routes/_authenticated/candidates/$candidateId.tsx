@@ -207,6 +207,7 @@ function CandidateDetailPage() {
           </CardHeader>
           <CardContent>
             <EvaluationResults
+                key={activeCandidatePositionId}
                 candidatePositionId={activeCandidatePositionId}
                 candidateId={candidateIdNum}
                 positionId={activePosition.position_id}
