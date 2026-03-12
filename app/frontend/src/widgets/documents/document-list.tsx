@@ -15,6 +15,7 @@ import { useDocuments } from "@/features/documents";
 import { useCandidate } from "@/features/candidates";
 import { formatDate } from "@/shared/lib/format";
 import type { DocumentResponse } from "@/shared/api";
+import { InlineTranscriptViewer } from "./inline-transcript-viewer";
 
 interface DocumentListProps {
   candidateId: number;
@@ -112,8 +113,8 @@ export function DocumentList({
   const renderDocumentRow = (document: DocumentResponse) => (
     <TableRow
       key={document.id}
-      onClick={() => onDocumentClick?.(document.id)}
-      className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+      onClick={() => document.type !== "transcript" && onDocumentClick?.(document.id)}
+      className={onDocumentClick && document.type !== "transcript" ? "cursor-pointer hover:bg-muted/50" : undefined}
     >
       <TableCell>
         <div className="flex items-center gap-2">
@@ -188,33 +189,41 @@ export function DocumentList({
     const sortedStages = Array.from(transcriptsByStage.keys()).sort();
 
     return (
-      <div className="border border-border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Filename / Stage</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Uploader</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {cvDocs.map(renderDocumentRow)}
-            {sortedStages.map((stage) => {
-              const stageDocs = transcriptsByStage.get(stage) || [];
-              return (
-                <React.Fragment key={stage}>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableCell colSpan={4} className="font-medium text-sm">
-                      {stage} Interviews
-                    </TableCell>
-                  </TableRow>
-                  {stageDocs.map(renderDocumentRow)}
-                </React.Fragment>
-              );
-            })}
-          </TableBody>
-        </Table>
+      <div className="space-y-4">
+        <div className="border border-border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Filename / Stage</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Uploader</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cvDocs.map(renderDocumentRow)}
+              {sortedStages.map((stage) => {
+                const stageDocs = transcriptsByStage.get(stage) || [];
+                return (
+                  <React.Fragment key={stage}>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={4} className="font-medium text-sm">
+                        {stage} Interviews
+                      </TableCell>
+                    </TableRow>
+                    {stageDocs.map(renderDocumentRow)}
+                  </React.Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+        {transcriptDocs.length > 0 && (
+          <div className="mt-6 space-y-2">
+            <h4 className="text-sm font-medium text-muted-foreground">Transcript Viewer</h4>
+            <InlineTranscriptViewer transcripts={transcriptDocs} />
+          </div>
+        )}
       </div>
     );
   };
@@ -222,74 +231,83 @@ export function DocumentList({
   const shouldGroupByPosition = !positionId && sortedPositionIds.length > 0;
 
   if (!shouldGroupByPosition) {
+    const flatTranscriptDocs = documents.filter((d) => d.type === "transcript");
     return (
-      <div className="border border-border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Type</TableHead>
-              <TableHead>Filename / Stage</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Uploader</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.map((document) => (
-              <TableRow
-                key={document.id}
-                onClick={() => onDocumentClick?.(document.id)}
-                className={onDocumentClick ? "cursor-pointer hover:bg-muted/50" : undefined}
-              >
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        TYPE_VARIANTS[document.type as keyof typeof TYPE_VARIANTS] || "outline"
-                      }
-                    >
-                      {document.type.toUpperCase()}
-                    </Badge>
-                    {isCurrentCV(document) && (
-                      <Badge variant="default" className="bg-green-600">
-                        Current
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {document.type === "transcript" && document.interview_stage
-                      ? `${document.interview_stage} - ${getDisplayFilename(document)}`
-                      : getDisplayFilename(document)}
-                    {isCurrentCV(document) && hasMultipleCVVersions(document) && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onVersionHistoryClick?.(document.candidate_position_id);
-                        }}
-                      >
-                        Version history
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground font-mono tabular-nums">
-                  {document.type === "transcript" && document.interview_date
-                    ? formatDate(document.interview_date)
-                    : formatDate(document.created_at)}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {document.type === "transcript" && document.interviewer_name
-                    ? document.interviewer_name
-                    : (document.uploaded_by_name || "Unknown")}
-                </TableCell>
+      <div className="space-y-4">
+        <div className="border border-border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Filename / Stage</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Uploader</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {documents.map((document) => (
+                <TableRow
+                  key={document.id}
+                  onClick={() => document.type !== "transcript" && onDocumentClick?.(document.id)}
+                  className={onDocumentClick && document.type !== "transcript" ? "cursor-pointer hover:bg-muted/50" : undefined}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          TYPE_VARIANTS[document.type as keyof typeof TYPE_VARIANTS] || "outline"
+                        }
+                      >
+                        {document.type.toUpperCase()}
+                      </Badge>
+                      {isCurrentCV(document) && (
+                        <Badge variant="default" className="bg-green-600">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {document.type === "transcript" && document.interview_stage
+                        ? `${document.interview_stage} - ${getDisplayFilename(document)}`
+                        : getDisplayFilename(document)}
+                      {isCurrentCV(document) && hasMultipleCVVersions(document) && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onVersionHistoryClick?.(document.candidate_position_id);
+                          }}
+                        >
+                          Version history
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground font-mono tabular-nums">
+                    {document.type === "transcript" && document.interview_date
+                      ? formatDate(document.interview_date)
+                      : formatDate(document.created_at)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {document.type === "transcript" && document.interviewer_name
+                      ? document.interviewer_name
+                      : (document.uploaded_by_name || "Unknown")}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        {flatTranscriptDocs.length > 0 && (
+          <div className="mt-6 space-y-2">
+            <h4 className="text-sm font-medium text-muted-foreground">Transcript Viewer</h4>
+            <InlineTranscriptViewer transcripts={flatTranscriptDocs} />
+          </div>
+        )}
       </div>
     );
   }
