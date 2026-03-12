@@ -97,17 +97,21 @@ export function ScreeningEvalResult({
     <div className="space-y-6">
       <CollapsibleSection label="Key Topics" items={result.key_topics} />
 
-      <CollapsibleSection
-        label="Strengths"
-        items={result.strengths}
-        listClassName="text-green-800 dark:text-green-400"
-      />
+      <div className="bg-green-50/50 rounded-lg p-3">
+        <CollapsibleSection
+          label="Strengths"
+          items={result.strengths}
+          listClassName="text-green-800 dark:text-green-400"
+        />
+      </div>
 
-      <CollapsibleSection
-        label="Concerns"
-        items={result.concerns}
-        listClassName="text-amber-800 dark:text-amber-400"
-      />
+      <div className="bg-amber-50/50 rounded-lg p-3">
+        <CollapsibleSection
+          label="Concerns"
+          items={result.concerns}
+          listClassName="text-amber-800 dark:text-amber-400"
+        />
+      </div>
 
       <div>
         <SectionLabel>Communication Quality</SectionLabel>
