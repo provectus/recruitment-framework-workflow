@@ -2,6 +2,7 @@ import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { cn } from "@/shared/lib/utils";
+import { SectionLabel } from "./evaluation-primitives";
 
 type RecommendationValue = "hire" | "no_hire" | "needs_discussion";
 type ConfidenceValue = "high" | "medium" | "low";
@@ -44,14 +45,6 @@ const CONFIDENCE_CONFIG = {
     className: "border-amber-400 text-amber-700 dark:text-amber-400",
   },
 } as const satisfies Record<ConfidenceValue, { label: string; className: string }>;
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-      {children}
-    </p>
-  );
-}
 
 export function RecommendationResult({
   result,

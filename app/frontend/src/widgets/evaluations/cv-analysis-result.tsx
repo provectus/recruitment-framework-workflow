@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
+import { SectionLabel } from "./evaluation-primitives";
 
 interface SkillMatch {
   skill: string;
@@ -22,14 +23,6 @@ interface CvAnalysisResult {
   education: string;
   signals_and_red_flags: string;
   overall_fit: string;
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-      {children}
-    </p>
-  );
 }
 
 function TruncatedText({ text, maxLen = 80 }: { text: string; maxLen?: number }) {

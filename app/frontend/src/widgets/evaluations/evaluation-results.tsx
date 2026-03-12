@@ -1,17 +1,11 @@
 import { useState } from "react";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useEvaluations, useEvaluationStream } from "@/features/evaluations";
+import { STEP_ORDER, buildStepMap } from "@/shared/lib/evaluation-summary";
+import type { StepType } from "@/shared/lib/evaluation-summary";
 import { EvaluationStepCard } from "./evaluation-step-card";
 import { ResultRenderer } from "./result-renderer";
 import { HmDecisionGate } from "./hm-decision-gate";
-
-const STEP_ORDER = [
-  "cv_analysis",
-  "screening_eval",
-  "technical_eval",
-  "recommendation",
-  "feedback_gen",
-] as const;
 
 interface EvaluationResultsProps {
   candidatePositionId: number;
@@ -65,23 +59,23 @@ export function EvaluationResults({
     );
   }
 
-  const stepMap = new Map(evaluations.map((e) => [e.step_type, e]));
+  const stepMap = buildStepMap(evaluations);
 
   const orderedEvaluations = STEP_ORDER.flatMap((step) => {
-    const evaluation = stepMap.get(step);
+    const evaluation = stepMap[step];
     return evaluation ? [evaluation] : [];
   });
 
   const unorderedEvaluations = evaluations.filter(
-    (e) => !STEP_ORDER.includes(e.step_type as (typeof STEP_ORDER)[number])
+    (e) => !STEP_ORDER.includes(e.step_type as StepType)
   );
 
   const allEvaluations = [...orderedEvaluations, ...unorderedEvaluations];
 
   const disableRerun = streamEnabled;
 
-  const screeningEval = stepMap.get("screening_eval");
-  const recommendation = stepMap.get("recommendation");
+  const screeningEval = stepMap["screening_eval"];
+  const recommendation = stepMap["recommendation"];
 
   const showDecisionAfterScreening =
     screeningEval?.status === "completed" && currentStage === "screening";

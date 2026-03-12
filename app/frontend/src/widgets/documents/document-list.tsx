@@ -135,6 +135,9 @@ export function DocumentList({
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           {getDisplayFilename(document)}
+          {document.type === "transcript" && (
+            <span className="text-xs text-muted-foreground">View below ↓</span>
+          )}
           {isCurrentCV(document) && hasMultipleCVVersions(document) && (
             <Button
               variant="link"
@@ -272,6 +275,9 @@ export function DocumentList({
                       {document.type === "transcript" && document.interview_stage
                         ? `${document.interview_stage} - ${getDisplayFilename(document)}`
                         : getDisplayFilename(document)}
+                      {document.type === "transcript" && (
+                        <span className="text-xs text-muted-foreground">View below ↓</span>
+                      )}
                       {isCurrentCV(document) && hasMultipleCVVersions(document) && (
                         <Button
                           variant="link"

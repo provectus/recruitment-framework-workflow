@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import type { ContentState } from "@/features/documents";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { AlertCircle } from "lucide-react";
+import { cn } from "@/shared/lib/utils";
 
 interface DocumentContentRendererProps {
   contentState: ContentState;
@@ -26,7 +27,7 @@ export function DocumentContentRenderer({
 
   if (contentState.status === "error") {
     return (
-      <div className={`flex items-center gap-2 text-destructive ${className ?? ""}`}>
+      <div className={cn("flex items-center gap-2 text-destructive", className)}>
         <AlertCircle className="h-4 w-4" />
         <span className="text-sm">{contentState.error}</span>
       </div>
@@ -36,13 +37,13 @@ export function DocumentContentRenderer({
   const { content } = contentState;
 
   if (contentType === "application/pdf") {
-    return <iframe src={content} className={`w-full h-full ${className ?? ""}`} title="PDF viewer" />;
+    return <iframe src={content} className={cn("w-full h-full", className)} title="PDF viewer" />;
   }
 
   if (contentType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
     return (
       <div
-        className={`prose prose-sm max-w-none dark:prose-invert ${className ?? ""}`}
+        className={cn("prose prose-sm max-w-none dark:prose-invert", className)}
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
@@ -50,14 +51,14 @@ export function DocumentContentRenderer({
 
   if (contentType === "text/markdown") {
     return (
-      <div className={`prose prose-sm max-w-none dark:prose-invert ${className ?? ""}`}>
+      <div className={cn("prose prose-sm max-w-none dark:prose-invert", className)}>
         <ReactMarkdown>{content}</ReactMarkdown>
       </div>
     );
   }
 
   return (
-    <pre className={`text-sm whitespace-pre-wrap font-mono ${className ?? ""}`}>
+    <pre className={cn("text-sm whitespace-pre-wrap font-mono", className)}>
       {content}
     </pre>
   );

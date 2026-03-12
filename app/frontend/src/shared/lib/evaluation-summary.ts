@@ -28,8 +28,8 @@ export function buildStepMap(evaluations: EvaluationResponse[]): StepMap {
 
 export function firstSentence(text: string | undefined | null, maxLen = 120): string {
   if (!text) return "—";
-  const dot = text.indexOf(".");
-  const sentence = dot > 0 ? text.slice(0, dot + 1) : text;
+  const match = text.match(/^.+?\.\s/);
+  const sentence = match ? match[0].trim() : text;
   return sentence.length > maxLen ? sentence.slice(0, maxLen) + "…" : sentence;
 }
 
