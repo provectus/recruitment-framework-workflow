@@ -62,6 +62,7 @@ async def stream_evaluation_status(
 
             async with async_session_factory() as poll_session:
                 if not access_verified:
+                    assert current_user.id is not None
                     await evaluation_service.verify_access(
                         poll_session, candidate_position_id, current_user.id
                     )
@@ -114,6 +115,7 @@ async def list_evaluations(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
+    assert current_user.id is not None
     try:
         await evaluation_service.verify_access(
             session, candidate_position_id, current_user.id
@@ -140,6 +142,7 @@ async def rerun_evaluation(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
     _validate_step_type(step_type)
+    assert current_user.id is not None
     try:
         await evaluation_service.verify_access(
             session, candidate_position_id, current_user.id
@@ -167,6 +170,7 @@ async def get_evaluation_history(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationHistoryResponse:
     _validate_step_type(step_type)
+    assert current_user.id is not None
     try:
         await evaluation_service.verify_access(
             session, candidate_position_id, current_user.id
@@ -195,6 +199,7 @@ async def get_evaluation_by_step(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationResponse:
     _validate_step_type(step_type)
+    assert current_user.id is not None
     try:
         await evaluation_service.verify_access(
             session, candidate_position_id, current_user.id
