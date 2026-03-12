@@ -153,6 +153,23 @@ export function TechnicalEvalResult({
         <Progress value={totalPercent} className="h-2" />
       </div>
 
+      <div className="grid grid-cols-2 gap-6">
+        <div className="bg-green-50/50 rounded-lg p-3">
+          <SectionLabel>Strengths</SectionLabel>
+          <BulletList
+            items={result.strengths_summary}
+            className="text-green-800 dark:text-green-400"
+          />
+        </div>
+        <div className="bg-amber-50/50 rounded-lg p-3">
+          <SectionLabel>Improvement Areas</SectionLabel>
+          <BulletList
+            items={result.improvement_areas}
+            className="text-amber-800 dark:text-amber-400"
+          />
+        </div>
+      </div>
+
       <div>
         <SectionLabel>Criteria Scores</SectionLabel>
         <Table>
@@ -167,47 +184,41 @@ export function TechnicalEvalResult({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {result.criteria_scores.map((row, idx) => (
-              <TableRow key={idx}>
-                <TableCell className="text-muted-foreground">
-                  {row.category_name}
-                </TableCell>
-                <TableCell className="font-medium whitespace-normal">
-                  {row.criterion_name}
-                </TableCell>
-                <TableCell>
-                  <ScoreIndicator score={row.score} maxScore={row.max_score} />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {row.weight}%
-                </TableCell>
-                <TableCell className="min-w-40 max-w-56">
-                  <ExpandableCell content={row.evidence} />
-                </TableCell>
-                <TableCell className="min-w-40 max-w-56">
-                  <ExpandableCell content={row.reasoning} />
-                </TableCell>
-              </TableRow>
-            ))}
+            {result.criteria_scores.map((row, idx) => {
+              const prevCategory =
+                idx > 0
+                  ? result.criteria_scores[idx - 1].category_name
+                  : null;
+              const isNewGroup =
+                prevCategory !== null && row.category_name !== prevCategory;
+              return (
+                <TableRow
+                  key={idx}
+                  className={cn(isNewGroup && "border-t-2 border-border bg-muted/30")}
+                >
+                  <TableCell className="text-muted-foreground">
+                    {row.category_name}
+                  </TableCell>
+                  <TableCell className="font-medium whitespace-normal">
+                    {row.criterion_name}
+                  </TableCell>
+                  <TableCell>
+                    <ScoreIndicator score={row.score} maxScore={row.max_score} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {row.weight}%
+                  </TableCell>
+                  <TableCell className="min-w-40 max-w-56">
+                    <ExpandableCell content={row.evidence} />
+                  </TableCell>
+                  <TableCell className="min-w-40 max-w-56">
+                    <ExpandableCell content={row.reasoning} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <SectionLabel>Strengths</SectionLabel>
-          <BulletList
-            items={result.strengths_summary}
-            className="text-green-800 dark:text-green-400"
-          />
-        </div>
-        <div>
-          <SectionLabel>Improvement Areas</SectionLabel>
-          <BulletList
-            items={result.improvement_areas}
-            className="text-amber-800 dark:text-amber-400"
-          />
-        </div>
       </div>
     </div>
   );
