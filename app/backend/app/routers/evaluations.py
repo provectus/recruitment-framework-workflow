@@ -20,6 +20,13 @@ from app.services import evaluation_service
 
 router = APIRouter(prefix="/api/evaluations", tags=["evaluations"])
 
+
+def _require_user_id(user: User) -> int:
+    if user.id is None:
+        raise HTTPException(status_code=401, detail="User ID not available")
+    return user.id
+
+
 TERMINAL_STATUSES = {EvaluationStatus.completed, EvaluationStatus.failed}
 POLL_INTERVAL_SECONDS = 2
 KEEPALIVE_INTERVAL_POLLS = 15
@@ -62,9 +69,9 @@ async def stream_evaluation_status(
 
             async with async_session_factory() as poll_session:
                 if not access_verified:
-                    assert current_user.id is not None
+                    user_id = _require_user_id(current_user)
                     await evaluation_service.verify_access(
-                        poll_session, candidate_position_id, current_user.id
+                        poll_session, candidate_position_id, user_id
                     )
                     access_verified = True
                 evaluations = await evaluation_service.get_evaluations(
@@ -115,11 +122,9 @@ async def list_evaluations(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
-    assert current_user.id is not None
+    user_id = _require_user_id(current_user)
     try:
-        await evaluation_service.verify_access(
-            session, candidate_position_id, current_user.id
-        )
+        await evaluation_service.verify_access(session, candidate_position_id, user_id)
     except NotFoundException as e:
         raise HTTPException(status_code=404, detail=e.detail) from e
     evaluations = await evaluation_service.get_evaluations(
@@ -142,11 +147,9 @@ async def rerun_evaluation(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
     _validate_step_type(step_type)
-    assert current_user.id is not None
+    user_id = _require_user_id(current_user)
     try:
-        await evaluation_service.verify_access(
-            session, candidate_position_id, current_user.id
-        )
+        await evaluation_service.verify_access(session, candidate_position_id, user_id)
         evaluations = await evaluation_service.rerun_evaluation(
             session=session,
             candidate_position_id=candidate_position_id,
@@ -170,11 +173,9 @@ async def get_evaluation_history(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationHistoryResponse:
     _validate_step_type(step_type)
-    assert current_user.id is not None
+    user_id = _require_user_id(current_user)
     try:
-        await evaluation_service.verify_access(
-            session, candidate_position_id, current_user.id
-        )
+        await evaluation_service.verify_access(session, candidate_position_id, user_id)
     except NotFoundException as e:
         raise HTTPException(status_code=404, detail=e.detail) from e
     evaluations = await evaluation_service.get_evaluation_history(
@@ -199,11 +200,9 @@ async def get_evaluation_by_step(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationResponse:
     _validate_step_type(step_type)
-    assert current_user.id is not None
+    user_id = _require_user_id(current_user)
     try:
-        await evaluation_service.verify_access(
-            session, candidate_position_id, current_user.id
-        )
+        await evaluation_service.verify_access(session, candidate_position_id, user_id)
         evaluation = await evaluation_service.get_evaluation_by_step(
             session=session,
             candidate_position_id=candidate_position_id,
