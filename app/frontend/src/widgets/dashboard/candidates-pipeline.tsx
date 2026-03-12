@@ -12,12 +12,12 @@ import {
 import { Skeleton } from "@/shared/ui/skeleton";
 
 const STAGE_COLORS: Record<string, string> = {
-  new: "bg-stone-400",
-  screening: "bg-amber-500",
-  technical: "bg-orange-500",
-  offer: "bg-yellow-500",
-  hired: "bg-emerald-500",
-  rejected: "bg-red-500",
+  new: "bg-stone-400 dark:bg-stone-500",
+  screening: "bg-amber-500 dark:bg-amber-400",
+  technical: "bg-orange-500 dark:bg-orange-400",
+  offer: "bg-yellow-500 dark:bg-yellow-400",
+  hired: "bg-emerald-500 dark:bg-emerald-400",
+  rejected: "bg-red-500 dark:bg-red-400",
 };
 
 export function CandidatesPipeline() {

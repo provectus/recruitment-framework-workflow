@@ -1,5 +1,11 @@
 import { Badge } from "@/shared/ui/badge";
 import { Progress } from "@/shared/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
 import type { EvaluationResponse } from "@/shared/api";
 import {
   buildStepMap,
@@ -18,22 +24,22 @@ interface EvaluationSummaryBannerProps {
 }
 
 const VERDICT_STYLES: Record<string, string> = {
-  hire: "bg-green-100 text-green-800 border-green-200",
-  no_hire: "bg-red-100 text-red-800 border-red-200",
-  needs_discussion: "bg-amber-100 text-amber-800 border-amber-200",
+  hire: "bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800",
+  no_hire: "bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800",
+  needs_discussion: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
 };
 
 const CONFIDENCE_STYLES: Record<string, string> = {
-  high: "bg-green-50 text-green-700",
-  medium: "bg-amber-50 text-amber-700",
-  low: "bg-red-50 text-red-700",
+  high: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400",
+  medium: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+  low: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
 };
 
 const STEP_STATUS_DOT: Record<string, string> = {
-  completed: "bg-green-500",
-  running: "bg-blue-500 animate-pulse",
-  pending: "bg-amber-400",
-  failed: "bg-red-500",
+  completed: "bg-green-500 dark:bg-green-400",
+  running: "bg-blue-500 dark:bg-blue-400 animate-pulse",
+  pending: "bg-amber-400 dark:bg-amber-300",
+  failed: "bg-red-500 dark:bg-red-400",
 };
 
 export function EvaluationSummaryBanner({ evaluations }: EvaluationSummaryBannerProps) {
@@ -93,26 +99,32 @@ export function EvaluationSummaryBanner({ evaluations }: EvaluationSummaryBanner
         </div>
 
         {/* Pipeline Progress */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          {STEP_ORDER.map((step) => {
-            const ev = stepMap[step];
-            const status = ev?.status ?? "not_started";
-            return (
-              <div key={step} className="group relative flex flex-col items-center">
-                <div
-                  className={cn(
-                    "h-2.5 w-2.5 rounded-full",
-                    STEP_STATUS_DOT[status] ?? "bg-muted-foreground/20"
-                  )}
-                />
-                <div className="absolute -bottom-8 hidden group-hover:block z-10 whitespace-nowrap rounded bg-popover px-2 py-1 text-xs shadow-md border">
-                  {getEvaluationStepLabel(step)}
-                  {ev ? ` · ${formatEvaluationStatus(ev.status)}` : " · Not started"}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <TooltipProvider>
+          <div className="flex items-center gap-1.5 ml-auto">
+            {STEP_ORDER.map((step) => {
+              const ev = stepMap[step];
+              const status = ev?.status ?? "not_started";
+              return (
+                <Tooltip key={step}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={`${getEvaluationStepLabel(step)}: ${ev ? formatEvaluationStatus(ev.status) : "Not started"}`}
+                      className={cn(
+                        "h-2.5 w-2.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                        STEP_STATUS_DOT[status] ?? "bg-muted-foreground/20"
+                      )}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {getEvaluationStepLabel(step)}
+                    {ev ? ` · ${formatEvaluationStatus(ev.status)}` : " · Not started"}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </TooltipProvider>
       </div>
 
       {/* One-liner */}
