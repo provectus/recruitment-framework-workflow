@@ -1,3 +1,4 @@
+export { DocumentContentRenderer } from "./document-content-renderer";
 export { DocumentList } from "./document-list";
 export { DocumentViewer } from "./document-viewer";
 export { CvVersionHistory } from "./cv-version-history";
