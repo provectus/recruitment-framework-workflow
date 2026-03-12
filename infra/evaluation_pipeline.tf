@@ -300,7 +300,7 @@ resource "aws_lambda_function" "cv_analysis" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id
+      BEDROCK_MODEL_ID = var.bedrock_model_id_light
       S3_BUCKET_NAME   = module.s3.files_bucket_id
       DB_HOST          = module.rds.db_instance_address
       DB_PORT          = tostring(module.rds.db_instance_port)
@@ -359,7 +359,7 @@ resource "aws_lambda_function" "screening_eval" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id
+      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
       S3_BUCKET_NAME   = module.s3.files_bucket_id
       DB_HOST          = module.rds.db_instance_address
       DB_PORT          = tostring(module.rds.db_instance_port)
@@ -418,7 +418,7 @@ resource "aws_lambda_function" "technical_eval" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id
+      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
       S3_BUCKET_NAME   = module.s3.files_bucket_id
       DB_HOST          = module.rds.db_instance_address
       DB_PORT          = tostring(module.rds.db_instance_port)
@@ -477,7 +477,7 @@ resource "aws_lambda_function" "recommendation" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id
+      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
       S3_BUCKET_NAME   = module.s3.files_bucket_id
       DB_HOST          = module.rds.db_instance_address
       DB_PORT          = tostring(module.rds.db_instance_port)
@@ -536,7 +536,7 @@ resource "aws_lambda_function" "feedback_gen" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id
+      BEDROCK_MODEL_ID = var.bedrock_model_id_light
       S3_BUCKET_NAME   = module.s3.files_bucket_id
       DB_HOST          = module.rds.db_instance_address
       DB_PORT          = tostring(module.rds.db_instance_port)

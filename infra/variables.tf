@@ -89,8 +89,14 @@ variable "alert_email" {
   default     = ""
 }
 
-variable "bedrock_model_id" {
-  description = "Amazon Bedrock model ID used by evaluation Lambda functions"
+variable "bedrock_model_id_heavy" {
+  description = "Bedrock model for complex evaluation tasks (screening, technical, recommendation)"
   type        = string
-  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  default     = "anthropic.claude-sonnet-4-6"
+}
+
+variable "bedrock_model_id_light" {
+  description = "Bedrock model for simpler tasks (CV analysis, feedback generation)"
+  type        = string
+  default     = "anthropic.claude-haiku-4-5-20251001-v1:0"
 }

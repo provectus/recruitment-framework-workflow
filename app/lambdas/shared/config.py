@@ -8,7 +8,7 @@ DB_PASSWORD: str = os.environ.get("DB_PASSWORD", "postgres")
 
 S3_BUCKET_NAME: str = os.environ.get("S3_BUCKET_NAME", "lauter-files")
 BEDROCK_MODEL_ID: str = os.environ.get(
-    "BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    "BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6"
 )
 AWS_REGION: str = os.environ.get("AWS_REGION", "us-east-1")
 

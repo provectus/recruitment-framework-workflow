@@ -37,6 +37,9 @@ enable_bedrock = false
 # Email address for CloudWatch alarm notifications (leave empty to skip)
 alert_email = ""
 
-# Amazon Bedrock model ID for evaluation Lambda functions
-# Ensure this model is enabled in your AWS account via the Bedrock console
-bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+# Amazon Bedrock model IDs for evaluation Lambda functions
+# Ensure these models are enabled in your AWS account via the Bedrock console
+# Heavy: screening eval, technical eval, recommendation (complex reasoning)
+bedrock_model_id_heavy = "anthropic.claude-sonnet-4-6"
+# Light: CV analysis, feedback generation (simpler extraction/generation)
+bedrock_model_id_light = "anthropic.claude-haiku-4-5-20251001-v1:0"
