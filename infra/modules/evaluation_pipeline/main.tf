@@ -268,26 +268,25 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
 
 # ─── Lambda Layer: shared code + dependencies ─────────────────────────────────
 
-resource "null_resource" "lambda_shared_layer_structure" {
-  triggers = {
-    source_hash = sha256(join("", [for f in fileset("${var.lambdas_source_path}/shared", "**") : filesha256("${var.lambdas_source_path}/shared/${f}")]))
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      rm -rf ${path.module}/.terraform/lambda_layers/shared_staging
-      mkdir -p ${path.module}/.terraform/lambda_layers/shared_staging/python/shared
-      cp -r ${var.lambdas_source_path}/shared/* ${path.module}/.terraform/lambda_layers/shared_staging/python/shared/
-    EOT
+locals {
+  shared_layer_files = {
+    for f in fileset("${var.lambdas_source_path}/shared", "**") :
+    f => f
+    if !strcontains(f, "__pycache__")
   }
 }
 
 data "archive_file" "lambda_shared_layer" {
   type        = "zip"
-  source_dir  = "${path.module}/.terraform/lambda_layers/shared_staging"
   output_path = "${path.module}/.terraform/lambda_layers/shared.zip"
 
-  depends_on = [null_resource.lambda_shared_layer_structure]
+  dynamic "source" {
+    for_each = local.shared_layer_files
+    content {
+      content  = file("${var.lambdas_source_path}/shared/${source.value}")
+      filename = "python/shared/${source.value}"
+    }
+  }
 }
 
 resource "aws_lambda_layer_version" "shared" {
