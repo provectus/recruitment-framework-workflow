@@ -56,6 +56,7 @@ def dispatch(evaluation: Evaluation) -> None:
 
 
 def poll_and_dispatch() -> None:
+    to_dispatch: list[int] = []
     with get_session() as session:
         pending = (
             session.query(Evaluation)
@@ -63,9 +64,18 @@ def poll_and_dispatch() -> None:
             .order_by(Evaluation.created_at.asc())
             .all()
         )
+        for evaluation in pending:
+            evaluation.status = "running"
+            session.add(evaluation)
+            to_dispatch.append(evaluation.id)
+        if to_dispatch:
+            session.commit()
 
-    for evaluation in pending:
-        dispatch(evaluation)
+    for eval_id in to_dispatch:
+        with get_session() as session:
+            evaluation = session.get(Evaluation, eval_id)
+            if evaluation is not None and evaluation.status == "running":
+                dispatch(evaluation)
 
 
 def main() -> None:

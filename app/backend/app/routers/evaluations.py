@@ -48,6 +48,7 @@ async def stream_evaluation_status(
     async def event_generator() -> AsyncGenerator[dict[str, str], None]:
         last_known_statuses: dict[str, str] = {}
         keepalive_counter = 0
+        access_verified = False
         started_at = asyncio.get_event_loop().time()
 
         while True:
@@ -60,6 +61,11 @@ async def stream_evaluation_status(
                 break
 
             async with async_session_factory() as poll_session:
+                if not access_verified:
+                    await evaluation_service.verify_access(
+                        poll_session, candidate_position_id, current_user.id
+                    )
+                    access_verified = True
                 evaluations = await evaluation_service.get_evaluations(
                     poll_session, candidate_position_id
                 )
@@ -108,6 +114,12 @@ async def list_evaluations(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EvaluationListResponse:
+    try:
+        await evaluation_service.verify_access(
+            session, candidate_position_id, current_user.id
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
     evaluations = await evaluation_service.get_evaluations(
         session=session,
         candidate_position_id=candidate_position_id,
@@ -129,6 +141,9 @@ async def rerun_evaluation(
 ) -> EvaluationListResponse:
     _validate_step_type(step_type)
     try:
+        await evaluation_service.verify_access(
+            session, candidate_position_id, current_user.id
+        )
         evaluations = await evaluation_service.rerun_evaluation(
             session=session,
             candidate_position_id=candidate_position_id,
@@ -152,6 +167,12 @@ async def get_evaluation_history(
     current_user: User = Depends(get_current_user),
 ) -> EvaluationHistoryResponse:
     _validate_step_type(step_type)
+    try:
+        await evaluation_service.verify_access(
+            session, candidate_position_id, current_user.id
+        )
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
     evaluations = await evaluation_service.get_evaluation_history(
         session=session,
         candidate_position_id=candidate_position_id,
@@ -175,6 +196,9 @@ async def get_evaluation_by_step(
 ) -> EvaluationResponse:
     _validate_step_type(step_type)
     try:
+        await evaluation_service.verify_access(
+            session, candidate_position_id, current_user.id
+        )
         evaluation = await evaluation_service.get_evaluation_by_step(
             session=session,
             candidate_position_id=candidate_position_id,

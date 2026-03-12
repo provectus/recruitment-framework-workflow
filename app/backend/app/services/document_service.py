@@ -216,7 +216,13 @@ async def complete_upload(
     await session.commit()
     await session.refresh(document)
 
-    await _maybe_trigger_evaluation(session, document)
+    try:
+        await _maybe_trigger_evaluation(session, document)
+    except Exception:
+        logger.exception(
+            "Failed to trigger evaluation for document %s — document saved successfully",
+            document.id,
+        )
 
     return document
 
@@ -265,7 +271,13 @@ async def create_pasted_transcript(
     await session.commit()
     await session.refresh(document)
 
-    await _maybe_trigger_evaluation(session, document)
+    try:
+        await _maybe_trigger_evaluation(session, document)
+    except Exception:
+        logger.exception(
+            "Failed to trigger evaluation for document %s — document saved successfully",
+            document.id,
+        )
 
     return document
 

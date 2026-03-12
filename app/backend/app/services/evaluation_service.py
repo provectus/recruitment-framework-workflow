@@ -88,36 +88,46 @@ async def create_evaluation(
     step_type: str,
     source_document_id: int | None = None,
     rubric_version_id: int | None = None,
+    _max_retries: int = 3,
 ) -> Evaluation:
+    from sqlalchemy.exc import IntegrityError
+
     candidate_position = await session.get(CandidatePosition, candidate_position_id)
     if candidate_position is None:
         raise NotFoundException(f"Candidate position {candidate_position_id} not found")
 
-    latest_version_query = (
-        select(Evaluation.version)
-        .where(Evaluation.candidate_position_id == candidate_position_id)
-        .where(Evaluation.step_type == step_type)
-        .order_by(Evaluation.version.desc())
-        .limit(1)
-    )
-    result = await session.execute(latest_version_query)
-    latest_version = result.scalar_one_or_none()
-    next_version = (latest_version or 0) + 1
+    for attempt in range(_max_retries):
+        latest_version_query = (
+            select(Evaluation.version)
+            .where(Evaluation.candidate_position_id == candidate_position_id)
+            .where(Evaluation.step_type == step_type)
+            .order_by(Evaluation.version.desc())
+            .limit(1)
+        )
+        result = await session.execute(latest_version_query)
+        latest_version = result.scalar_one_or_none()
+        next_version = (latest_version or 0) + 1
 
-    evaluation = Evaluation(
-        candidate_position_id=candidate_position_id,
-        step_type=EvaluationStepType(step_type),
-        status=EvaluationStatus.pending,
-        version=next_version,
-        source_document_id=source_document_id,
-        rubric_version_id=rubric_version_id,
-    )
+        evaluation = Evaluation(
+            candidate_position_id=candidate_position_id,
+            step_type=EvaluationStepType(step_type),
+            status=EvaluationStatus.pending,
+            version=next_version,
+            source_document_id=source_document_id,
+            rubric_version_id=rubric_version_id,
+        )
 
-    session.add(evaluation)
-    await session.commit()
-    await session.refresh(evaluation)
+        session.add(evaluation)
+        try:
+            await session.commit()
+            await session.refresh(evaluation)
+            return evaluation
+        except IntegrityError:
+            await session.rollback()
+            if attempt == _max_retries - 1:
+                raise
 
-    return evaluation
+    raise RuntimeError("Unreachable: retry loop exited without return or raise")
 
 
 async def trigger_evaluation(
@@ -182,6 +192,35 @@ async def trigger_feedback_gen(
         candidate_position_id=candidate_position_id,
         step_type=EvaluationStepType.feedback_gen,
     )
+
+
+async def verify_access(
+    session: AsyncSession,
+    candidate_position_id: int,
+    user_id: int,
+) -> None:
+    from app.models.document import Document
+    from app.models.position import Position
+
+    cp = await session.get(CandidatePosition, candidate_position_id)
+    if cp is None:
+        raise NotFoundException(f"Candidate position {candidate_position_id} not found")
+
+    position = await session.get(Position, cp.position_id)
+    if position is not None and position.hiring_manager_id == user_id:
+        return
+
+    doc_query = (
+        select(Document.id)
+        .where(Document.candidate_position_id == candidate_position_id)
+        .where(Document.uploaded_by_id == user_id)
+        .limit(1)
+    )
+    result = await session.execute(doc_query)
+    if result.scalar_one_or_none() is not None:
+        return
+
+    raise NotFoundException(f"Candidate position {candidate_position_id} not found")
 
 
 async def _latest_evaluation_for_step(
