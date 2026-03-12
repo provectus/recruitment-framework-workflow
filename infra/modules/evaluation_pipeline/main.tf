@@ -351,7 +351,7 @@ resource "aws_lambda_function" "evaluation" {
   }
 
   depends_on = [
-    aws_cloudwatch_log_group.lambda[each.key],
+    aws_cloudwatch_log_group.lambda,
     aws_iam_role_policy_attachment.lambda_evaluation_vpc,
   ]
 
