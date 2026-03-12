@@ -112,7 +112,27 @@ module "iam" {
   cloudfront_distribution_arn  = module.cloudfront.distribution_arn
   enable_bedrock               = var.enable_bedrock
   enable_ecs_exec              = var.environment != "prod"
-  evaluation_event_bus_arn     = aws_cloudwatch_event_bus.evaluation.arn
+  evaluation_event_bus_arn     = module.evaluation_pipeline.event_bus_arn
+}
+
+# Evaluation Pipeline Module - EventBridge, Lambdas, Step Functions
+module "evaluation_pipeline" {
+  source = "./modules/evaluation_pipeline"
+
+  project_name           = var.project_name
+  vpc_id                 = module.networking.vpc_id
+  private_subnet_ids     = module.networking.private_subnet_ids
+  rds_security_group_id  = module.networking.rds_security_group_id
+  rds_instance_address   = module.rds.db_instance_address
+  rds_instance_port      = module.rds.db_instance_port
+  db_name                = var.db_name
+  db_username            = var.db_username
+  db_master_secret_arn   = module.rds.db_master_secret_arn
+  files_bucket_arn       = module.s3.files_bucket_arn
+  files_bucket_id        = module.s3.files_bucket_id
+  bedrock_model_id_heavy = var.bedrock_model_id_heavy
+  bedrock_model_id_light = var.bedrock_model_id_light
+  lambdas_source_path    = "${path.module}/../app/lambdas"
 }
 
 # Cognito Module - User Pool with Google OAuth federation
@@ -164,7 +184,7 @@ module "ecs" {
   files_bucket_name            = module.s3.files_bucket_id
   allowed_email_domain         = var.allowed_email_domain
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
-  evaluation_event_bus_name    = aws_cloudwatch_event_bus.evaluation.name
+  evaluation_event_bus_name    = module.evaluation_pipeline.event_bus_name
 }
 
 # Associate WAF with ALB

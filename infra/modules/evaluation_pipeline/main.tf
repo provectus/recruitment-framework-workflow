@@ -1,8 +1,35 @@
-data "aws_region" "eval_pipeline" {}
+data "aws_region" "current" {}
 
 locals {
-  lambda_evaluation_functions = ["cv-analysis", "screening-eval", "technical-eval", "recommendation", "feedback-gen"]
-  db_ssm_prefix               = "/${var.project_name}/db"
+  db_ssm_prefix = "/${var.project_name}/db"
+
+  evaluation_functions = {
+    "cv-analysis" = {
+      description = "Analyzes candidate CVs against position requirements using Bedrock"
+      source_dir  = "cv_analysis"
+      model_id    = var.bedrock_model_id_light
+    }
+    "screening-eval" = {
+      description = "Analyzes candidate screening interview transcripts against position requirements using Bedrock"
+      source_dir  = "screening_eval"
+      model_id    = var.bedrock_model_id_heavy
+    }
+    "technical-eval" = {
+      description = "Scores candidate technical interview transcripts against rubric criteria using Bedrock"
+      source_dir  = "technical_eval"
+      model_id    = var.bedrock_model_id_heavy
+    }
+    "recommendation" = {
+      description = "Aggregates prior evaluation results and produces a hire/no-hire recommendation using Bedrock"
+      source_dir  = "recommendation"
+      model_id    = var.bedrock_model_id_heavy
+    }
+    "feedback-gen" = {
+      description = "Generates candidate-facing rejection feedback from aggregated evaluation results using Bedrock"
+      source_dir  = "feedback_gen"
+      model_id    = var.bedrock_model_id_light
+    }
+  }
 }
 
 # ─── SSM Parameters: DB connection details for Lambda cold-start reads ───────
@@ -11,7 +38,7 @@ resource "aws_ssm_parameter" "db_host" {
   name        = "${local.db_ssm_prefix}/host"
   description = "RDS hostname for ${var.project_name} Lambda functions"
   type        = "String"
-  value       = module.rds.db_instance_address
+  value       = var.rds_instance_address
 
   tags = {
     Name = "${var.project_name}-db-host-param"
@@ -22,7 +49,7 @@ resource "aws_ssm_parameter" "db_port" {
   name        = "${local.db_ssm_prefix}/port"
   description = "RDS port for ${var.project_name} Lambda functions"
   type        = "String"
-  value       = tostring(module.rds.db_instance_port)
+  value       = tostring(var.rds_instance_port)
 
   tags = {
     Name = "${var.project_name}-db-port-param"
@@ -128,14 +155,14 @@ resource "aws_iam_role_policy" "eventbridge_sfn" {
 resource "aws_security_group" "lambda_evaluation" {
   name        = "${var.project_name}-lambda-evaluation"
   description = "Security group for evaluation Lambda functions"
-  vpc_id      = module.networking.vpc_id
+  vpc_id      = var.vpc_id
 
   egress {
     description     = "PostgreSQL to RDS"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [module.networking.rds_security_group_id]
+    security_groups = [var.rds_security_group_id]
   }
 
   egress {
@@ -151,14 +178,13 @@ resource "aws_security_group" "lambda_evaluation" {
   }
 }
 
-# Allow Lambda security group to reach RDS
 resource "aws_security_group_rule" "rds_from_lambda" {
   type                     = "ingress"
   description              = "PostgreSQL from evaluation Lambda functions"
   from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
-  security_group_id        = module.networking.rds_security_group_id
+  security_group_id        = var.rds_security_group_id
   source_security_group_id = aws_security_group.lambda_evaluation.id
 }
 
@@ -206,7 +232,7 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Effect = "Allow"
         Action = ["bedrock:InvokeModel"]
         Resource = [
-          "arn:aws:bedrock:${data.aws_region.eval_pipeline.region}::foundation-model/anthropic.claude-*"
+          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/anthropic.claude-*"
         ]
       },
       {
@@ -214,7 +240,7 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Effect = "Allow"
         Action = ["s3:GetObject"]
         Resource = [
-          "${module.s3.files_bucket_arn}/*"
+          "${var.files_bucket_arn}/*"
         ]
       },
       {
@@ -233,7 +259,7 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Effect = "Allow"
         Action = ["secretsmanager:GetSecretValue"]
         Resource = [
-          module.rds.db_master_secret_arn
+          var.db_master_secret_arn
         ]
       }
     ]
@@ -244,14 +270,14 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
 
 resource "null_resource" "lambda_shared_layer_structure" {
   triggers = {
-    source_hash = sha256(join("", [for f in fileset("${path.module}/../app/lambdas/shared", "**") : filesha256("${path.module}/../app/lambdas/shared/${f}")]))
+    source_hash = sha256(join("", [for f in fileset("${var.lambdas_source_path}/shared", "**") : filesha256("${var.lambdas_source_path}/shared/${f}")]))
   }
 
   provisioner "local-exec" {
     command = <<-EOT
       rm -rf ${path.module}/.terraform/lambda_layers/shared_staging
       mkdir -p ${path.module}/.terraform/lambda_layers/shared_staging/python/shared
-      cp -r ${path.module}/../app/lambdas/shared/* ${path.module}/.terraform/lambda_layers/shared_staging/python/shared/
+      cp -r ${var.lambdas_source_path}/shared/* ${path.module}/.terraform/lambda_layers/shared_staging/python/shared/
     EOT
   }
 }
@@ -276,31 +302,34 @@ resource "aws_lambda_layer_version" "shared" {
   }
 }
 
-# ─── Lambda Function: cv-analysis ────────────────────────────────────────────
+# ─── Lambda Functions: evaluation (for_each) ─────────────────────────────────
 
-data "archive_file" "lambda_cv_analysis" {
+data "archive_file" "lambda_function" {
+  for_each    = local.evaluation_functions
   type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/cv_analysis"
-  output_path = "${path.module}/.terraform/lambda_functions/cv_analysis.zip"
+  source_dir  = "${var.lambdas_source_path}/${each.value.source_dir}"
+  output_path = "${path.module}/.terraform/lambda_functions/${each.value.source_dir}.zip"
 }
 
-resource "aws_cloudwatch_log_group" "lambda_cv_analysis" {
-  name              = "/aws/lambda/${var.project_name}-cv-analysis"
+resource "aws_cloudwatch_log_group" "lambda" {
+  for_each          = local.evaluation_functions
+  name              = "/aws/lambda/${var.project_name}-${each.key}"
   retention_in_days = 30
 
   tags = {
-    Name = "${var.project_name}-lambda-cv-analysis-logs"
+    Name = "${var.project_name}-lambda-${each.key}-logs"
   }
 }
 
-resource "aws_lambda_function" "cv_analysis" {
-  function_name    = "${var.project_name}-cv-analysis"
-  description      = "Analyzes candidate CVs against position requirements using Bedrock"
+resource "aws_lambda_function" "evaluation" {
+  for_each         = local.evaluation_functions
+  function_name    = "${var.project_name}-${each.key}"
+  description      = each.value.description
   role             = aws_iam_role.lambda_evaluation.arn
   runtime          = "python3.12"
   handler          = "handler.handler"
-  filename         = data.archive_file.lambda_cv_analysis.output_path
-  source_code_hash = data.archive_file.lambda_cv_analysis.output_base64sha256
+  filename         = data.archive_file.lambda_function[each.key].output_path
+  source_code_hash = data.archive_file.lambda_function[each.key].output_base64sha256
   memory_size      = 512
   timeout          = 300
   layers           = [aws_lambda_layer_version.shared.arn]
@@ -308,250 +337,26 @@ resource "aws_lambda_function" "cv_analysis" {
   reserved_concurrent_executions = 10
 
   vpc_config {
-    subnet_ids         = module.networking.private_subnet_ids
+    subnet_ids         = var.private_subnet_ids
     security_group_ids = [aws_security_group.lambda_evaluation.id]
   }
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID       = var.bedrock_model_id_light
-      S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      BEDROCK_MODEL_ID       = each.value.model_id
+      S3_BUCKET_NAME         = var.files_bucket_id
+      DB_PASSWORD_SECRET_ARN = var.db_master_secret_arn
       DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
   depends_on = [
-    aws_cloudwatch_log_group.lambda_cv_analysis,
+    aws_cloudwatch_log_group.lambda[each.key],
     aws_iam_role_policy_attachment.lambda_evaluation_vpc,
   ]
 
   tags = {
-    Name = "${var.project_name}-cv-analysis"
-    Type = "evaluation-lambda"
-  }
-}
-
-# ─── Lambda Function: screening-eval ─────────────────────────────────────────
-
-data "archive_file" "lambda_screening_eval" {
-  type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/screening_eval"
-  output_path = "${path.module}/.terraform/lambda_functions/screening_eval.zip"
-}
-
-resource "aws_cloudwatch_log_group" "lambda_screening_eval" {
-  name              = "/aws/lambda/${var.project_name}-screening-eval"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.project_name}-lambda-screening-eval-logs"
-  }
-}
-
-resource "aws_lambda_function" "screening_eval" {
-  function_name    = "${var.project_name}-screening-eval"
-  description      = "Analyzes candidate screening interview transcripts against position requirements using Bedrock"
-  role             = aws_iam_role.lambda_evaluation.arn
-  runtime          = "python3.12"
-  handler          = "handler.handler"
-  filename         = data.archive_file.lambda_screening_eval.output_path
-  source_code_hash = data.archive_file.lambda_screening_eval.output_base64sha256
-  memory_size      = 512
-  timeout          = 300
-  layers           = [aws_lambda_layer_version.shared.arn]
-
-  reserved_concurrent_executions = 10
-
-  vpc_config {
-    subnet_ids         = module.networking.private_subnet_ids
-    security_group_ids = [aws_security_group.lambda_evaluation.id]
-  }
-
-  environment {
-    variables = {
-      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
-      DB_SSM_PREFIX          = local.db_ssm_prefix
-    }
-  }
-
-  depends_on = [
-    aws_cloudwatch_log_group.lambda_screening_eval,
-    aws_iam_role_policy_attachment.lambda_evaluation_vpc,
-  ]
-
-  tags = {
-    Name = "${var.project_name}-screening-eval"
-    Type = "evaluation-lambda"
-  }
-}
-
-# ─── Lambda Function: technical-eval ─────────────────────────────────────────
-
-data "archive_file" "lambda_technical_eval" {
-  type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/technical_eval"
-  output_path = "${path.module}/.terraform/lambda_functions/technical_eval.zip"
-}
-
-resource "aws_cloudwatch_log_group" "lambda_technical_eval" {
-  name              = "/aws/lambda/${var.project_name}-technical-eval"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.project_name}-lambda-technical-eval-logs"
-  }
-}
-
-resource "aws_lambda_function" "technical_eval" {
-  function_name    = "${var.project_name}-technical-eval"
-  description      = "Scores candidate technical interview transcripts against rubric criteria using Bedrock"
-  role             = aws_iam_role.lambda_evaluation.arn
-  runtime          = "python3.12"
-  handler          = "handler.handler"
-  filename         = data.archive_file.lambda_technical_eval.output_path
-  source_code_hash = data.archive_file.lambda_technical_eval.output_base64sha256
-  memory_size      = 512
-  timeout          = 300
-  layers           = [aws_lambda_layer_version.shared.arn]
-
-  reserved_concurrent_executions = 10
-
-  vpc_config {
-    subnet_ids         = module.networking.private_subnet_ids
-    security_group_ids = [aws_security_group.lambda_evaluation.id]
-  }
-
-  environment {
-    variables = {
-      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
-      DB_SSM_PREFIX          = local.db_ssm_prefix
-    }
-  }
-
-  depends_on = [
-    aws_cloudwatch_log_group.lambda_technical_eval,
-    aws_iam_role_policy_attachment.lambda_evaluation_vpc,
-  ]
-
-  tags = {
-    Name = "${var.project_name}-technical-eval"
-    Type = "evaluation-lambda"
-  }
-}
-
-# ─── Lambda Function: recommendation ─────────────────────────────────────────
-
-data "archive_file" "lambda_recommendation" {
-  type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/recommendation"
-  output_path = "${path.module}/.terraform/lambda_functions/recommendation.zip"
-}
-
-resource "aws_cloudwatch_log_group" "lambda_recommendation" {
-  name              = "/aws/lambda/${var.project_name}-recommendation"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.project_name}-lambda-recommendation-logs"
-  }
-}
-
-resource "aws_lambda_function" "recommendation" {
-  function_name    = "${var.project_name}-recommendation"
-  description      = "Aggregates prior evaluation results and produces a hire/no-hire recommendation using Bedrock"
-  role             = aws_iam_role.lambda_evaluation.arn
-  runtime          = "python3.12"
-  handler          = "handler.handler"
-  filename         = data.archive_file.lambda_recommendation.output_path
-  source_code_hash = data.archive_file.lambda_recommendation.output_base64sha256
-  memory_size      = 512
-  timeout          = 300
-  layers           = [aws_lambda_layer_version.shared.arn]
-
-  reserved_concurrent_executions = 10
-
-  vpc_config {
-    subnet_ids         = module.networking.private_subnet_ids
-    security_group_ids = [aws_security_group.lambda_evaluation.id]
-  }
-
-  environment {
-    variables = {
-      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
-      DB_SSM_PREFIX          = local.db_ssm_prefix
-    }
-  }
-
-  depends_on = [
-    aws_cloudwatch_log_group.lambda_recommendation,
-    aws_iam_role_policy_attachment.lambda_evaluation_vpc,
-  ]
-
-  tags = {
-    Name = "${var.project_name}-recommendation"
-    Type = "evaluation-lambda"
-  }
-}
-
-# ─── Lambda Function: feedback-gen ───────────────────────────────────────────
-
-data "archive_file" "lambda_feedback_gen" {
-  type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/feedback_gen"
-  output_path = "${path.module}/.terraform/lambda_functions/feedback_gen.zip"
-}
-
-resource "aws_cloudwatch_log_group" "lambda_feedback_gen" {
-  name              = "/aws/lambda/${var.project_name}-feedback-gen"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.project_name}-lambda-feedback-gen-logs"
-  }
-}
-
-resource "aws_lambda_function" "feedback_gen" {
-  function_name    = "${var.project_name}-feedback-gen"
-  description      = "Generates candidate-facing rejection feedback from aggregated evaluation results using Bedrock"
-  role             = aws_iam_role.lambda_evaluation.arn
-  runtime          = "python3.12"
-  handler          = "handler.handler"
-  filename         = data.archive_file.lambda_feedback_gen.output_path
-  source_code_hash = data.archive_file.lambda_feedback_gen.output_base64sha256
-  memory_size      = 512
-  timeout          = 300
-  layers           = [aws_lambda_layer_version.shared.arn]
-
-  reserved_concurrent_executions = 10
-
-  vpc_config {
-    subnet_ids         = module.networking.private_subnet_ids
-    security_group_ids = [aws_security_group.lambda_evaluation.id]
-  }
-
-  environment {
-    variables = {
-      BEDROCK_MODEL_ID       = var.bedrock_model_id_light
-      S3_BUCKET_NAME         = module.s3.files_bucket_id
-      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
-      DB_SSM_PREFIX          = local.db_ssm_prefix
-    }
-  }
-
-  depends_on = [
-    aws_cloudwatch_log_group.lambda_feedback_gen,
-    aws_iam_role_policy_attachment.lambda_evaluation_vpc,
-  ]
-
-  tags = {
-    Name = "${var.project_name}-feedback-gen"
+    Name = "${var.project_name}-${each.key}"
     Type = "evaluation-lambda"
   }
 }
@@ -601,18 +406,9 @@ resource "aws_iam_role_policy" "sfn_evaluation_pipeline" {
         Sid    = "InvokeLambdas"
         Effect = "Allow"
         Action = ["lambda:InvokeFunction"]
-        Resource = [
-          aws_lambda_function.cv_analysis.arn,
-          "${aws_lambda_function.cv_analysis.arn}:*",
-          aws_lambda_function.screening_eval.arn,
-          "${aws_lambda_function.screening_eval.arn}:*",
-          aws_lambda_function.technical_eval.arn,
-          "${aws_lambda_function.technical_eval.arn}:*",
-          aws_lambda_function.recommendation.arn,
-          "${aws_lambda_function.recommendation.arn}:*",
-          aws_lambda_function.feedback_gen.arn,
-          "${aws_lambda_function.feedback_gen.arn}:*",
-        ]
+        Resource = flatten([
+          for key, fn in aws_lambda_function.evaluation : [fn.arn, "${fn.arn}:*"]
+        ])
       },
       {
         Sid    = "CloudWatchLogsDelivery"
@@ -689,7 +485,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Parameters = {
-          FunctionName = aws_lambda_function.cv_analysis.arn
+          FunctionName = aws_lambda_function.evaluation["cv-analysis"].arn
           "Payload.$"  = "$"
         }
         ResultSelector = {
@@ -727,7 +523,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Parameters = {
-          FunctionName = aws_lambda_function.screening_eval.arn
+          FunctionName = aws_lambda_function.evaluation["screening-eval"].arn
           "Payload.$"  = "$"
         }
         ResultSelector = {
@@ -765,7 +561,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Parameters = {
-          FunctionName = aws_lambda_function.technical_eval.arn
+          FunctionName = aws_lambda_function.evaluation["technical-eval"].arn
           "Payload.$"  = "$"
         }
         ResultSelector = {
@@ -803,7 +599,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Parameters = {
-          FunctionName = aws_lambda_function.recommendation.arn
+          FunctionName = aws_lambda_function.evaluation["recommendation"].arn
           "Payload.$"  = "$"
         }
         ResultSelector = {
@@ -841,7 +637,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Parameters = {
-          FunctionName = aws_lambda_function.feedback_gen.arn
+          FunctionName = aws_lambda_function.evaluation["feedback-gen"].arn
           "Payload.$"  = "$"
         }
         ResultSelector = {
