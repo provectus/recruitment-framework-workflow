@@ -244,10 +244,26 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
 
 # ─── Lambda Layer: shared code + dependencies ─────────────────────────────────
 
+resource "null_resource" "lambda_shared_layer_structure" {
+  triggers = {
+    source_hash = sha256(join("", [for f in fileset("${path.module}/../app/lambdas/shared", "**") : filesha256("${path.module}/../app/lambdas/shared/${f}")]))
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      rm -rf ${path.module}/.terraform/lambda_layers/shared_staging
+      mkdir -p ${path.module}/.terraform/lambda_layers/shared_staging/python/shared
+      cp -r ${path.module}/../app/lambdas/shared/* ${path.module}/.terraform/lambda_layers/shared_staging/python/shared/
+    EOT
+  }
+}
+
 data "archive_file" "lambda_shared_layer" {
   type        = "zip"
-  source_dir  = "${path.module}/../app/lambdas/shared"
+  source_dir  = "${path.module}/.terraform/lambda_layers/shared_staging"
   output_path = "${path.module}/.terraform/lambda_layers/shared.zip"
+
+  depends_on = [null_resource.lambda_shared_layer_structure]
 }
 
 resource "aws_lambda_layer_version" "shared" {
@@ -300,13 +316,14 @@ resource "aws_lambda_function" "cv_analysis" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id_light
-      S3_BUCKET_NAME   = module.s3.files_bucket_id
-      DB_HOST          = module.rds.db_instance_address
-      DB_PORT          = tostring(module.rds.db_instance_port)
-      DB_NAME          = var.db_name
-      DB_USERNAME      = var.db_username
-      DB_SSM_PREFIX    = local.db_ssm_prefix
+      BEDROCK_MODEL_ID       = var.bedrock_model_id_light
+      S3_BUCKET_NAME         = module.s3.files_bucket_id
+      DB_HOST                = module.rds.db_instance_address
+      DB_PORT                = tostring(module.rds.db_instance_port)
+      DB_NAME                = var.db_name
+      DB_USERNAME            = var.db_username
+      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
@@ -359,13 +376,14 @@ resource "aws_lambda_function" "screening_eval" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME   = module.s3.files_bucket_id
-      DB_HOST          = module.rds.db_instance_address
-      DB_PORT          = tostring(module.rds.db_instance_port)
-      DB_NAME          = var.db_name
-      DB_USERNAME      = var.db_username
-      DB_SSM_PREFIX    = local.db_ssm_prefix
+      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
+      S3_BUCKET_NAME         = module.s3.files_bucket_id
+      DB_HOST                = module.rds.db_instance_address
+      DB_PORT                = tostring(module.rds.db_instance_port)
+      DB_NAME                = var.db_name
+      DB_USERNAME            = var.db_username
+      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
@@ -418,13 +436,14 @@ resource "aws_lambda_function" "technical_eval" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME   = module.s3.files_bucket_id
-      DB_HOST          = module.rds.db_instance_address
-      DB_PORT          = tostring(module.rds.db_instance_port)
-      DB_NAME          = var.db_name
-      DB_USERNAME      = var.db_username
-      DB_SSM_PREFIX    = local.db_ssm_prefix
+      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
+      S3_BUCKET_NAME         = module.s3.files_bucket_id
+      DB_HOST                = module.rds.db_instance_address
+      DB_PORT                = tostring(module.rds.db_instance_port)
+      DB_NAME                = var.db_name
+      DB_USERNAME            = var.db_username
+      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
@@ -477,13 +496,14 @@ resource "aws_lambda_function" "recommendation" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id_heavy
-      S3_BUCKET_NAME   = module.s3.files_bucket_id
-      DB_HOST          = module.rds.db_instance_address
-      DB_PORT          = tostring(module.rds.db_instance_port)
-      DB_NAME          = var.db_name
-      DB_USERNAME      = var.db_username
-      DB_SSM_PREFIX    = local.db_ssm_prefix
+      BEDROCK_MODEL_ID       = var.bedrock_model_id_heavy
+      S3_BUCKET_NAME         = module.s3.files_bucket_id
+      DB_HOST                = module.rds.db_instance_address
+      DB_PORT                = tostring(module.rds.db_instance_port)
+      DB_NAME                = var.db_name
+      DB_USERNAME            = var.db_username
+      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
@@ -536,13 +556,14 @@ resource "aws_lambda_function" "feedback_gen" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID = var.bedrock_model_id_light
-      S3_BUCKET_NAME   = module.s3.files_bucket_id
-      DB_HOST          = module.rds.db_instance_address
-      DB_PORT          = tostring(module.rds.db_instance_port)
-      DB_NAME          = var.db_name
-      DB_USERNAME      = var.db_username
-      DB_SSM_PREFIX    = local.db_ssm_prefix
+      BEDROCK_MODEL_ID       = var.bedrock_model_id_light
+      S3_BUCKET_NAME         = module.s3.files_bucket_id
+      DB_HOST                = module.rds.db_instance_address
+      DB_PORT                = tostring(module.rds.db_instance_port)
+      DB_NAME                = var.db_name
+      DB_USERNAME            = var.db_username
+      DB_PASSWORD_SECRET_ARN = module.rds.db_master_secret_arn
+      DB_SSM_PREFIX          = local.db_ssm_prefix
     }
   }
 
@@ -779,7 +800,7 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
             ResultPath  = "$.error"
           }
         ]
-        Next = "InvokeRecommendation"
+        Next = "EvaluationComplete"
       }
 
       MarkTechnicalEvalFailed = {
