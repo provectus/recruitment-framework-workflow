@@ -163,6 +163,20 @@ async def trigger_feedback_gen(
     session: AsyncSession,
     candidate_position_id: int,
 ) -> Evaluation:
+    existing = await _latest_evaluation_for_step(
+        session, candidate_position_id, EvaluationStepType.feedback_gen
+    )
+    if existing and existing.status in (
+        EvaluationStatus.pending,
+        EvaluationStatus.running,
+    ):
+        logger.info(
+            "Skipping duplicate feedback_gen trigger — evaluation_id=%s is already %s",
+            existing.id,
+            existing.status,
+        )
+        return existing
+
     return await trigger_evaluation(
         session=session,
         candidate_position_id=candidate_position_id,

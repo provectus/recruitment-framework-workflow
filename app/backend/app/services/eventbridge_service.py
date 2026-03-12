@@ -18,13 +18,10 @@ async def publish_evaluation_event(
     rubric_version_id: int | None = None,
 ) -> None:
     if not settings.evaluation_event_bus_name:
-        logger.error(
-            "EVALUATION_EVENT_BUS_NAME is not configured — skipping event publish "
-            "for evaluation_id=%s step_type=%s",
-            evaluation_id,
-            step_type,
+        raise RuntimeError(
+            f"EVALUATION_EVENT_BUS_NAME is not configured — cannot publish event "
+            f"for evaluation_id={evaluation_id} step_type={step_type}"
         )
-        return
 
     detail = {
         "evaluation_id": evaluation_id,
