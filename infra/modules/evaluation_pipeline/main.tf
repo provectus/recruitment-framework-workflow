@@ -232,7 +232,8 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Effect = "Allow"
         Action = ["bedrock:InvokeModel"]
         Resource = [
-          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/anthropic.claude-*"
+          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.bedrock_model_id_heavy}",
+          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.bedrock_model_id_light}",
         ]
       },
       {

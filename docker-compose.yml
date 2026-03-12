@@ -77,6 +77,14 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f local_orchestrator || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     environment:
       DB_HOST: db
       DB_PORT: 5432
