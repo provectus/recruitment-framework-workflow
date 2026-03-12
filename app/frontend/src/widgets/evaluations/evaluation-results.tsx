@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useEvaluations, useEvaluationStream } from "@/features/evaluations";
 import { EvaluationStepCard } from "./evaluation-step-card";
@@ -34,6 +35,21 @@ export function EvaluationResults({
   );
 
   useEvaluationStream(candidatePositionId, streamEnabled);
+
+  const [openPanels, setOpenPanels] = useState<Set<string>>(new Set());
+
+  const togglePanel = (stepType: string) => {
+    setOpenPanels((prev) => {
+      const next = new Set(prev);
+      if (next.has(stepType)) next.delete(stepType);
+      else next.add(stepType);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    setOpenPanels(new Set());
+  }, [candidatePositionId]);
 
   if (isLoading) {
     return (
@@ -78,32 +94,30 @@ export function EvaluationResults({
 
   return (
     <div className="space-y-3">
-      {allEvaluations.map((evaluation) => (
-        <div key={evaluation.id}>
+      {allEvaluations.map((ev) => (
+        <div key={ev.id}>
           <EvaluationStepCard
-            evaluation={evaluation}
+            evaluation={ev}
             candidatePositionId={candidatePositionId}
             disableRerun={disableRerun}
             resultContent={
-              evaluation.result ? (
-                <ResultRenderer
-                  stepType={evaluation.step_type}
-                  result={evaluation.result}
-                />
+              ev.result ? (
+                <ResultRenderer stepType={ev.step_type} result={ev.result} />
               ) : undefined
             }
+            isOpen={openPanels.has(ev.step_type)}
+            onToggle={() => togglePanel(ev.step_type)}
           />
-          {evaluation.step_type === "screening_eval" &&
-            showDecisionAfterScreening && (
-              <HmDecisionGate
-                candidatePositionId={candidatePositionId}
-                candidateId={candidateId}
-                positionId={positionId}
-                evaluations={evaluations}
-                currentStage={currentStage}
-              />
-            )}
-          {evaluation.step_type === "recommendation" &&
+          {ev.step_type === "screening_eval" && showDecisionAfterScreening && (
+            <HmDecisionGate
+              candidatePositionId={candidatePositionId}
+              candidateId={candidateId}
+              positionId={positionId}
+              evaluations={evaluations}
+              currentStage={currentStage}
+            />
+          )}
+          {ev.step_type === "recommendation" &&
             showDecisionAfterRecommendation && (
               <HmDecisionGate
                 candidatePositionId={candidatePositionId}
