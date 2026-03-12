@@ -19,5 +19,9 @@ export function useRerunEvaluation(candidatePositionId: number) {
         }),
       });
     },
+    onError: (_error, variables) => {
+      const stepType = variables.path?.step_type ?? "";
+      toast.error(`Failed to re-run ${getEvaluationStepLabel(stepType)}`);
+    },
   });
 }

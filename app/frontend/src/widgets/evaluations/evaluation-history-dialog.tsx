@@ -15,7 +15,7 @@ import {
   getEvaluationStatusVariant,
   formatEvaluationStatus,
 } from "@/shared/lib/evaluation-utils";
-import { useEvaluationHistory } from "@/features/evaluations/hooks/use-evaluation-history";
+import { useEvaluationHistory } from "@/features/evaluations";
 import { ResultRenderer } from "./result-renderer";
 
 interface EvaluationHistoryDialogProps {
