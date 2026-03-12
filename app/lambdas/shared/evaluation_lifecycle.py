@@ -28,8 +28,9 @@ def run_evaluation(
             yield session, evaluation
 
         except Exception as exc:
+            session.rollback()
             evaluation.status = "failed"
-            evaluation.error_message = str(exc)
+            evaluation.error_message = type(exc).__name__
             evaluation.completed_at = datetime.now(tz=UTC)
             session.add(evaluation)
             session.commit()
