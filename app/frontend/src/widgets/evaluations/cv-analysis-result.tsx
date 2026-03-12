@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -31,9 +32,30 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function TruncatedText({ text, maxLen = 80 }: { text: string; maxLen?: number }) {
+  const [expanded, setExpanded] = useState(false);
+  if (text.length <= maxLen) return <span>{text}</span>;
+  return (
+    <span>
+      {expanded ? text : text.slice(0, maxLen) + "…"}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="ml-1 text-xs text-primary hover:underline"
+      >
+        {expanded ? "Less" : "More"}
+      </button>
+    </span>
+  );
+}
+
 export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
   return (
     <div className="space-y-6">
+      <div>
+        <SectionLabel>Overall Fit</SectionLabel>
+        <p className="text-sm leading-relaxed font-medium">{result.overall_fit}</p>
+      </div>
+
       <div>
         <SectionLabel>Skills Match</SectionLabel>
         <Table>
@@ -47,22 +69,22 @@ export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
           <TableBody>
             {result.skills_match.map((item, idx) => (
               <TableRow key={idx}>
-                <TableCell className="font-medium">{item.skill}</TableCell>
-                <TableCell>
+                <TableCell className="py-2 font-medium">{item.skill}</TableCell>
+                <TableCell className="py-2">
                   {item.present ? (
-                    <Badge className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+                    <Badge className="gap-1 text-xs px-1.5 py-0 bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
                       <CheckCircle2 className="size-3" />
                       Present
                     </Badge>
                   ) : (
-                    <Badge className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
+                    <Badge className="gap-1 text-xs px-1.5 py-0 bg-red-100 text-red-800 border-red-200 hover:bg-red-100">
                       <XCircle className="size-3" />
                       Absent
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-muted-foreground whitespace-normal">
-                  {item.notes}
+                <TableCell className="py-2 text-muted-foreground whitespace-normal">
+                  <TruncatedText text={item.notes} />
                 </TableCell>
               </TableRow>
             ))}
@@ -85,11 +107,6 @@ export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
         <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-400">
           {result.signals_and_red_flags}
         </p>
-      </div>
-
-      <div>
-        <SectionLabel>Overall Fit</SectionLabel>
-        <p className="text-sm leading-relaxed font-medium">{result.overall_fit}</p>
       </div>
     </div>
   );
