@@ -15,7 +15,7 @@ React SPA (S3+CF) → FastAPI (ECS Fargate) → EventBridge → Step Functions �
                          ↓                                       ↓
                     RDS Postgres                           Bedrock (Claude)
                     S3 (files)
-```G
+```
 
 - **Frontend:** React 19 + TypeScript SPA, Vite, TanStack Router (file-based routing with auto code-splitting), Tailwind v4, shadcn/ui (new-york style, Lucide icons), React Compiler enabled
 - **Backend:** Python 3.12+, FastAPI (async), SQLModel + asyncpg (Postgres), Alembic (async migrations), pydantic-settings for config
