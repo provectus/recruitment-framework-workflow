@@ -3,8 +3,8 @@ import re
 from datetime import date
 from uuid import uuid4
 
-from sqlalchemy import select
 from sqlalchemy.orm import aliased
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.exceptions import ConflictError, ForbiddenError, NotFoundException
