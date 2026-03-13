@@ -1,7 +1,9 @@
 output "event_bus_name" {
-  value = aws_cloudwatch_event_bus.evaluation.name
+  description = "Name of the evaluation EventBridge custom event bus"
+  value       = aws_cloudwatch_event_bus.evaluation.name
 }
 
 output "event_bus_arn" {
-  value = aws_cloudwatch_event_bus.evaluation.arn
+  description = "ARN of the evaluation EventBridge custom event bus"
+  value       = aws_cloudwatch_event_bus.evaluation.arn
 }

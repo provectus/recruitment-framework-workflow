@@ -20,6 +20,12 @@ variable "domain" {
   }
 }
 
+variable "owner" {
+  description = "Team or person responsible for the resources (used in default_tags)"
+  type        = string
+  default     = "recruitment-team"
+}
+
 variable "environment" {
   description = "Environment name (poc, dev, staging, prod) used for resource naming and configuration"
   type        = string

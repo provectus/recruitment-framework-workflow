@@ -4,8 +4,9 @@ globs:
 ---
 
 - Project name in infra is `lauter` — all AWS resources prefixed `lauter-*` (cluster, service, ECR, SSM paths)
-- Terraform ~1.14.5 + AWS provider ~6.33 — no TLS provider; OIDC thumbprint managed by AWS server-side
-- `default_tags` at provider level sets `Project`, `Environment`, `ManagedBy` — do NOT add these in per-resource `tags` blocks (only `Name` + functional tags like `Type`)
+- Terraform = 1.14.5 + AWS provider = 6.33.0 — exact version pins (Provectus convention), no TLS provider; OIDC thumbprint managed by AWS server-side
+- Version config lives in `infra/versions.tf` (separate from `main.tf`)
+- `default_tags` at provider level sets `Project`, `Environment`, `Owner`, `ManagedBy` — do NOT add these in per-resource `tags` blocks (only `Name` + functional tags like `Type`)
 - State backend is manual — S3 bucket + DynamoDB table must be created before `terraform init` (see `infra/ROLLOUT.md`)
 - `terraform.tfvars` is gitignored — copy from `terraform.tfvars.example`, never commit
 - ECS images use `:latest` tag — no versioned pinning; deploy workflow builds and pushes `latest`
