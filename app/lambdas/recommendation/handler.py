@@ -7,8 +7,6 @@ sys.path.insert(0, "/var/task")
 
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
-
 from shared import bedrock as bedrock_module
 from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
 from shared.models import CandidatePosition, Position
@@ -18,6 +16,8 @@ from shared.prompts.recommendation import (
     build_recommendation_prompt,
 )
 from shared.queries import fetch_latest_completed_result
+
+logger = logging.getLogger(__name__)
 
 VALID_RECOMMENDATIONS = {"hire", "no_hire", "needs_discussion"}
 VALID_CONFIDENCE_LEVELS = {"high", "medium", "low"}
@@ -81,9 +81,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         position = session.get(Position, candidate_position.position_id)
         if position is None:
-            raise ValueError(
-                f"Position {candidate_position.position_id} not found"
-            )
+            raise ValueError(f"Position {candidate_position.position_id} not found")
 
         upstream_results = _fetch_latest_completed_results(
             session, evaluation.candidate_position_id

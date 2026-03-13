@@ -30,7 +30,7 @@ def run_evaluation(
         except Exception as exc:
             session.rollback()
             evaluation.status = "failed"
-            evaluation.error_message = type(exc).__name__
+            evaluation.error_message = f"{type(exc).__name__}: {exc}"
             evaluation.completed_at = datetime.now(tz=UTC)
             session.add(evaluation)
             session.commit()

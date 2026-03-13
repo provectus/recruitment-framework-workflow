@@ -55,15 +55,11 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         if evaluation.source_document_id is None:
-            raise ValueError(
-                f"Evaluation {evaluation_id} has no source_document_id"
-            )
+            raise ValueError(f"Evaluation {evaluation_id} has no source_document_id")
 
         document = session.get(Document, evaluation.source_document_id)
         if document is None:
-            raise ValueError(
-                f"Document {evaluation.source_document_id} not found"
-            )
+            raise ValueError(f"Document {evaluation.source_document_id} not found")
 
         candidate_position = session.get(
             CandidatePosition, evaluation.candidate_position_id
@@ -75,9 +71,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         position = session.get(Position, candidate_position.position_id)
         if position is None:
-            raise ValueError(
-                f"Position {candidate_position.position_id} not found"
-            )
+            raise ValueError(f"Position {candidate_position.position_id} not found")
 
         transcript_text = s3_module.get_document_text(document.s3_key)
         _validate_transcript_length(transcript_text)

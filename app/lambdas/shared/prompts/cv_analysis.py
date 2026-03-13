@@ -26,7 +26,10 @@ TOOL_SCHEMA: dict[str, Any] = {
                 "properties": {
                     "skill": {"type": "string"},
                     "present": {"type": "boolean"},
-                    "notes": {"type": "string", "description": "Brief observation from the CV"},
+                    "notes": {
+                        "type": "string",
+                        "description": "Brief observation from the CV",
+                    },
                 },
                 "required": ["skill", "present", "notes"],
             },

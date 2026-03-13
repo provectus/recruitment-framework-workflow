@@ -25,7 +25,9 @@ def _read_ssm_param(name: str) -> str:
 DB_HOST: str = os.environ.get("DB_HOST") or _read_ssm_param("host") or "localhost"
 DB_PORT: str = os.environ.get("DB_PORT") or _read_ssm_param("port") or "5432"
 DB_NAME: str = os.environ.get("DB_NAME") or _read_ssm_param("name") or "lauter"
-DB_USERNAME: str = os.environ.get("DB_USERNAME") or _read_ssm_param("username") or "postgres"
+DB_USERNAME: str = (
+    os.environ.get("DB_USERNAME") or _read_ssm_param("username") or "postgres"
+)
 DB_PASSWORD_SECRET_ARN: str = os.environ.get("DB_PASSWORD_SECRET_ARN", "")
 
 
@@ -55,7 +57,11 @@ AWS_REGION: str = os.environ.get("AWS_REGION", "us-east-1")
 
 S3_ENDPOINT_URL: str = os.environ.get("S3_ENDPOINT_URL", "")
 MOCK_BEDROCK: bool = os.environ.get("MOCK_BEDROCK", "").lower() in ("true", "1", "yes")
-MOCK_BEDROCK_DELAY_SECONDS: float = float(os.environ.get("MOCK_BEDROCK_DELAY_SECONDS", "3"))
+MOCK_BEDROCK_DELAY_SECONDS: float = float(
+    os.environ.get("MOCK_BEDROCK_DELAY_SECONDS", "3")
+)
 MOCK_EVALUATION_FAILURES: list[str] = [
-    s.strip() for s in os.environ.get("MOCK_EVALUATION_FAILURES", "").split(",") if s.strip()
+    s.strip()
+    for s in os.environ.get("MOCK_EVALUATION_FAILURES", "").split(",")
+    if s.strip()
 ]

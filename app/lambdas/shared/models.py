@@ -72,9 +72,7 @@ class Position(SQLModel, table=True):
     hiring_manager_id: int = Field(
         sa_column=Column(Integer, ForeignKey("users.id"), nullable=False)
     )
-    is_archived: bool = Field(
-        default=False, sa_column=Column(Boolean, nullable=False)
-    )
+    is_archived: bool = Field(default=False, sa_column=Column(Boolean, nullable=False))
     created_at: datetime = Field(
         sa_column=Column(DateTime, nullable=False, server_default=func.now())
     )
@@ -106,9 +104,7 @@ class Document(SQLModel, table=True):
             Integer, ForeignKey("candidate_positions.id"), nullable=False, index=True
         )
     )
-    file_name: str | None = Field(
-        default=None, sa_column=Column(String, nullable=True)
-    )
+    file_name: str | None = Field(default=None, sa_column=Column(String, nullable=True))
     s3_key: str = Field(sa_column=Column(String, unique=True, nullable=False))
     status: str = Field(default="pending", sa_column=Column(String, nullable=False))
     created_at: datetime = Field(

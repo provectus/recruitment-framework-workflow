@@ -6,11 +6,31 @@ from shared import config
 MOCK_RESPONSES: dict[str, dict] = {
     "cv_analysis": {
         "skills_match": [
-            {"skill": "Python", "present": True, "notes": "5 years of professional experience with Python, including FastAPI and Django."},
-            {"skill": "AWS", "present": True, "notes": "Experience with EC2, S3, and Lambda mentioned in two previous roles."},
-            {"skill": "PostgreSQL", "present": True, "notes": "Used as primary database in last three positions."},
-            {"skill": "Docker", "present": True, "notes": "Docker and Docker Compose used for local development and CI/CD."},
-            {"skill": "TypeScript", "present": False, "notes": "No mention of TypeScript or frontend development experience."},
+            {
+                "skill": "Python",
+                "present": True,
+                "notes": "5 years of professional experience with Python, including FastAPI and Django.",
+            },
+            {
+                "skill": "AWS",
+                "present": True,
+                "notes": "Experience with EC2, S3, and Lambda mentioned in two previous roles.",
+            },
+            {
+                "skill": "PostgreSQL",
+                "present": True,
+                "notes": "Used as primary database in last three positions.",
+            },
+            {
+                "skill": "Docker",
+                "present": True,
+                "notes": "Docker and Docker Compose used for local development and CI/CD.",
+            },
+            {
+                "skill": "TypeScript",
+                "present": False,
+                "notes": "No mention of TypeScript or frontend development experience.",
+            },
         ],
         "experience_relevance": "Candidate has 6 years of backend engineering experience directly relevant to the role. Previous work at two mid-size SaaS companies involved building and maintaining microservices at scale.",
         "education": "B.S. in Computer Science from a well-regarded university. Coursework in distributed systems and databases is relevant to the position requirements.",
@@ -36,12 +56,36 @@ MOCK_RESPONSES: dict[str, dict] = {
         "communication_quality": "The candidate communicated clearly and professionally throughout the screening. Responses were well-structured, concise, and demonstrated strong active listening skills.",
         "motivation_culture_fit": "Genuine interest in the company's mission and growth trajectory. Values alignment with the team's collaborative culture was evident. Expressed interest in mentoring junior engineers, which aligns with team needs.",
         "requirements_alignment": [
-            {"requirement": "Python", "status": "met", "evidence": "Discussed 5 years of professional Python experience across multiple roles."},
-            {"requirement": "AWS", "status": "met", "evidence": "Mentioned working with EC2, S3, and Lambda in previous positions."},
-            {"requirement": "PostgreSQL", "status": "met", "evidence": "Confirmed as primary database in recent work."},
-            {"requirement": "Docker", "status": "partially_met", "evidence": "Mentioned using Docker for local development but depth unclear."},
-            {"requirement": "TypeScript", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
-            {"requirement": "CI/CD", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
+            {
+                "requirement": "Python",
+                "status": "met",
+                "evidence": "Discussed 5 years of professional Python experience across multiple roles.",
+            },
+            {
+                "requirement": "AWS",
+                "status": "met",
+                "evidence": "Mentioned working with EC2, S3, and Lambda in previous positions.",
+            },
+            {
+                "requirement": "PostgreSQL",
+                "status": "met",
+                "evidence": "Confirmed as primary database in recent work.",
+            },
+            {
+                "requirement": "Docker",
+                "status": "partially_met",
+                "evidence": "Mentioned using Docker for local development but depth unclear.",
+            },
+            {
+                "requirement": "TypeScript",
+                "status": "not_assessed",
+                "evidence": "Topic was not covered during the screening.",
+            },
+            {
+                "requirement": "CI/CD",
+                "status": "not_assessed",
+                "evidence": "Topic was not covered during the screening.",
+            },
         ],
     },
     "technical_eval": {

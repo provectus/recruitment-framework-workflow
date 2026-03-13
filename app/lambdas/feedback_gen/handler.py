@@ -7,8 +7,6 @@ sys.path.insert(0, "/var/task")
 
 from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
-
 from shared import bedrock as bedrock_module
 from shared.evaluation_lifecycle import complete_evaluation, run_evaluation
 from shared.prompts.feedback_gen import (
@@ -17,6 +15,8 @@ from shared.prompts.feedback_gen import (
     build_feedback_gen_prompt,
 )
 from shared.queries import fetch_latest_completed_result
+
+logger = logging.getLogger(__name__)
 
 _UPSTREAM_STEP_TYPES = ("cv_analysis", "screening_eval", "technical_eval")
 
@@ -45,9 +45,7 @@ def _determine_rejection_stage(evaluation_results: dict[str, Any]) -> str:
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     detail = event.get("detail", event)
     evaluation_id: int = detail["evaluation_id"]
-    logger.info(
-        "feedback_gen handler started", extra={"evaluation_id": evaluation_id}
-    )
+    logger.info("feedback_gen handler started", extra={"evaluation_id": evaluation_id})
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         evaluation_results = _collect_completed_evaluations(
@@ -70,9 +68,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         )
 
         if "feedback_text" not in result:
-            raise ValueError(
-                "Bedrock response missing required field: feedback_text"
-            )
+            raise ValueError("Bedrock response missing required field: feedback_text")
 
         result["rejection_stage"] = rejection_stage
 

@@ -72,6 +72,7 @@ def invoke_claude(
 ) -> str:
     if config.MOCK_BEDROCK and step_type:
         from shared.mock_bedrock import mock_invoke_claude
+
         return mock_invoke_claude(step_type)
 
     client = get_client()
@@ -93,9 +94,7 @@ def invoke_claude(
         payload = _parse_invoke_response(response)
         content = payload.get("content", [])
         if not content or "text" not in content[0]:
-            raise RuntimeError(
-                f"Unexpected Bedrock response shape: {payload}"
-            )
+            raise RuntimeError(f"Unexpected Bedrock response shape: {payload}")
         return content[0]["text"]
 
     return _invoke_with_retry(_call)
@@ -111,6 +110,7 @@ def invoke_claude_structured(
 ) -> dict[str, Any]:
     if config.MOCK_BEDROCK and step_type:
         from shared.mock_bedrock import mock_invoke_claude_structured
+
         return mock_invoke_claude_structured(step_type)
 
     client = get_client()
