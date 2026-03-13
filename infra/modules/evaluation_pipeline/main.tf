@@ -296,8 +296,8 @@ resource "null_resource" "lambda_layer_build" {
       cp -r "${var.lambdas_source_path}/shared/"* "${local.layer_build_dir}/python/shared/"
       find "${local.layer_build_dir}" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-      pip install --quiet --target "${local.layer_build_dir}/python" \
-        --platform manylinux2014_x86_64 --only-binary=:all: \
+      python3 -m pip install --quiet --target "${local.layer_build_dir}/python" \
+        --platform manylinux2014_x86_64 --only-binary=:all: --no-deps \
         -r "${var.lambdas_source_path}/requirements-layer.txt"
 
       mkdir -p "$(dirname "${local.layer_zip_path}")"
