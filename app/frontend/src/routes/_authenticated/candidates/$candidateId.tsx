@@ -11,6 +11,8 @@ import { TranscriptUploadDialog } from "@/widgets/documents/transcript-upload-di
 import { DocumentList } from "@/widgets/documents/document-list";
 import { DocumentViewer, CvVersionHistory } from "@/widgets/documents";
 import { CandidatePositionsTable, AddToPositionDialog, CandidateInfoCard } from "@/widgets/candidates";
+import { EvaluationResults, EvaluationSummaryBanner } from "@/widgets/evaluations";
+import { useEvaluations } from "@/features/evaluations";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +51,8 @@ function CandidateDetailPage() {
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
   const [versionHistoryCandidatePositionId, setVersionHistoryCandidatePositionId] = useState<number | null>(null);
 
+  const [selectedCandidatePositionId, setSelectedCandidatePositionId] = useState<number | null>(null);
+
   const { refetch: refetchDocuments } = useDocuments(candidateIdNum);
 
   const handleUploadClick = (candidatePositionId: number) => {
@@ -66,6 +70,17 @@ function CandidateDetailPage() {
       pos.status !== "closed" &&
       !candidate?.positions?.some((cp) => cp.position_id === pos.id)
   ) || [];
+
+  const candidatePositions = candidate?.positions ?? [];
+  const activeCandidatePositionId =
+    selectedCandidatePositionId ?? candidatePositions[0]?.candidate_position_id ?? null;
+  const activePosition = candidatePositions.find(
+    (p) => p.candidate_position_id === activeCandidatePositionId
+  ) ?? null;
+
+  const { data: evaluationsData } = useEvaluations(activeCandidatePositionId ?? 0, {
+    enabled: activeCandidatePositionId !== null,
+  });
 
   if (isLoading) {
     return (
@@ -110,6 +125,10 @@ function CandidateDetailPage() {
           Archive
         </Button>
       </div>
+
+      {activeCandidatePositionId && (
+        <EvaluationSummaryBanner evaluations={evaluationsData?.items ?? []} />
+      )}
 
       <CandidateInfoCard
         candidateId={candidateIdNum}
@@ -161,6 +180,42 @@ function CandidateDetailPage() {
           />
         </CardContent>
       </Card>
+
+      {activeCandidatePositionId !== null && activePosition !== null && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Evaluations</CardTitle>
+              {candidatePositions.length > 1 && (
+                <div className="flex gap-2">
+                  {candidatePositions.map((pos) => (
+                    <button
+                      key={pos.candidate_position_id}
+                      onClick={() => setSelectedCandidatePositionId(pos.candidate_position_id)}
+                      className={`text-sm px-3 py-1 rounded-full border transition-colors ${
+                        pos.candidate_position_id === activeCandidatePositionId
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {pos.position_title}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <EvaluationResults
+                key={activeCandidatePositionId}
+                candidatePositionId={activeCandidatePositionId}
+                candidateId={candidateIdNum}
+                positionId={activePosition.position_id}
+                currentStage={activePosition.stage}
+              />
+          </CardContent>
+        </Card>
+      )}
 
       <AddToPositionDialog
         candidateId={candidateIdNum}

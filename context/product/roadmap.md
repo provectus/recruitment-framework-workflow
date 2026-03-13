@@ -12,9 +12,9 @@ _Technical prerequisites that must be in place before product features can be bu
   - [x] **Cloud Setup:** VPC, subnets, ECS cluster, RDS PostgreSQL, S3, CloudWatch — the runtime environment for API and SPA
   - [x] **Bedrock Access:** Enable Claude model access in us-east-1
 
-- [ ] **n8n Instance (On-Prem)**
-  - [ ] **Dedicated Instance Setup:** Docker Compose with n8n + its own Postgres on the purchased instance
-  - [ ] **Connectivity:** Establish outbound HTTPS from on-prem to AWS services (direct internet or VPN — TBD with ops)
+- [x] ~~**n8n Instance (On-Prem)**~~ **Replaced by Lambda + Step Functions (v5.0)**
+  - [x] ~~Dedicated Instance Setup~~ — Lambda + Step Functions replaces n8n
+  - [x] ~~Connectivity~~ — All within AWS, no on-prem needed
 
 - [x] **CI/CD & Deployment**
   - [x] **Pipeline Setup:** Automated build and deploy for FastAPI (ECS) and React SPA (S3 + CloudFront)
@@ -37,7 +37,7 @@ _The core foundation — a working web application where recruiters can log in, 
 
 - [ ] **Backend API**
   - [ ] **Core API:** FastAPI service handling auth, uploads, candidate data, and evaluation orchestration
-  - [ ] **n8n Integration:** Webhook triggers from API to n8n for kicking off evaluation workflows
+  - [x] ~~**n8n Integration**~~ **Replaced:** EventBridge triggers from API to Step Functions (v5.0)
 
 - [x] **Lever API Research**
   - [x] **API Exploration:** Investigate Lever API auth model (OAuth 2.0 / API keys), available endpoints, rate limits, webhook support, and data schemas — document findings for integration planning
@@ -49,9 +49,9 @@ _The core foundation — a working web application where recruiters can log in, 
   - [ ] **Recruitment Filter:** Filter Barley data to recruitment interviews only — exclude non-recruitment company calls
   - [ ] **Candidate & Position Linking:** Associate each Barley interview with the correct candidate and position in our system
 
-- [ ] **CV Analysis**
-  - [ ] **Resume Parsing:** Extract key information from candidate CVs (experience, skills, education)
-  - [ ] **Requirements Matching:** Compare CV data against role requirements, surface key signals and gaps
+- [x] **CV Analysis**
+  - [x] **Resume Parsing:** Extract key information from candidate CVs (experience, skills, education)
+  - [x] **Requirements Matching:** Compare CV data against role requirements, surface key signals and gaps
 
 ---
 
@@ -59,23 +59,23 @@ _The core foundation — a working web application where recruiters can log in, 
 
 _Build the core evaluation and decision-support capabilities, from screening through to final recommendation. Results are displayed in the SPA; Lever write-back is deferred to the Future phase._
 
-- [ ] **Screening Summary**
-  - [ ] **Transcript Processing:** Ingest HR screening transcripts (from Barley sync or manual upload) and extract structured insights
-  - [ ] **HM-Ready Summary:** Generate concise summary highlighting key points for Hiring Manager review
+- [x] **Screening Summary**
+  - [x] **Transcript Processing:** Ingest HR screening transcripts (from Barley sync or manual upload) and extract structured insights
+  - [x] **HM-Ready Summary:** Generate concise summary highlighting key points for Hiring Manager review
 
-- [ ] **HM Review & Decision Gate**
-  - [ ] **Screening Results View:** Display AI-generated screening summary alongside candidate profile in the SPA
-  - [ ] **Proceed/Reject Decision:** Allow HM to mark candidate as "proceed to technical" or "reject" with optional notes
-  - [ ] **Rejection Triggers Feedback Flow:** When rejected at this stage, trigger candidate feedback generation
+- [x] **HM Review & Decision Gate**
+  - [x] **Screening Results View:** Display AI-generated screening summary alongside candidate profile in the SPA
+  - [x] **Proceed/Reject Decision:** Allow HM to mark candidate as "proceed to technical" or "reject" with optional notes
+  - [x] **Rejection Triggers Feedback Flow:** When rejected at this stage, trigger candidate feedback generation
 
-- [ ] **Technical Evaluation**
-  - [ ] **Technical Transcript Analysis:** Process technical interview transcripts (from Barley sync or manual upload) against competency areas
-  - [ ] **Decision Rubric Engine:** Apply weighted scoring framework with transparent reasoning for each criterion
+- [x] **Technical Evaluation**
+  - [x] **Technical Transcript Analysis:** Process technical interview transcripts (from Barley sync or manual upload) against competency areas
+  - [x] **Decision Rubric Engine:** Apply weighted scoring framework with transparent reasoning for each criterion
     - [x] Rubric management: templates, position rubrics, versioning, editor (spec 006)
 
-- [ ] **Recommendation Generation**
-  - [ ] **Hire/No-Hire Recommendation:** Generate structured recommendation with confidence level and supporting evidence
-  - [ ] **Reasoning Transparency:** Clearly articulate why the system reached its conclusion
+- [x] **Recommendation Generation**
+  - [x] **Hire/No-Hire Recommendation:** Generate structured recommendation with confidence level and supporting evidence
+  - [x] **Reasoning Transparency:** Clearly articulate why the system reached its conclusion
 
 ---
 
@@ -84,7 +84,7 @@ _Build the core evaluation and decision-support capabilities, from screening thr
 _Generate candidate-facing feedback to close the loop on rejected candidates._
 
 - [ ] **Candidate Feedback Generation**
-  - [ ] **Rejection Feedback Drafts:** Auto-generate professional, constructive feedback for rejected candidates
+  - [x] **Rejection Feedback Drafts:** Auto-generate professional, constructive feedback for rejected candidates (implemented in spec 007)
   - [ ] **Feedback Templates:** Create customizable templates for different rejection scenarios (skills gap, culture fit, etc.)
 
 ---
@@ -106,3 +106,19 @@ _Deferred until the POC evaluation pipeline is proven. No specific phase assigne
 - [ ] **Feedback Form Drafting & Review**
   - [ ] **AI Feedback Drafting:** LLM fills in Lever feedback form fields based on interview transcript analysis — generates draft per interviewer assignee for both recruitment and technical stages
   - [ ] **Review & Approval UI:** Reviewer sees AI-drafted feedback in the SPA, can edit any field, and explicitly approves before submission to Lever
+
+---
+
+### Future: AI Candidate Analyst (Chat)
+
+_Conversational AI assistant for recruiters — powered by Claude Agent SDK. Lets recruiters ask freeform questions about any candidate with full context (position, CV, transcripts, evaluation results) loaded automatically. Claude decides which data to pull and how to synthesize answers._
+
+- [ ] **Chat Widget & Backend**
+  - [ ] **Conversational Interface:** Chat widget in the SPA for recruiters to ask questions about a candidate in natural language
+  - [ ] **Agent Backend:** Long-running Agent SDK service (ECS Fargate) with custom MCP tools for querying evaluations, fetching CVs/transcripts, searching candidates, and retrieving position details
+  - [ ] **Session Persistence:** Recruiter can leave and resume a conversation with full context retained
+
+- [ ] **Context-Aware Analysis**
+  - [ ] **Cross-Signal Synthesis:** Answer questions that span multiple evaluation steps — "How does their screening align with the technical assessment?"
+  - [ ] **Candidate Comparison:** Compare candidates against each other or against position requirements on demand
+  - [ ] **Draft Generation:** Generate rejection emails, interview prep notes, or hiring committee summaries from conversation context

@@ -1871,6 +1871,241 @@
           }
         }
       }
+    },
+    "/api/evaluations/{candidate_position_id}/stream": {
+      "get": {
+        "tags": [
+          "evaluations"
+        ],
+        "summary": "Stream Evaluation Status",
+        "operationId": "stream_evaluation_status_api_evaluations__candidate_position_id__stream_get",
+        "parameters": [
+          {
+            "name": "candidate_position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Candidate Position Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evaluations/{candidate_position_id}": {
+      "get": {
+        "tags": [
+          "evaluations"
+        ],
+        "summary": "List Evaluations",
+        "operationId": "list_evaluations_api_evaluations__candidate_position_id__get",
+        "parameters": [
+          {
+            "name": "candidate_position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Candidate Position Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evaluations/{candidate_position_id}/{step_type}/rerun": {
+      "post": {
+        "tags": [
+          "evaluations"
+        ],
+        "summary": "Rerun Evaluation",
+        "operationId": "rerun_evaluation_api_evaluations__candidate_position_id___step_type__rerun_post",
+        "parameters": [
+          {
+            "name": "candidate_position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Candidate Position Id"
+            }
+          },
+          {
+            "name": "step_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Step Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evaluations/{candidate_position_id}/{step_type}/history": {
+      "get": {
+        "tags": [
+          "evaluations"
+        ],
+        "summary": "Get Evaluation History",
+        "operationId": "get_evaluation_history_api_evaluations__candidate_position_id___step_type__history_get",
+        "parameters": [
+          {
+            "name": "candidate_position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Candidate Position Id"
+            }
+          },
+          {
+            "name": "step_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Step Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationHistoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evaluations/{candidate_position_id}/{step_type}": {
+      "get": {
+        "tags": [
+          "evaluations"
+        ],
+        "summary": "Get Evaluation By Step",
+        "operationId": "get_evaluation_by_step_api_evaluations__candidate_position_id___step_type__get",
+        "parameters": [
+          {
+            "name": "candidate_position_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Candidate Position Id"
+            }
+          },
+          {
+            "name": "step_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Step Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2498,6 +2733,152 @@
         ],
         "title": "DocumentResponse"
       },
+      "EvaluationHistoryResponse": {
+        "properties": {
+          "step_type": {
+            "type": "string",
+            "title": "Step Type"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step_type",
+          "items"
+        ],
+        "title": "EvaluationHistoryResponse"
+      },
+      "EvaluationListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EvaluationResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "EvaluationListResponse"
+      },
+      "EvaluationResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "step_type": {
+            "type": "string",
+            "title": "Step Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "source_document_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Document Id"
+          },
+          "rubric_version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rubric Version Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "step_type",
+          "status",
+          "version",
+          "result",
+          "error_message",
+          "source_document_id",
+          "rubric_version_id",
+          "started_at",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "EvaluationResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2654,6 +3035,17 @@
             ],
             "title": "Requirements"
           },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
+          },
           "team_id": {
             "type": "integer",
             "title": "Team Id"
@@ -2691,6 +3083,17 @@
               }
             ],
             "title": "Requirements"
+          },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
           },
           "status": {
             "type": "string",
@@ -2737,6 +3140,7 @@
           "id",
           "title",
           "requirements",
+          "evaluation_instructions",
           "status",
           "team_id",
           "team_name",
@@ -2808,6 +3212,17 @@
             ],
             "title": "Requirements"
           },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
+          },
           "status": {
             "type": "string",
             "title": "Status"
@@ -2830,6 +3245,7 @@
           "id",
           "title",
           "requirements",
+          "evaluation_instructions",
           "status",
           "team_id",
           "hiring_manager_id",
@@ -3071,6 +3487,17 @@
               }
             ],
             "title": "Requirements"
+          },
+          "evaluation_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluation Instructions"
           },
           "team_id": {
             "anyOf": [

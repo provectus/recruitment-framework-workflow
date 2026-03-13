@@ -2,256 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Tech Stack
-
-- **Frontend:** TypeScript, React 19, TanStack Query, TanStack Router, shadcn/ui, Tailwind v4, hey-api for API codegen, Feature-Sliced Design (FSD) architecture
-- **Backend:** Python 3.12+, FastAPI, SQLModel, Alembic migrations, PostgreSQL, asyncpg
-- **Infrastructure:** Docker Compose for local dev, Terraform ~1.14 + AWS provider ~6.33 for cloud, MinIO for local S3
-
-## Debugging & Bug Fixes
-
-When fixing bugs, always verify the fix actually resolves the issue before committing. If the first fix attempt fails, step back and investigate the root cause more deeply rather than applying incremental patches.
-
-## Workflow Rules
-
-- Always run `bun run build` AND `bun run lint` after making frontend changes before considering a task complete
-- For backend changes, run the test suite (`uv run pytest`) before considering complete
-- Never commit without verifying the build passes locally
-
-## Code Review Guidelines
-
-When reviewing code or flagging issues, do NOT flag standard library/framework patterns as bugs. Specifically: `'use client'` directives in shadcn components are expected defaults, not issues. Apply a reasonable confidence threshold — only report issues you are 85%+ confident are real problems.
-
 ## Project Overview
 
-**Lauter** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; n8n workflows orchestrate AI analysis and push results back to Lever.
+**Lauter** — an internal recruitment workflow automation tool for Provectus. Connects Lever (ATS), Barley (interview recordings/transcripts), and Claude AI (via Amazon Bedrock) to automate candidate evaluation. Recruiters upload CVs/transcripts through a web UI; AWS Step Functions + Lambda orchestrate AI evaluation pipeline and write results directly to the database.
 
 See `context/product/` for product definition, architecture, roadmap, and POC plans.
 
 ## Architecture
 
 ```
-React SPA (S3+CF) → FastAPI (ECS Fargate) ↔ n8n (on-prem Docker)
-                         ↓                        ↓
-                    RDS Postgres              Bedrock (Claude)
-                    S3 (files)               Lever API
+React SPA (S3+CF) → FastAPI (ECS Fargate) → EventBridge → Step Functions → Lambdas
+                         ↓                                       ↓
+                    RDS Postgres                           Bedrock (Claude)
+                    S3 (files)
 ```
 
 - **Frontend:** React 19 + TypeScript SPA, Vite, TanStack Router (file-based routing with auto code-splitting), Tailwind v4, shadcn/ui (new-york style, Lucide icons), React Compiler enabled
 - **Backend:** Python 3.12+, FastAPI (async), SQLModel + asyncpg (Postgres), Alembic (async migrations), pydantic-settings for config
-- **Workflow engine:** n8n self-hosted on-prem, triggered via webhooks from FastAPI
+- **Evaluation pipeline:** EventBridge (custom bus) → Step Functions (standard workflow) → 5 Lambda functions (Python 3.12, VPC-attached, write to RDS directly)
 - **Auth:** AWS Cognito (Google OAuth federation) + JWT (dev login)
-
-## Repository Structure
-
-```
-docker-compose.yml  # Local dev: Postgres 16, MinIO (S3), backend w/ hot reload
-app/
-  backend/          # FastAPI app (managed with uv)
-    app/
-      main.py       # Entrypoint, lifespan, router registration
-      config.py     # pydantic-settings (reads .env)
-      database.py   # async SQLAlchemy engine + session factory
-      exceptions.py # Custom exception hierarchy (AppError → NotFoundException, ConflictError, ValidationError)
-      dependencies/ # FastAPI Depends() providers (auth: get_current_user)
-      models/       # SQLModel models (candidate, candidate_position, document, position, position_rubric, rubric_template, team, user, enums)
-      routers/      # FastAPI route modules (auth, candidates, dashboard, documents, health, position_rubrics, positions, rubric_templates, teams, users)
-      schemas/      # Pydantic request/response schemas per domain
-      services/     # Business logic layer (auth, candidate, dashboard, document, position, position_rubric, rubric_template, storage, team, user)
-    migrations/     # Alembic (async, renders as batch, SQLModel metadata)
-    scripts/        # seed.py (dev data), export_openapi.py (generates frontend/openapi.json)
-    tests/          # pytest-asyncio, aiosqlite in-memory, httpx AsyncClient
-    Dockerfile      # Multi-stage: base → dev (hot reload) / prod
-    entrypoint.sh   # Runs alembic upgrade head before app start
-  frontend/         # React SPA (managed with bun)
-    openapi.json    # Generated OpenAPI spec — source for API client codegen
-    src/
-      routes/       # TanStack file-based routes (routeTree.gen.ts auto-generated)
-      features/     # Feature modules (auth, candidates, dashboard, documents, positions, rubrics, settings)
-      widgets/      # Composite UI blocks (candidates, dashboard, documents, positions, rubrics, sidebar)
-      shared/       # api/ (generated client), lib/, ui/ (shadcn components)
-infra/              # Terraform IaC — networking, ECS, RDS, S3, CloudFront, Cognito, IAM, ACM, WAF, monitoring
-.github/workflows/  # CI + deploy pipelines (see CI/CD section)
-context/
-  product/          # Product definition, architecture, roadmap, POC plans
-  spec/             # Functional and technical specs (per feature)
-```
 
 ## Local Development
 
-### Full stack via Docker Compose
-```bash
-# Start Postgres + MinIO + backend (auto-runs migrations)
-docker compose up -d
-# Frontend runs outside Docker
-cd app/frontend && bun install && bun run dev
-```
-- **Postgres:** port 5437, db `lauter`, user/pass `postgres/postgres`
-- **MinIO (S3):** API port 9100, console port 9101, user/pass `minioadmin/minioadmin`, bucket `lauter-files`
-- **Backend:** port 8000, hot-reload, reads `app/backend/.env`
-- **Frontend:** port 5173 (Vite default)
-- **minio-init:** auto-creates the `lauter-files` bucket on startup — no manual setup needed
+Use `/setup` skill to guide new engineers through full environment setup.
 
-The database runs via Docker Compose on localhost (not the Docker service name). The `.env` should use `localhost` for `DB_HOST` when running the app outside Docker. Always check `.env` configuration when debugging connection issues.
+Quick start: `docker compose up -d` then `cd app/frontend && bun install && bun run dev`
 
-Docker Compose overrides backend env vars (`DEBUG=true`, `DATABASE_URL`, S3 endpoints) — the `.env` file is loaded but compose values take precedence. `S3_PRESIGN_ENDPOINT_URL` (`http://localhost:9100`) is separate from `S3_ENDPOINT_URL` — presigned URLs must resolve from the browser, not from inside the container. `entrypoint.sh` auto-runs `alembic upgrade head` on container start — disable with `APP_RUN_MIGRATIONS=false`.
+**Key ports:** Backend :8000, Frontend :5173, Postgres :5437, MinIO :9100 (console :9101)
 
-### Backend standalone (without Docker)
-```bash
-cd app/backend
-cp .env.example .env                    # Edit DATABASE_URL to point at your Postgres
-uv sync                                 # Install dependencies
-uv run alembic upgrade head             # Apply migrations
-uv run fastapi dev                      # Start dev server on :8000
-```
+Docker Compose overrides backend env vars (`DEBUG=true`, `DATABASE_URL`, S3 endpoints). `S3_PRESIGN_ENDPOINT_URL` (`http://localhost:9100`) is separate from `S3_ENDPOINT_URL` — presigned URLs must resolve from the browser, not from inside the container.
 
-### Seed dev data
-```bash
-cd app/backend && uv run python -m scripts.seed
-```
-
-### OpenAPI → Frontend client codegen
-```bash
-cd app/backend && uv run python scripts/export_openapi.py   # Writes app/frontend/openapi.json
-cd app/frontend && bun run generate:api                      # Regenerates src/shared/api/
-```
-The CI `openapi-check` job fails if openapi.json is stale — always re-export after changing routes.
-
-## Commands
-
-### Backend (`app/backend/`)
+OpenAPI codegen: re-export after changing routes or CI `openapi-check` will fail.
 
 ```bash
-uv run fastapi dev                      # Dev server with hot reload
-uv run pytest                           # Run all tests
-uv run pytest tests/test_health.py      # Run single test file
-uv run pytest -k test_health_check      # Run single test by name
-uv run ruff check .                     # Lint
-uv run ruff format .                    # Format
-uv run alembic upgrade head             # Apply migrations
-uv run alembic revision --autogenerate -m "description"  # Create migration
-uv run mypy app/                        # Type check
-uv run bandit -r app/ -c pyproject.toml # Security scan
-uv run python -m scripts.seed           # Seed local DB with dev data
-uv run python scripts/export_openapi.py # Regenerate frontend/openapi.json
-```
-
-### Frontend (`app/frontend/`)
-
-```bash
-bun install                             # Install deps
-bun run dev                             # Dev server (Vite)
-bun run build                           # Type-check + production build
-bun run lint                            # ESLint
-bun run preview                         # Preview production build
-bunx shadcn@latest add <component>      # Add shadcn/ui component
-bun run generate:api                    # Regenerate API client from openapi.json
-bun run generate:api:watch              # Watch running backend and auto-regenerate API client
-```
-
-### Infrastructure (`infra/`)
-
-```bash
-terraform fmt -recursive                                # Format all .tf files
-terraform init                                          # Initialize (state backend must exist first — see infra/ROLLOUT.md)
-terraform validate                                      # Validate config
-terraform plan -var-file="terraform.tfvars"              # Preview changes
-terraform apply -var-file="terraform.tfvars"             # Apply changes
-terraform output                                        # Show outputs (URLs, ARNs)
+cd app/backend && uv run python scripts/export_openapi.py
+cd app/frontend && bun run generate:api
 ```
 
 ## Conventions
 
 - When creating shell scripts or entrypoint files, always set execute permissions (`chmod +x`) immediately after creating them
+- Backend, frontend, and infrastructure conventions are in `.claude/rules/` — auto-loaded by glob when editing files in those directories
 
-### Backend
+## CI/CD
 
-- **Async everywhere:** all DB operations, routes, and tests use async/await
-- **Config via `.env`:** pydantic-settings `Settings` class in `config.py` — all env vars go through this
-- **DB connection: two modes** — full `DATABASE_URL` string OR decomposed `DB_HOST/DB_PORT/DB_NAME/DB_USERNAME/DB_PASSWORD` (used in ECS/prod). If both set, `DATABASE_URL` wins.
-- **Services are plain async functions** (not classes) — all take `session: AsyncSession` as first arg, imported as modules: `from app.services import candidate_service`
-- **Soft delete:** `Candidate` and `Position` use `is_archived: bool` — queries must filter `is_archived == False`
-- **`expire_on_commit=False`** — after `session.commit()`, call `session.refresh(obj)` to pick up server-generated values (timestamps, IDs)
-- **Exception → HTTP mapping is manual** — each router must catch `AppError` subclasses (`NotFoundException` → 404, `ConflictError` → 409, `ValidationError` → 422, `ForbiddenError` → 403). No global handler.
-- **`ValidationError` name collision** — `app.exceptions.ValidationError` shadows pydantic's. Alias if both needed in same file.
-- **Tests use SQLite:** `conftest.py` overrides the DB session with aiosqlite; uses `setup_database` autouse fixture for create/drop per test. Test DB is file-based (`./test.db`) — delete if you see stale data. Postgres-specific SQL (ILIKE, JSON ops) won't work in tests.
-- **`asyncio_mode = "auto"`** in pytest config — no `@pytest.mark.asyncio` needed on tests
-- **Ruff rules:** `F E W I UP B C4 SIM FA ISC ICN RET TC PTH RUF` — line length 88, Python 3.12 target. Ignores `B008` (FastAPI `Depends()` triggers it) and `ISC001`.
-- **Alembic:** async engine, `render_as_batch=True`, file template `YYYY-MM-DD_slug`, models must be imported in `models/__init__.py` for autogenerate to detect them
-- **Router pattern:** each module in `routers/` creates an `APIRouter`, registered in `main.py` via `app.include_router()`
-
-### Auth
-
-- **Cookie-only auth** — no `Authorization: Bearer` header support. Frontend uses httpOnly cookies.
-- **Debug mode skips Cognito entirely** — only dev-login (`POST /api/auth/dev-login`) works when `DEBUG=true`
-- **`COOKIE_SECURE=false`** required for local HTTP dev (defaults `true`)
-- **`ALLOWED_EMAIL_DOMAIN=provectus.com`** — hard-coded default restricts login to `@provectus.com` emails
-- **Dev-login endpoint returns 404 (not 403)** in production — intentionally hidden
-
-### Frontend
-
-- **Path alias:** `@/` maps to `src/` (configured in vite.config.ts and tsconfig)
-- **Routing:** file-based via TanStack Router — add routes as files under `src/routes/`, `routeTree.gen.ts` is auto-generated (do not edit manually)
-- **UI components:** shadcn/ui with `components.json` config (rsc: false, baseColor: slate, cssVariables: true). Components install to `src/shared/ui/` — aliases configured in `components.json`
-- **Package manager:** bun (not npm/yarn). CI uses `bun install --frozen-lockfile` — commit `bun.lock` after adding/updating deps.
-- **API client:** auto-generated via `@hey-api/openapi-ts` from `openapi.json` → `src/shared/api/`. Uses axios (`@hey-api/client-axios`), not fetch. `src/shared/api/` is ESLint-ignored — never edit manually, always regenerate.
-- **Layout:** features/ (hooks-only domain logic: `features/{domain}/hooks/use-{noun}.ts`), widgets/ (composite UI), shared/ (api, lib, ui components)
-- **Data fetching:** TanStack React Query with generated query/mutation options from the API client
-- **Forms:** react-hook-form + zod validation
-- **No `enum` keyword** — `erasableSyntaxOnly: true` in tsconfig; use `as const` objects instead
-- **Type imports must use `import type`** — `verbatimModuleSyntax: true` enforced
-- **Unused vars/params break the build** — `noUnusedLocals` + `noUnusedParameters` are `true`
-- **Tailwind v4 CSS-only config** — no `tailwind.config.ts`; theme customization in `src/index.css` via `@theme inline {}`
-
-### Infrastructure
-
-- **Project name in infra is `lauter`** — all AWS resources prefixed `lauter-*` (cluster, service, ECR, SSM paths)
-- **Terraform ~1.14.5 + AWS provider ~6.33** — no TLS provider; OIDC thumbprint managed by AWS server-side
-- **`default_tags`** at provider level sets `Project`, `Environment`, `ManagedBy` — do NOT add these in per-resource `tags` blocks (only `Name` + functional tags like `Type`)
-- **State backend is manual** — S3 bucket + DynamoDB table must be created before `terraform init` (see `infra/ROLLOUT.md`)
-- **`terraform.tfvars` is gitignored** — copy from `terraform.tfvars.example`, never commit
-- **ECS images use `:latest` tag** — no versioned pinning; deploy workflow builds and pushes `latest`
-- **CPU architecture: X86_64** — must use `--platform linux/amd64` when building on Apple Silicon
-- **Migrations run as separate ECS task** before service update in deploy workflow
-- **CloudFront managed policies** referenced via `data` sources, not hardcoded UUIDs
-- **WAF log group names** must start with `aws-waf-logs-` (AWS requirement)
-- **RDS:** force_ssl enabled, Performance Insights on, `pg_stat_statements` preloaded
-- **S3 lifecycle rules:** files bucket (IA 90d, Glacier 365d), SPA (noncurrent 7d), logs buckets (expire 90d)
-- **`infra/ROLLOUT.md`** — cloud environment rollout runbook (state backend, Bedrock enablement, domain config)
-- **`infra/REVIEW.md`** — summary of infrastructure review changes (25 commits, 3 phases)
-- **Environment values:** `poc`, `dev`, `staging`, `prod` — deletion protection and final snapshots are prod-only
-
-## CI/CD Workflows (`.github/workflows/`)
-
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci-backend.yml` | PR → `main` (backend paths) | ruff lint + format check, mypy, bandit security scan, pytest, OpenAPI spec freshness |
-| `ci-frontend.yml` | PR → `main` (frontend paths) | bun install, generate API client, eslint, build (includes tsc) |
-| `ci-infra.yml` | PR → `main` (infra paths) | terraform fmt, validate, tflint (no AWS creds needed) |
-| `dependency-review.yml` | PR → `main` | Flags high-severity dependency vulnerabilities |
-| `deploy-backend.yml` | Push to `main` (backend paths) | Lint/test → Docker build → push to ECR → ECS force-new-deployment |
-| `deploy-frontend.yml` | Push to `main` (frontend paths) | Lint/build → S3 sync → CloudFront invalidation |
-
-Deploy jobs use OIDC (`role-to-assume`) — no static AWS keys in secrets.
-
-## Development Workflow
-
-### Feature lifecycle (AWOS skills in `.awos/`)
-Each feature follows: **roadmap → spec → tech → tasks → implement → verify**
-1. Roadmap item checked in `context/product/roadmap.md`
-2. Functional spec: `context/spec/NNN-name/functional-spec.md` — what & why, testable acceptance criteria
-3. Technical spec: `context/spec/NNN-name/technical-considerations.md` — data model, API design, implementation approach
-4. Task list: `context/spec/NNN-name/tasks.md` — vertical slices, each keeping the app runnable
-5. Implementation via subagent delegation per task slice
-6. Verification against acceptance criteria
-
-### Feature build order
-Backend first (model → service → router → tests), then frontend (features → widgets → routes).
-After feature completion: code review pass, then CI fix pass.
-
-### Commit conventions
-Emoji prefix + conventional commit: `✨ feat:`, `🐛 fix:`, `📝 docs:`, `🔧 chore:`, `♻️ refactor:`, `🚀 ci:`, `🏗️ feat:` (infra), `🔒️ fix:` (security), `💚 fix:` (CI)
-
-### Spec numbering
-Sequential in `context/spec/`: 001-authentication, 002-infrastructure, 003-lever-api-research, 004-core-data-management, 005-document-uploads, 006-decision-rubrics. Next spec gets `007-*`.
-
+Deploy jobs in `.github/workflows/` use OIDC (`role-to-assume`) — no static AWS keys. CI runs on PRs to `main` (backend: ruff/mypy/bandit/pytest/openapi-check, frontend: eslint/build, infra: fmt/validate/tflint).

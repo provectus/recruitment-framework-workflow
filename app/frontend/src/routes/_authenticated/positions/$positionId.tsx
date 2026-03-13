@@ -85,6 +85,7 @@ function PositionDetailPage() {
         positionId={positionIdNum}
         title={position.title}
         requirements={position.requirements}
+        evaluationInstructions={position.evaluation_instructions}
         teamId={position.team_id}
         teamName={position.team_name}
         hiringManagerId={position.hiring_manager_id}

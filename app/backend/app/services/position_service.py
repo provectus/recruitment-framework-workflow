@@ -77,6 +77,7 @@ async def create_position(
     team_id: int,
     hiring_manager_id: int,
     requirements: str | None = None,
+    evaluation_instructions: str | None = None,
 ) -> Position:
     team_stmt = select(Team).where(Team.id == team_id)
     team_result = await session.exec(team_stmt)
@@ -95,6 +96,7 @@ async def create_position(
     position = Position(
         title=title,
         requirements=requirements,
+        evaluation_instructions=evaluation_instructions,
         team_id=team_id,
         hiring_manager_id=hiring_manager_id,
         status=PositionStatus.open,
@@ -145,6 +147,7 @@ async def get_position_detail(session: AsyncSession, position_id: int) -> dict |
         "id": position.id,
         "title": position.title,
         "requirements": position.requirements,
+        "evaluation_instructions": position.evaluation_instructions,
         "status": position.status,
         "team_id": position.team_id,
         "team_name": team.name if team else "Unknown",
@@ -164,6 +167,7 @@ async def update_position(
     position_id: int,
     title: str | None = None,
     requirements: str | None = None,
+    evaluation_instructions: str | None = None,
     team_id: int | None = None,
     hiring_manager_id: int | None = None,
     status: str | None = None,
@@ -196,6 +200,8 @@ async def update_position(
         position.title = title
     if requirements is not None:
         position.requirements = requirements
+    if evaluation_instructions is not None:
+        position.evaluation_instructions = evaluation_instructions
     if team_id is not None:
         position.team_id = team_id
     if hiring_manager_id is not None:

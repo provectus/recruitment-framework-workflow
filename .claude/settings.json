@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=$(cat - | jq -r '.tool_input.file_path // empty'); if [[ \"$filepath\" == *.py ]] && [[ \"$filepath\" == */app/backend/* ]]; then cd app/backend && uv run ruff format \"$filepath\" && uv run ruff check --fix \"$filepath\" 2>/dev/null; exit 0; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "filepath=$(cat - | jq -r '.tool_input.file_path // empty'); if [[ \"$filepath\" == *.env ]] || [[ \"$filepath\" == *.env.* && \"$filepath\" != *.env.example ]] || [[ \"$filepath\" == */bun.lock ]] || [[ \"$filepath\" == */uv.lock ]]; then echo 'BLOCKED: Do not edit .env or lock files directly' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

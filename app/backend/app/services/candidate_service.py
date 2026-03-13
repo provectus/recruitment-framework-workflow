@@ -322,6 +322,15 @@ async def update_stage(
     session.add(candidate_position)
     await session.commit()
     await session.refresh(candidate_position)
+
+    if new_stage == PipelineStage.rejected and candidate_position.id is not None:
+        from app.services import evaluation_service
+
+        await evaluation_service.trigger_feedback_gen(
+            session=session,
+            candidate_position_id=candidate_position.id,
+        )
+
     return candidate_position
 
 

@@ -20,6 +20,12 @@ variable "domain" {
   }
 }
 
+variable "owner" {
+  description = "Team or person responsible for the resources (used in default_tags)"
+  type        = string
+  default     = "recruitment-team"
+}
+
 variable "environment" {
   description = "Environment name (poc, dev, staging, prod) used for resource naming and configuration"
   type        = string
@@ -87,4 +93,16 @@ variable "alert_email" {
   description = "Email address for CloudWatch alarm SNS notifications (empty = no subscription)"
   type        = string
   default     = ""
+}
+
+variable "bedrock_model_id_heavy" {
+  description = "Bedrock model for complex evaluation tasks (screening, technical, recommendation)"
+  type        = string
+  default     = "anthropic.claude-sonnet-4-6"
+}
+
+variable "bedrock_model_id_light" {
+  description = "Bedrock model for simpler tasks (CV analysis, feedback generation)"
+  type        = string
+  default     = "anthropic.claude-haiku-4-5-20251001-v1:0"
 }

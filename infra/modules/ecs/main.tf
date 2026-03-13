@@ -208,6 +208,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "S3_BUCKET_NAME"
           value = var.files_bucket_name
+        },
+        {
+          name  = "EVALUATION_EVENT_BUS_NAME"
+          value = var.evaluation_event_bus_name
         }
       ]
 

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class PositionCreate(BaseModel):
     title: str
     requirements: str | None = None
+    evaluation_instructions: str | None = None
     team_id: int
     hiring_manager_id: int
 
@@ -12,6 +13,7 @@ class PositionResponse(BaseModel):
     id: int
     title: str
     requirements: str | None
+    evaluation_instructions: str | None
     status: str
     team_id: int
     hiring_manager_id: int
@@ -45,6 +47,7 @@ class PositionDetailResponse(BaseModel):
     id: int
     title: str
     requirements: str | None
+    evaluation_instructions: str | None
     status: str
     team_id: int
     team_name: str
@@ -59,6 +62,7 @@ class PositionDetailResponse(BaseModel):
 class PositionUpdate(BaseModel):
     title: str | None = None
     requirements: str | None = None
+    evaluation_instructions: str | None = None
     team_id: int | None = None
     hiring_manager_id: int | None = None
     status: str | None = None

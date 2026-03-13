@@ -1,0 +1,23 @@
+---
+globs:
+  - "app/backend/**"
+---
+
+- Async everywhere: all DB operations, routes, and tests use async/await
+- Config via `.env`: pydantic-settings `Settings` class in `config.py` — all env vars go through this
+- DB connection: two modes — full `DATABASE_URL` string OR decomposed `DB_HOST/DB_PORT/DB_NAME/DB_USERNAME/DB_PASSWORD` (used in ECS/prod). If both set, `DATABASE_URL` wins.
+- Services are plain async functions (not classes) — all take `session: AsyncSession` as first arg, imported as modules: `from app.services import candidate_service`
+- Soft delete: `Candidate` and `Position` use `is_archived: bool` — queries must filter `is_archived == False`
+- `expire_on_commit=False` — after `session.commit()`, call `session.refresh(obj)` to pick up server-generated values (timestamps, IDs)
+- Exception → HTTP mapping is manual — each router must catch `AppError` subclasses (`NotFoundException` → 404, `ConflictError` → 409, `ValidationError` → 422, `ForbiddenError` → 403). No global handler.
+- `ValidationError` name collision — `app.exceptions.ValidationError` shadows pydantic's. Alias if both needed in same file.
+- Tests use SQLite: `conftest.py` overrides the DB session with aiosqlite; uses `setup_database` autouse fixture for create/drop per test. Test DB is file-based (`./test.db`) — delete if you see stale data. Postgres-specific SQL (ILIKE, JSON ops) won't work in tests.
+- `asyncio_mode = "auto"` in pytest config — no `@pytest.mark.asyncio` needed on tests
+- Ruff rules: `F E W I UP B C4 SIM FA ISC ICN RET TC PTH RUF` — line length 88, Python 3.12 target. Ignores `B008` (FastAPI `Depends()` triggers it) and `ISC001`.
+- Alembic: async engine, `render_as_batch=True`, file template `YYYY-MM-DD_slug`, models must be imported in `models/__init__.py` for autogenerate to detect them
+- Router pattern: each module in `routers/` creates an `APIRouter`, registered in `main.py` via `app.include_router()`
+- Cookie-only auth — no `Authorization: Bearer` header support. Frontend uses httpOnly cookies.
+- Debug mode skips Cognito entirely — only dev-login (`POST /api/auth/dev-login`) works when `DEBUG=true`
+- `COOKIE_SECURE=false` required for local HTTP dev (defaults `true`)
+- `ALLOWED_EMAIL_DOMAIN=provectus.com` — hard-coded default restricts login to `@provectus.com` emails
+- Dev-login endpoint returns 404 (not 403) in production — intentionally hidden

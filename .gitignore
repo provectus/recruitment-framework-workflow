@@ -43,3 +43,10 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# Samples
+
+docs/instructions
+docs/transcripts
+docs/requirements
+docs/outputs

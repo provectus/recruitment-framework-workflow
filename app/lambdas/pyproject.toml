@@ -1,0 +1,35 @@
+[project]
+name = "lauter-lambdas"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.42.63",
+    "psycopg2-binary>=2.9.11",
+    "pypdf>=6.7.5",
+    "python-docx>=1.2.0",
+    "sqlalchemy>=2.0.48",
+    "sqlmodel>=0.0.37",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "UP", "B", "C4", "SIM", "FA", "ISC", "ICN", "RET", "TC", "PTH", "RUF"]
+ignore = ["ISC001"]
+
+[tool.ruff.lint.per-file-ignores]
+"shared/prompts/*.py" = ["E501"]
+
+[dependency-groups]
+dev = [
+    "pdfminer-six>=20260107",
+    "pytest>=9.0.2",
+    "ruff>=0.15.5",
+]

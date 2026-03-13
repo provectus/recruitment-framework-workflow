@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+
+# Testing
+.pytest_cache/
+
+# Linting
+.ruff_cache/

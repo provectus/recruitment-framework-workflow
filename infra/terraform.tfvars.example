@@ -11,6 +11,9 @@ project_name = "lauter"
 # Environment name (poc, dev, staging, prod)
 environment = "poc"
 
+# Team or person responsible for the resources (used in default_tags)
+owner = "recruitment-team"
+
 # Custom domain for the application (e.g., lauter.provectus.com)
 # Required DNS records will need to be created after terraform apply:
 # - your-domain.com → CloudFront (serves both SPA and /api/* via path routing)
@@ -36,3 +39,10 @@ enable_bedrock = false
 
 # Email address for CloudWatch alarm notifications (leave empty to skip)
 alert_email = ""
+
+# Amazon Bedrock model IDs for evaluation Lambda functions
+# Ensure these models are enabled in your AWS account via the Bedrock console
+# Heavy: screening eval, technical eval, recommendation (complex reasoning)
+bedrock_model_id_heavy = "anthropic.claude-sonnet-4-6"
+# Light: CV analysis, feedback generation (simpler extraction/generation)
+bedrock_model_id_light = "anthropic.claude-haiku-4-5-20251001-v1:0"

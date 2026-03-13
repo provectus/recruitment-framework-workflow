@@ -135,6 +135,12 @@ variable "allowed_email_domain" {
   default     = "provectus.com"
 }
 
+variable "evaluation_event_bus_name" {
+  description = "Name of the EventBridge custom bus for evaluation events (empty disables publishing)"
+  type        = string
+  default     = ""
+}
+
 variable "task_cpu" {
   description = "CPU units for the ECS task (256, 512, 1024, 2048, 4096)"
   type        = string

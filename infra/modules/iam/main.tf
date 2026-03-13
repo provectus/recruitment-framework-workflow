@@ -163,6 +163,24 @@ resource "aws_iam_role_policy" "ecs_task_exec" {
   })
 }
 
+resource "aws_iam_role_policy" "ecs_task_eventbridge" {
+  name = "${var.project_name}-ecs-task-eventbridge-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "events:PutEvents"
+        ]
+        Resource = var.evaluation_event_bus_arn
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "ecs_task_bedrock" {
   count = var.enable_bedrock ? 1 : 0
   name  = "${var.project_name}-ecs-task-bedrock-policy"
