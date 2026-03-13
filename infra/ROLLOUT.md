@@ -1,9 +1,9 @@
 # Lauter — Cloud Environment Rollout Runbook
 
-Step-by-step guide to provision the Lauter AWS environment from scratch. Assumes the `feature/infra-ci-setup` branch is merged to `main`.
+Step-by-step guide to provision the Lauter AWS environment from scratch.
 
 **Estimated wall-clock time:** ~45 minutes (excluding DNS propagation).
-**Estimated monthly cost:** ~$50–70/month for POC (see [Cost Estimate](#cost-estimate)).
+**Estimated monthly cost:** ~$50–85/month for POC (see [Cost Estimate](#cost-estimate)).
 
 
 ## Prerequisites
@@ -13,7 +13,7 @@ Before starting, ensure you have:
 | Requirement | How to verify |
 |---|---|
 | AWS CLI v2 installed | `aws --version` |
-| Terraform >= 1.5 installed | `terraform --version` |
+| Terraform = 1.14.5 installed | `terraform --version` |
 | Docker installed | `docker --version` |
 | Bun installed (for SPA build) | `bun --version` |
 | AWS credentials configured | `aws sts get-caller-identity` |
@@ -49,7 +49,7 @@ echo $ACCOUNT_ID
 
 1. Open [Bedrock Model Access](https://console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess)
 2. Click **Manage model access**
-3. Enable: Anthropic Claude 3 Sonnet, Claude 3.5 Sonnet, Claude 3 Haiku
+3. Enable: Anthropic Claude Sonnet 4.6, Claude Haiku 4.5
 4. Accept terms, click **Request model access**
 5. Wait for "Access granted" (typically instant)
 
@@ -121,13 +121,13 @@ echo "jwt_secret_key_arn = \"${JWT_SECRET_ARN}\""
 Save the output ARN — you need it for `terraform.tfvars` in Step 6.
 
 
-## Step 5: Update Backend Config in main.tf
+## Step 5: Update Backend Config in versions.tf
 
-Replace the `ACCOUNT_ID` placeholder on line 13 of `infra/main.tf`:
+Replace the `ACCOUNT_ID` placeholder on line 17 of `infra/versions.tf`:
 
 ```bash
 cd infra
-sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/" main.tf
+sed -i '' "s/ACCOUNT_ID/${ACCOUNT_ID}/" versions.tf
 ```
 
 Verify the file now reads:
@@ -151,6 +151,7 @@ Edit `terraform.tfvars` with actual values:
 | `region` | `"us-east-1"` | Do not change unless relocating all resources |
 | `project_name` | `"lauter"` | Used in all resource name prefixes |
 | `environment` | `"poc"` | One of: `poc`, `dev`, `staging`, `prod` |
+| `owner` | `"recruitment-team"` | Team/person tag on all resources |
 | `domain` | `"lauter.provectus.com"` | Must match your DNS zone |
 | `github_repo` | `"provectus/recruitment-framework"` | Format: `org/repo` |
 | `google_client_id` | `"123...apps.googleusercontent.com"` | From Step 1 |
@@ -158,6 +159,8 @@ Edit `terraform.tfvars` with actual values:
 | `jwt_secret_key_arn` | `"arn:aws:secretsmanager:us-east-1:..."` | From Step 4 |
 | `enable_bedrock` | `false` | Set `true` after Step 2 when ready |
 | `alert_email` | `"team@provectus.com"` | CloudWatch alarm notifications (optional) |
+| `bedrock_model_id_heavy` | `"anthropic.claude-sonnet-4-6"` | Heavy eval tasks (default works) |
+| `bedrock_model_id_light` | `"anthropic.claude-haiku-4-5-20251001-v1:0"` | Light eval tasks (default works) |
 
 Sensitive variables can also be passed via env vars:
 
@@ -180,7 +183,7 @@ terraform init
 
 Expected: `Terraform has been successfully initialized!`
 
-If you see `Error configuring S3 Backend`, double-check the bucket name in `main.tf` matches what you created in Step 3.
+If you see `Error configuring S3 Backend`, double-check the bucket name in `versions.tf` matches what you created in Step 3.
 
 ### Plan
 
@@ -188,16 +191,17 @@ If you see `Error configuring S3 Backend`, double-check the bucket name in `main
 terraform plan -out=tfplan
 ```
 
-Expected: **~50 resources** to add, 0 to change, 0 to destroy. Review the plan for:
+Expected: **~120 resources** to add, 0 to change, 0 to destroy. Review the plan for:
 - VPC + 2 public subnets + 2 private subnets + NAT Gateway
 - RDS PostgreSQL instance (`db.t4g.micro`)
-- 2 S3 buckets (SPA + files) + ALB access logs bucket
+- 3 S3 buckets (SPA + files + CloudFront logs) + ALB access logs bucket
 - ECS cluster + Fargate service + ALB
 - CloudFront distribution
 - Cognito User Pool + Google IdP
 - ACM certificate
 - WAF WebACLs (2: one for ALB, one for CloudFront)
-- IAM roles (execution, task, GitHub Actions) + OIDC provider
+- IAM roles (execution, task, GitHub Actions) + OIDC provider + ECR repository
+- Evaluation pipeline: EventBridge custom bus + Step Functions state machine + 5 Lambda functions + shared Lambda layer
 - CloudWatch log group + alarms + SNS topic
 
 ### Apply
@@ -255,7 +259,7 @@ aws acm describe-certificate \
 Both the SPA and API are served through CloudFront (API calls are routed via `/api/*` path to the ALB). Only one DNS record is needed:
 
 ```bash
-echo "Create CNAME: $(terraform output -raw domain) → $(terraform output -raw cloudfront_distribution_domain)"
+echo "Create CNAME: YOUR_DOMAIN → $(terraform output -raw cloudfront_distribution_domain)"
 ```
 
 | Record | Type | Value |
@@ -284,7 +288,7 @@ aws ecr get-login-password --region us-east-1 | \
 
 # Build the backend image
 cd app/backend
-docker build --target prod -t lauter-backend .
+docker build --platform linux/amd64 --target prod -t lauter-backend .
 
 # Tag and push
 docker tag lauter-backend:latest ${ECR_URL}:latest
@@ -317,7 +321,7 @@ TASK_ARN=$(aws ecs run-task \
   --network-configuration \
     "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[${SG_ID}],assignPublicIp=DISABLED}" \
   --overrides \
-    '{"containerOverrides":[{"name":"lauter-backend","command":["alembic","upgrade","head"]}]}' \
+    '{"containerOverrides":[{"name":"lauter-backend","command":["uv","run","alembic","upgrade","head"]}]}' \
   --query 'tasks[0].taskArn' --output text)
 
 echo "Migration task: ${TASK_ARN}"
@@ -386,10 +390,10 @@ Go to **GitHub → Repository → Settings → Secrets and variables → Actions
 
 | Secret name | Value | Used by |
 |---|---|---|
-| `AWS_ACCOUNT_ID` | Your AWS account ID | Both deploy workflows (OIDC role ARN construction) |
+| `AWS_ACCOUNT_ID` | Your AWS account ID | All deploy workflows (OIDC role ARN construction) |
 | `CLOUDFRONT_DISTRIBUTION_ID` | `terraform output -raw cloudfront_distribution_id` | `deploy-frontend.yml` |
 
-**No static AWS keys needed.** Both deploy workflows use OIDC (`role-to-assume`) with the `lauter-github-actions-role` created by Terraform.
+**No static AWS keys needed.** All deploy workflows (backend, frontend, lambdas) use OIDC (`role-to-assume`) with the `lauter-github-actions-role` created by Terraform.
 
 Verify the OIDC role ARN:
 
@@ -457,7 +461,10 @@ Internet
         │                                 ├── S3 bucket (lauter-files-*)
         │                                 ├── Cognito (Google OAuth)
         │                                 ├── Secrets Manager (DB password, JWT key, Cognito secret)
-        │                                 └── Bedrock (Claude models, Phase 2)
+        │                                 └── EventBridge ──► Step Functions ──► 5 Lambdas
+        │                                                                         ├── Bedrock (Claude Sonnet/Haiku)
+        │                                                                         ├── RDS (direct write)
+        │                                                                         └── S3 (file read)
         └── /* (default) ──► S3 bucket (lauter-spa-*)
 ```
 
@@ -467,12 +474,16 @@ Internet
 networking ──────────┬──► ecs ◄── iam ◄── s3
                      │     │               ▲
                      ├──► rds          cloudfront ◄── acm
-                     │                  ▲  ▲
-                     │                 waf  └── ecs (ALB origin)
+                     │     │              ▲  ▲
+                     ├──► evaluation_pipeline  waf  └── ecs (ALB origin)
+                     │     ├── rds (address, secret)
+                     │     └── s3 (files bucket)
                      │
-                     └──► (security groups shared across ecs, rds)
+                     └──► (security groups shared across ecs, rds, lambdas)
 
 cognito ──► ecs (SSM params, secrets)
+iam ◄── evaluation_pipeline (event bus ARN)
+ecs ◄── evaluation_pipeline (event bus name)
 monitoring ◄── ecs (ALB metrics), rds (DB metrics)
 ```
 
@@ -487,6 +498,8 @@ monitoring ◄── ecs (ALB metrics), rds (DB metrics)
 | CloudFront | ~$1 (low traffic) |
 | S3 (all buckets) | < $1 |
 | Secrets Manager (3 secrets) | < $2 |
+| Lambda (5 functions, low volume) | < $1 |
+| Step Functions (standard, low volume) | < $1 |
 | CloudWatch | < $2 |
 | WAF (2 WebACLs) | ~$10 |
 | **Total** | **~$50–85/month** |
@@ -498,14 +511,14 @@ The NAT Gateway is the largest cost driver. For a tighter budget, consider a NAT
 
 ### `terraform init` fails with S3 backend error
 
-**Cause:** State bucket doesn't exist or name doesn't match `main.tf`.
+**Cause:** State bucket doesn't exist or name doesn't match `versions.tf`.
 
 ```bash
 # Verify bucket exists
 aws s3api head-bucket --bucket lauter-terraform-state-${ACCOUNT_ID}
 
-# Verify main.tf has the correct bucket name
-grep bucket infra/main.tf
+# Verify versions.tf has the correct bucket name
+grep bucket infra/versions.tf
 ```
 
 ### `terraform apply` hangs on ACM certificate
