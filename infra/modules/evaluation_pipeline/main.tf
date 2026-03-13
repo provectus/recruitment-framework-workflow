@@ -279,7 +279,7 @@ locals {
     if !strcontains(f, "__pycache__")
   ]))
   requirements_hash = filesha256("${var.lambdas_source_path}/requirements-layer.txt")
-  layer_hash     = sha256("${local.shared_source_hash}-${local.requirements_hash}")
+  layer_hash        = sha256("${local.shared_source_hash}-${local.requirements_hash}")
 }
 
 resource "null_resource" "lambda_layer_build" {
