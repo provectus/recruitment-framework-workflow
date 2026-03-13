@@ -16,7 +16,6 @@ module "networking" {
   source = "./modules/networking"
 
   project_name = var.project_name
-  environment  = var.environment
 }
 
 # RDS Module - PostgreSQL database
@@ -36,7 +35,6 @@ module "s3" {
   source = "./modules/s3"
 
   project_name                = var.project_name
-  environment                 = var.environment
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
 
@@ -69,7 +67,6 @@ module "iam" {
   source = "./modules/iam"
 
   project_name                 = var.project_name
-  environment                  = var.environment
   region                       = var.region
   github_repo                  = var.github_repo
   files_bucket_arn             = module.s3.files_bucket_arn
@@ -113,7 +110,6 @@ module "cognito" {
   source = "./modules/cognito"
 
   project_name         = var.project_name
-  environment          = var.environment
   domain               = var.domain
   google_client_id     = var.google_client_id
   google_client_secret = var.google_client_secret
@@ -171,7 +167,6 @@ module "monitoring" {
   source = "./modules/monitoring"
 
   project_name            = var.project_name
-  environment             = var.environment
   alb_arn_suffix          = module.ecs.alb_arn_suffix
   target_group_arn_suffix = module.ecs.target_group_arn_suffix
   db_instance_id          = module.rds.db_instance_id
