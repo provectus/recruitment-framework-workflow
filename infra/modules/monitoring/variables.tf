@@ -3,6 +3,11 @@ variable "project_name" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment (dev, prod)"
+  type        = string
+}
+
 variable "alb_arn_suffix" {
   description = "ALB ARN suffix for CloudWatch alarm dimensions"
   type        = string

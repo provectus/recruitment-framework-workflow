@@ -3,6 +3,11 @@ variable "project_name" {
   type        = string
 }
 
+variable "environment" {
+  description = "Environment name (poc, dev, staging, prod)"
+  type        = string
+}
+
 variable "region" {
   description = "AWS region for resource ARN construction"
   type        = string
