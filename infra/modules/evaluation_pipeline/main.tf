@@ -419,7 +419,6 @@ resource "aws_iam_role_policy" "sfn_evaluation_pipeline" {
           "logs:UpdateLogDelivery",
           "logs:DeleteLogDelivery",
           "logs:ListLogDeliveries",
-          "logs:PutResourcePolicy",
           "logs:DescribeResourcePolicies",
           "logs:DescribeLogGroups",
         ]
