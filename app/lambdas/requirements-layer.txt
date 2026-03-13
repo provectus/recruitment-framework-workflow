@@ -1,0 +1,5 @@
+psycopg2-binary>=2.9.11
+pypdf>=6.7.5
+python-docx>=1.2.0
+sqlalchemy>=2.0.48
+sqlmodel>=0.0.37

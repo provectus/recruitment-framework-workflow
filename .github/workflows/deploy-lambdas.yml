@@ -74,7 +74,7 @@ jobs:
           find "$LAYER_DIR" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
           pip install --target "$LAYER_DIR/python" --platform manylinux2014_x86_64 --only-binary=:all: \
-            psycopg2-binary sqlmodel sqlalchemy pypdf python-docx boto3
+            -r $LAMBDAS_DIR/requirements-layer.txt
 
           cd "$LAYER_DIR"
           zip -r "$GITHUB_WORKSPACE/shared-layer.zip" python/
