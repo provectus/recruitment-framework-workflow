@@ -14,6 +14,7 @@ Before starting, ensure you have:
 |---|---|
 | AWS CLI v2 installed | `aws --version` |
 | Terraform = 1.14.5 installed | `terraform --version` |
+| Python 3.12+ installed (for Lambda layer build) | `python3 --version` |
 | Docker installed | `docker --version` |
 | Bun installed (for SPA build) | `bun --version` |
 | AWS credentials configured | `aws sts get-caller-identity` |
