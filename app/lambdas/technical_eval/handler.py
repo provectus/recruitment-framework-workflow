@@ -102,18 +102,14 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     with run_evaluation(evaluation_id) as (session, evaluation):
         if evaluation.source_document_id is None:
-            raise ValueError(
-                f"Evaluation {evaluation_id} has no source_document_id"
-            )
+            raise ValueError(f"Evaluation {evaluation_id} has no source_document_id")
 
         if evaluation.rubric_version_id is None:
             raise ValueError("No rubric assigned")
 
         document = session.get(Document, evaluation.source_document_id)
         if document is None:
-            raise ValueError(
-                f"Document {evaluation.source_document_id} not found"
-            )
+            raise ValueError(f"Document {evaluation.source_document_id} not found")
 
         candidate_position = session.get(
             CandidatePosition, evaluation.candidate_position_id
@@ -125,9 +121,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
         position = session.get(Position, candidate_position.position_id)
         if position is None:
-            raise ValueError(
-                f"Position {candidate_position.position_id} not found"
-            )
+            raise ValueError(f"Position {candidate_position.position_id} not found")
 
         rubric_version = session.get(
             PositionRubricVersion, evaluation.rubric_version_id

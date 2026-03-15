@@ -22,10 +22,12 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "I", "UP", "B", "C4", "SIM", "FA", "ISC", "ICN", "RET", "TC", "PTH", "RUF"]
-ignore = ["ISC001"]
+ignore = ["ISC001", "SIM105"]
 
 [tool.ruff.lint.per-file-ignores]
 "shared/prompts/*.py" = ["E501"]
+"shared/mock_bedrock.py" = ["E501"]
+"tests/*.py" = ["E501"]
 
 [dependency-groups]
 dev = [

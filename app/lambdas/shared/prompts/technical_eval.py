@@ -160,19 +160,19 @@ def build_technical_eval_prompt(
 
     if evaluation_instructions:
         context_sections.append(
-            f"## Evaluation Instructions\n\n<document type=\"evaluation_instructions\">\n{evaluation_instructions}\n</document>"
+            f'## Evaluation Instructions\n\n<document type="evaluation_instructions">\n{evaluation_instructions}\n</document>'
         )
 
     cv_context = _format_cv_context(cv_analysis_result, cv_text)
     if cv_context:
         context_sections.append(
-            f"## Candidate Background\n\n<document type=\"cv_context\">\n{cv_context}\n</document>"
+            f'## Candidate Background\n\n<document type="cv_context">\n{cv_context}\n</document>'
         )
 
     screening_context = _format_screening_context(screening_result)
     if screening_context:
         context_sections.append(
-            f"## Prior Screening Signals\n\n<document type=\"screening_context\">\n{screening_context}\n</document>"
+            f'## Prior Screening Signals\n\n<document type="screening_context">\n{screening_context}\n</document>'
         )
 
     additional_context = ""

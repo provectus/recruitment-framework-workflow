@@ -30,7 +30,11 @@ def run_evaluation(
         except Exception as exc:
             session.rollback()
             evaluation.status = "failed"
-            evaluation.error_message = type(exc).__name__
+            error_msg = str(exc)
+            sensitive_patterns = ("password=", "host=", "dbname=", "://")
+            if any(p in error_msg.lower() for p in sensitive_patterns):
+                error_msg = "details redacted for security"
+            evaluation.error_message = f"{type(exc).__name__}: {error_msg}"
             evaluation.completed_at = datetime.now(tz=UTC)
             session.add(evaluation)
             session.commit()

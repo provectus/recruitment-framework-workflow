@@ -17,8 +17,16 @@ SAMPLE_RESULT = {
     "communication_quality": "Candidate articulated ideas clearly and concisely throughout the interview.",
     "motivation_culture_fit": "Expressed genuine interest in the product domain and aligned with async-first culture.",
     "requirements_alignment": [
-        {"requirement": "Python", "status": "met", "evidence": "Discussed strong async Python background."},
-        {"requirement": "AWS", "status": "not_assessed", "evidence": "Topic was not covered during the screening."},
+        {
+            "requirement": "Python",
+            "status": "met",
+            "evidence": "Discussed strong async Python background.",
+        },
+        {
+            "requirement": "AWS",
+            "status": "not_assessed",
+            "evidence": "Topic was not covered during the screening.",
+        },
     ],
 }
 

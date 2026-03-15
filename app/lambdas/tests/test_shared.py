@@ -98,9 +98,7 @@ class TestBedrockInvokeClaude:
             "ModelTimeoutException", (Exception,), {}
         )
         payload = {"content": [{"text": response_text}]}
-        mock_response = {
-            "body": MagicMock(read=lambda: json.dumps(payload).encode())
-        }
+        mock_response = {"body": MagicMock(read=lambda: json.dumps(payload).encode())}
         mock_client.invoke_model.return_value = mock_response
         return mock_client
 

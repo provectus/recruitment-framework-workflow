@@ -97,7 +97,6 @@ def _make_mock_position(position_id: int = 2) -> MagicMock:
     return pos
 
 
-
 def _make_session_with_upstream(
     evaluation: MagicMock,
     candidate_position: MagicMock,
@@ -393,7 +392,11 @@ class TestRecommendationHandlerMissingInputs:
         assert result["recommendation"] in {"hire", "no_hire", "needs_discussion"}
         assert result["confidence"] == "low"
         assert len(result["missing_inputs"]) == 3
-        assert set(result["missing_inputs"]) == {"cv_analysis", "screening_eval", "technical_eval"}
+        assert set(result["missing_inputs"]) == {
+            "cv_analysis",
+            "screening_eval",
+            "technical_eval",
+        }
 
     def test_no_inputs_server_enforces_low_confidence_regardless_of_bedrock(self):
         from recommendation import handler as handler_module
@@ -549,4 +552,3 @@ class TestRecommendationHandlerValidation:
 
         assert evaluation.status == "failed"
         assert "Bedrock" in evaluation.error_message
-

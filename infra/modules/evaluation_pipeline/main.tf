@@ -267,35 +267,54 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
   })
 }
 
-# ─── Lambda Layer: shared code + dependencies ─────────────────────────────────
+# ─── Lambda Layer: shared code + pip dependencies ────────────────────────────
 
 locals {
-  shared_layer_files = {
-    for f in fileset("${var.lambdas_source_path}/shared", "**") :
-    f => f
+  layer_build_dir = "${path.module}/.terraform/lambda_layer_build"
+  layer_zip_path  = "${path.module}/.terraform/lambda_layers/shared.zip"
+
+  shared_source_hash = sha256(join("", [
+    for f in sort(fileset("${var.lambdas_source_path}/shared", "**")) :
+    filesha256("${var.lambdas_source_path}/shared/${f}")
     if !strcontains(f, "__pycache__")
-  }
+  ]))
+  requirements_hash = filesha256("${var.lambdas_source_path}/requirements-layer.txt")
+  layer_hash        = sha256("${local.shared_source_hash}-${local.requirements_hash}")
 }
 
-data "archive_file" "lambda_shared_layer" {
-  type        = "zip"
-  output_path = "${path.module}/.terraform/lambda_layers/shared.zip"
+resource "null_resource" "lambda_layer_build" {
+  triggers = {
+    layer_hash = local.layer_hash
+  }
 
-  dynamic "source" {
-    for_each = local.shared_layer_files
-    content {
-      content  = file("${var.lambdas_source_path}/shared/${source.value}")
-      filename = "python/shared/${source.value}"
-    }
+  provisioner "local-exec" {
+    command = <<-EOT
+      set -euo pipefail
+      rm -rf "${local.layer_build_dir}"
+      mkdir -p "${local.layer_build_dir}/python/shared"
+
+      cp -r "${var.lambdas_source_path}/shared/"* "${local.layer_build_dir}/python/shared/"
+      find "${local.layer_build_dir}" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+
+      python3 -m pip install --quiet --target "${local.layer_build_dir}/python" \
+        --platform manylinux2014_x86_64 --only-binary=:all: --no-deps \
+        -r "${var.lambdas_source_path}/requirements-layer.txt"
+
+      mkdir -p "$(dirname "${local.layer_zip_path}")"
+      cd "${local.layer_build_dir}"
+      zip -qr "${local.layer_zip_path}" python/
+    EOT
   }
 }
 
 resource "aws_lambda_layer_version" "shared" {
   layer_name          = "${var.project_name}-lambda-shared"
   description         = "Shared DB, Bedrock, S3, and prompt utilities for evaluation Lambdas"
-  filename            = data.archive_file.lambda_shared_layer.output_path
-  source_code_hash    = data.archive_file.lambda_shared_layer.output_base64sha256
+  filename            = local.layer_zip_path
+  source_code_hash    = local.layer_hash
   compatible_runtimes = ["python3.12"]
+
+  depends_on = [null_resource.lambda_layer_build]
 
   lifecycle {
     create_before_destroy = true

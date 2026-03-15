@@ -87,7 +87,6 @@ def _make_session_mock(
     session.get.side_effect = session_get
 
     def execute_side_effect(stmt):
-        scalar_result = MagicMock()
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None
 

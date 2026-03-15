@@ -59,27 +59,39 @@ def _describe_cv_signals(cv_result: dict[str, Any]) -> str:
 def _describe_screening_signals(screening_result: dict[str, Any]) -> str:
     lines: list[str] = []
     if screening_result.get("strengths"):
-        lines.append("Screening strengths: " + "; ".join(screening_result["strengths"][:3]))
+        lines.append(
+            "Screening strengths: " + "; ".join(screening_result["strengths"][:3])
+        )
     if screening_result.get("concerns"):
-        lines.append("Screening concerns: " + "; ".join(screening_result["concerns"][:3]))
+        lines.append(
+            "Screening concerns: " + "; ".join(screening_result["concerns"][:3])
+        )
     if screening_result.get("communication_quality"):
         lines.append(f"Communication: {screening_result['communication_quality']}")
     if screening_result.get("motivation_culture_fit"):
-        lines.append(f"Motivation / culture fit: {screening_result['motivation_culture_fit']}")
+        lines.append(
+            f"Motivation / culture fit: {screening_result['motivation_culture_fit']}"
+        )
     requirements_alignment = screening_result.get("requirements_alignment", [])
     gaps = [e for e in requirements_alignment if e.get("status") == "gap"]
     if gaps:
-        lines.append("Identified gaps: " + "; ".join(e["requirement"] for e in gaps[:3]))
+        lines.append(
+            "Identified gaps: " + "; ".join(e["requirement"] for e in gaps[:3])
+        )
     return "\n".join(lines)
 
 
 def _describe_technical_signals(technical_result: dict[str, Any]) -> str:
     lines: list[str] = []
     if technical_result.get("strengths_summary"):
-        lines.append("Technical strengths: " + "; ".join(technical_result["strengths_summary"][:3]))
+        lines.append(
+            "Technical strengths: "
+            + "; ".join(technical_result["strengths_summary"][:3])
+        )
     if technical_result.get("improvement_areas"):
         lines.append(
-            "Technical improvement areas: " + "; ".join(technical_result["improvement_areas"][:3])
+            "Technical improvement areas: "
+            + "; ".join(technical_result["improvement_areas"][:3])
         )
     return "\n".join(lines)
 

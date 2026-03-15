@@ -46,4 +46,4 @@ cd app/frontend && bun run generate:api
 
 ## CI/CD
 
-Deploy jobs in `.github/workflows/` use OIDC (`role-to-assume`) — no static AWS keys. CI runs on PRs to `main` (backend: ruff/mypy/bandit/pytest/openapi-check, frontend: eslint/build, infra: fmt/validate/tflint).
+Deploy jobs in `.github/workflows/` use OIDC (`role-to-assume`) — no static AWS keys. CI runs on PRs to `main` (backend: ruff/mypy/bandit/pytest/openapi-check, frontend: eslint/build, lambdas: ruff/pytest, infra: fmt/validate/tflint). Lambda deploy packages each function as a zip, publishes a shared layer with dependencies + `shared/` code, then updates all 5 function configurations.

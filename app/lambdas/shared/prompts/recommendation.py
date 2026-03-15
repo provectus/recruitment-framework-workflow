@@ -118,7 +118,7 @@ def build_recommendation_prompt(
 
     confidence_note = (
         "\nIMPORTANT: One or more evaluation inputs are missing (marked NOT AVAILABLE). "
-        "You MUST set confidence to \"low\" — this is non-negotiable."
+        'You MUST set confidence to "low" — this is non-negotiable.'
         if missing
         else ""
     )
