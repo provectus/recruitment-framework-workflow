@@ -132,9 +132,7 @@ async def test_presign_cv_happy_path(
     data = response.json()
     assert "document_id" in data
     assert data["upload_url"] == "https://s3.amazonaws.com/fake-upload-url"
-    assert "s3_key" in data
-    assert "documents/" in data["s3_key"]
-    assert "resume.pdf" in data["s3_key"]
+    assert "s3_key" not in data
 
     mock_generate_upload_url.assert_called_once()
     call_kwargs = mock_generate_upload_url.call_args.kwargs
@@ -170,9 +168,7 @@ async def test_presign_transcript_happy_path(
     data = response.json()
     assert "document_id" in data
     assert data["upload_url"] == "https://s3.amazonaws.com/fake-upload-url"
-    assert "s3_key" in data
-    assert "documents/" in data["s3_key"]
-    assert "interview-transcript.txt" in data["s3_key"]
+    assert "s3_key" not in data
 
 
 @patch("app.services.storage_service.generate_upload_url")

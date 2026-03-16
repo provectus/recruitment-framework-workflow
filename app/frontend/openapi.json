@@ -2396,6 +2396,7 @@
         "properties": {
           "email": {
             "type": "string",
+            "format": "email",
             "title": "Email"
           },
           "name": {
@@ -2962,6 +2963,7 @@
           },
           "content": {
             "type": "string",
+            "maxLength": 5000000,
             "minLength": 1,
             "title": "Content"
           },
@@ -2981,7 +2983,8 @@
           "notes": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 10000
               },
               {
                 "type": "null"
@@ -3595,7 +3598,8 @@
           "notes": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 10000
               },
               {
                 "type": "null"
@@ -3623,17 +3627,12 @@
           "upload_url": {
             "type": "string",
             "title": "Upload Url"
-          },
-          "s3_key": {
-            "type": "string",
-            "title": "S3 Key"
           }
         },
         "type": "object",
         "required": [
           "document_id",
-          "upload_url",
-          "s3_key"
+          "upload_url"
         ],
         "title": "PresignResponse"
       },

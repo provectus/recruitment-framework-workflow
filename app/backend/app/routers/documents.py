@@ -47,7 +47,6 @@ async def presign_upload(
     return PresignResponse(
         document_id=document.id,
         upload_url=upload_url,
-        s3_key=document.s3_key,
     )
 
 

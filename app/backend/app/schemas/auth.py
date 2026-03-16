@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class DevLoginRequest(BaseModel):
-    email: str
+    email: EmailStr
     name: str
 
 

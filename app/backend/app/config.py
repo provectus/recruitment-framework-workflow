@@ -73,9 +73,13 @@ class Settings(BaseSettings):
         if not self.jwt_secret_key:
             msg = "JWT_SECRET_KEY must be set"
             raise ValueError(msg)
-        if self.jwt_secret_key in _KNOWN_WEAK_SECRETS and not self.debug:
-            msg = "JWT_SECRET_KEY must not use a known weak value in production"
-            raise ValueError(msg)
+        if not self.debug:
+            if self.jwt_secret_key in _KNOWN_WEAK_SECRETS:
+                msg = "JWT_SECRET_KEY must not use a known weak value in production"
+                raise ValueError(msg)
+            if len(self.jwt_secret_key) < 32:
+                msg = "JWT_SECRET_KEY must be at least 32 characters in production"
+                raise ValueError(msg)
         return self
 
 

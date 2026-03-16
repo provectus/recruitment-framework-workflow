@@ -44,6 +44,7 @@ async def generate_upload_url(
                     "Bucket": settings.s3_bucket_name,
                     "Key": s3_key,
                     "ContentType": content_type,
+                    "ContentLength": max_size,
                 },
                 ExpiresIn=900,
                 HttpMethod="PUT",

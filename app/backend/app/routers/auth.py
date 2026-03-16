@@ -1,4 +1,5 @@
 import contextlib
+import hmac
 import json
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -36,7 +37,8 @@ async def dev_login(
     if not settings.debug:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
-    if not request.email.endswith(f"@{settings.allowed_email_domain}"):
+    email_domain = request.email.rsplit("@", 1)[-1] if "@" in request.email else ""
+    if email_domain != settings.allowed_email_domain:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email domain not allowed",
@@ -123,7 +125,8 @@ async def callback(
     with contextlib.suppress(json.JSONDecodeError):
         auth_state = json.loads(auth_state_cookie) if auth_state_cookie else None
 
-    if not auth_state or auth_state.get("state") != state:
+    stored_state = auth_state.get("state", "") if auth_state else ""
+    if not auth_state or not hmac.compare_digest(stored_state, state):
         return RedirectResponse(
             url="/login?error=invalid_state", status_code=status.HTTP_302_FOUND
         )
@@ -137,7 +140,8 @@ async def callback(
         )
 
     email = claims.get("email", "")
-    if not email.endswith(f"@{settings.allowed_email_domain}"):
+    email_domain = email.rsplit("@", 1)[-1] if "@" in email else ""
+    if email_domain != settings.allowed_email_domain:
         redirect_response = RedirectResponse(
             url="/login?error=domain_restricted", status_code=status.HTTP_302_FOUND
         )
@@ -157,9 +161,18 @@ async def callback(
         url=redirect_path, status_code=status.HTTP_302_FOUND
     )
 
+    app_token_payload = {
+        "sub": email,
+        "name": claims.get("name", ""),
+        "exp": datetime.now(UTC) + timedelta(seconds=ACCESS_TOKEN_MAX_AGE),
+    }
+    app_token = jwt.encode(
+        app_token_payload, settings.jwt_secret_key, algorithm="HS256"
+    )
+
     redirect_response.set_cookie(
         key="access_token",
-        value=tokens["access_token"],
+        value=app_token,
         httponly=True,
         path="/",
         samesite="strict",
@@ -236,7 +249,13 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
 
 @router.post("/logout", response_model=StatusResponse)
 async def logout(response: Response) -> StatusResponse:
-    response.delete_cookie(key="access_token", path="/", domain=settings.cookie_domain)
-    response.delete_cookie(key="id_token", path="/", domain=settings.cookie_domain)
-    response.delete_cookie(key="refresh_token", path="/", domain=settings.cookie_domain)
+    for cookie_name in ("access_token", "id_token", "refresh_token"):
+        response.delete_cookie(
+            key=cookie_name,
+            path="/",
+            domain=settings.cookie_domain,
+            samesite="strict",
+            secure=settings.cookie_secure,
+            httponly=True,
+        )
     return StatusResponse(status="ok")
