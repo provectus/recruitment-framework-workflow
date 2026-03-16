@@ -27,7 +27,12 @@ async function fetchDocumentContent(
   if (contentType === DOCX_MIME) {
     const arrayBuffer = await response.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer });
-    return DOMPurify.sanitize(result.value, {
+    DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+      if (node.tagName === "A") {
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+    });
+    const sanitized = DOMPurify.sanitize(result.value, {
       ALLOWED_TAGS: [
         "p", "b", "i", "em", "strong", "u", "a",
         "ul", "ol", "li", "br",
@@ -35,8 +40,10 @@ async function fetchDocumentContent(
         "table", "tr", "td", "th", "thead", "tbody",
         "span", "div",
       ],
-      ALLOWED_ATTR: ["href", "target", "alt", "colspan", "rowspan"],
+      ALLOWED_ATTR: ["href", "target", "rel", "alt", "colspan", "rowspan"],
     });
+    DOMPurify.removeHook("afterSanitizeAttributes");
+    return sanitized;
   }
 
   return response.text();
