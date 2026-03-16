@@ -35,7 +35,7 @@ class PresignRequest(BaseModel):
     interview_stage: str | None = None
     interviewer_id: int | None = None
     interview_date: date | None = None
-    notes: str | None = None
+    notes: str | None = Field(default=None, max_length=10_000)
 
     @field_validator("interview_stage", mode="before")
     @classmethod
@@ -56,6 +56,9 @@ class PresignRequest(BaseModel):
     @field_validator("file_size")
     @classmethod
     def validate_file_size(cls, v: int) -> int:
+        if v <= 0:
+            msg = "File size must be greater than 0"
+            raise ValueError(msg)
         if v > MAX_FILE_SIZE:
             msg = f"File size must not exceed {MAX_FILE_SIZE} bytes (25 MB)"
             raise ValueError(msg)
@@ -93,16 +96,18 @@ class PresignRequest(BaseModel):
 class PresignResponse(BaseModel):
     document_id: int
     upload_url: str
-    s3_key: str
+
+
+MAX_PASTE_CONTENT_LENGTH = 5_000_000
 
 
 class PasteTranscriptRequest(BaseModel):
     candidate_position_id: int
-    content: str = Field(min_length=1)
+    content: str = Field(min_length=1, max_length=MAX_PASTE_CONTENT_LENGTH)
     interview_stage: str
     interviewer_id: int
     interview_date: date
-    notes: str | None = None
+    notes: str | None = Field(default=None, max_length=10_000)
 
     @field_validator("interview_stage", mode="before")
     @classmethod

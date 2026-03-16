@@ -37,7 +37,7 @@ async def get_current_user(
         except InvalidTokenError:
             pass
 
-    if not email and id_token_cookie and not settings.debug:
+    if not email and id_token_cookie:
         try:
             claims = await auth_service.validate_cognito_id_token(id_token_cookie)
             email = claims.get("email")

@@ -50,12 +50,18 @@ def _validate_step_type(step_type: str) -> None:
 async def stream_evaluation_status(
     candidate_position_id: int,
     request: Request,
+    session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ) -> EventSourceResponse:
+    user_id = _require_user_id(current_user)
+    try:
+        await evaluation_service.verify_access(session, candidate_position_id, user_id)
+    except NotFoundException as e:
+        raise HTTPException(status_code=404, detail=e.detail) from e
+
     async def event_generator() -> AsyncGenerator[dict[str, str], None]:
         last_known_statuses: dict[str, str] = {}
         keepalive_counter = 0
-        access_verified = False
         started_at = asyncio.get_running_loop().time()
 
         while True:
@@ -68,12 +74,6 @@ async def stream_evaluation_status(
                 break
 
             async with async_session_factory() as poll_session:
-                if not access_verified:
-                    user_id = _require_user_id(current_user)
-                    await evaluation_service.verify_access(
-                        poll_session, candidate_position_id, user_id
-                    )
-                    access_verified = True
                 evaluations = await evaluation_service.get_evaluations(
                     poll_session, candidate_position_id
                 )
