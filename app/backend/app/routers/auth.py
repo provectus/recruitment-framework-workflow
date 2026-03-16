@@ -249,14 +249,13 @@ async def refresh(request: Request, response: Response) -> StatusResponse:
 
 @router.post("/logout", response_model=StatusResponse)
 async def logout(response: Response) -> StatusResponse:
-    cookie_opts = {
-        "path": "/",
-        "domain": settings.cookie_domain,
-        "samesite": "strict",
-        "secure": settings.cookie_secure,
-        "httponly": True,
-    }
-    response.delete_cookie(key="access_token", **cookie_opts)
-    response.delete_cookie(key="id_token", **cookie_opts)
-    response.delete_cookie(key="refresh_token", **cookie_opts)
+    for cookie_name in ("access_token", "id_token", "refresh_token"):
+        response.delete_cookie(
+            key=cookie_name,
+            path="/",
+            domain=settings.cookie_domain,
+            samesite="strict",
+            secure=settings.cookie_secure,
+            httponly=True,
+        )
     return StatusResponse(status="ok")
