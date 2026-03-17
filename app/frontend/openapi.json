@@ -5,13 +5,13 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/health": {
+    "/api/health": {
       "get": {
         "tags": [
           "health"
         ],
         "summary": "Health Check",
-        "operationId": "health_check_health_get",
+        "operationId": "health_check_api_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -22,7 +22,7 @@
                     "type": "string"
                   },
                   "type": "object",
-                  "title": "Response Health Check Health Get"
+                  "title": "Response Health Check Api Health Get"
                 }
               }
             }

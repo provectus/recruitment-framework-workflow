@@ -12,7 +12,7 @@ from app.services import auth_service
 
 @pytest.mark.asyncio
 async def test_health_check_still_works(client: AsyncClient):
-    response = await client.get("/health")
+    response = await client.get("/api/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 

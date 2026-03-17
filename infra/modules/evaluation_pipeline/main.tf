@@ -393,7 +393,7 @@ resource "aws_cloudwatch_log_group" "sfn_evaluation_pipeline" {
 
 # CloudWatch Logs resource policy — allows Step Functions to deliver logs
 resource "aws_cloudwatch_log_resource_policy" "sfn_logging" {
-  policy_name     = "${var.project_name}-sfn-logs-policy"
+  policy_name = "${var.project_name}-sfn-logs-policy"
   policy_document = jsonencode({
     Version = "2012-10-17"
     Statement = [
