@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     cognito_redirect_uri: str = "http://localhost:8000/api/auth/callback"
 
     s3_bucket_name: str = ""
-    s3_region: str = "us-east-2"
+    s3_region: str = "us-east-1"
     s3_endpoint_url: str | None = None
     s3_presign_endpoint_url: str | None = None
 

@@ -1,17 +1,5 @@
-# Required provider configuration for CloudFront WAF (must be in us-east-1)
-terraform {
-  required_providers {
-    aws = {
-      source                = "hashicorp/aws"
-      configuration_aliases = [aws.us_east_1]
-    }
-  }
-}
-
 # WAF Logging - CloudWatch log groups (name must start with aws-waf-logs-)
-# CloudFront WAF log group must be in us-east-1 alongside the WAF ACL
 resource "aws_cloudwatch_log_group" "waf_cloudfront" {
-  provider          = aws.us_east_1
   name              = "aws-waf-logs-${var.project_name}-cloudfront"
   retention_in_days = 30
 
@@ -30,7 +18,6 @@ resource "aws_cloudwatch_log_group" "waf_alb" {
 }
 
 resource "aws_wafv2_web_acl" "cloudfront" {
-  provider    = aws.us_east_1
   name        = "${var.project_name}-${var.environment}-cloudfront-waf"
   description = "WAF for CloudFront distribution"
   scope       = "CLOUDFRONT"
@@ -272,7 +259,6 @@ resource "aws_wafv2_web_acl" "alb" {
 
 # WAF Logging Configurations
 resource "aws_wafv2_web_acl_logging_configuration" "cloudfront" {
-  provider                = aws.us_east_1
   log_destination_configs = [aws_cloudwatch_log_group.waf_cloudfront.arn]
   resource_arn            = aws_wafv2_web_acl.cloudfront.arn
 }

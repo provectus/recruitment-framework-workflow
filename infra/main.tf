@@ -24,21 +24,6 @@ provider "aws" {
   }
 }
 
-# CloudFront-scoped WAF ACLs must be created in us-east-1
-provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
-
-  default_tags {
-    tags = {
-      Project     = var.project_name
-      Environment = var.environment
-      Owner       = var.owner
-      ManagedBy   = "Terraform"
-    }
-  }
-}
-
 # Networking Module - VPC, subnets, security groups
 module "networking" {
   source = "./modules/networking"
@@ -151,11 +136,6 @@ module "cognito" {
 # WAF Module - Web Application Firewall ACLs for CloudFront and ALB
 module "waf" {
   source = "./modules/waf"
-
-  providers = {
-    aws           = aws
-    aws.us_east_1 = aws.us_east_1
-  }
 
   project_name = var.project_name
   environment  = var.environment

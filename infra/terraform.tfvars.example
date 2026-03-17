@@ -3,7 +3,7 @@
 # IMPORTANT: Never commit terraform.tfvars to version control (already in .gitignore)
 
 # AWS region where resources will be deployed
-region = "us-east-2"
+region = "us-east-1"
 
 # Project name used as prefix for resource naming and tagging
 project_name = "lauter"
@@ -27,7 +27,7 @@ github_repo = "your-org/your-repo"
 
 # ARN of the JWT secret key in AWS Secrets Manager
 # Create with: aws secretsmanager create-secret --name lauter/jwt-secret-key --secret-string "$(openssl rand -base64 64)"
-jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-2:123456789012:secret:lauter/jwt-secret-key-AbCdEf"
+jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:lauter/jwt-secret-key-AbCdEf"
 
 # Google OAuth credentials are stored in Secrets Manager (not in tfvars):
 #   lauter/google-oauth/client-id
