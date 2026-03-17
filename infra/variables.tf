@@ -1,7 +1,7 @@
 variable "region" {
   description = "AWS region where resources will be deployed"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-2"
 }
 
 variable "project_name" {
@@ -46,18 +46,6 @@ variable "github_repo" {
     condition     = can(regex("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$", var.github_repo))
     error_message = "GitHub repository must be in format org/repo"
   }
-}
-
-variable "google_client_id" {
-  description = "Google OAuth 2.0 client ID for Cognito Google federation"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_client_secret" {
-  description = "Google OAuth 2.0 client secret for Cognito Google federation"
-  type        = string
-  sensitive   = true
 }
 
 variable "jwt_secret_key_arn" {

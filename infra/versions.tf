@@ -18,9 +18,9 @@ terraform {
 
   backend "s3" {
     # IMPORTANT: Replace ACCOUNT_ID with your AWS account ID before initializing
-    bucket         = "lauter-terraform-state-ACCOUNT_ID"
+    bucket         = "lauter-terraform-state-798836977962"
     key            = "lauter/terraform.tfstate"
-    region         = "us-east-1"
+    region         = "us-east-2"
     dynamodb_table = "lauter-terraform-locks"
     encrypt        = true
   }

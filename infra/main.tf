@@ -2,6 +2,15 @@ locals {
   use_custom_domain = var.domain != ""
 }
 
+# Google OAuth credentials from Secrets Manager
+data "aws_secretsmanager_secret_version" "google_client_id" {
+  secret_id = "${var.project_name}/google-oauth/client-id"
+}
+
+data "aws_secretsmanager_secret_version" "google_client_secret" {
+  secret_id = "${var.project_name}/google-oauth/client-secret"
+}
+
 provider "aws" {
   region = var.region
 
@@ -120,8 +129,8 @@ module "cognito" {
   project_name         = var.project_name
   environment          = var.environment
   domain               = var.domain
-  google_client_id     = var.google_client_id
-  google_client_secret = var.google_client_secret
+  google_client_id     = data.aws_secretsmanager_secret_version.google_client_id.secret_string
+  google_client_secret = data.aws_secretsmanager_secret_version.google_client_secret.secret_string
 }
 
 # WAF Module - Web Application Firewall ACLs for CloudFront and ALB
