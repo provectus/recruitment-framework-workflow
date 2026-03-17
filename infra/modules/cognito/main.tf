@@ -2,7 +2,7 @@
 resource "aws_cognito_user_pool" "main" {
   name = "${var.project_name}-users"
 
-  deletion_protection      = "ACTIVE"
+  deletion_protection      = var.environment == "prod" ? "ACTIVE" : "INACTIVE"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
@@ -86,8 +86,8 @@ resource "aws_cognito_user_pool_client" "web" {
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
 
   # Callback and logout URLs
-  callback_urls = ["https://${var.domain}/api/auth/callback"]
-  logout_urls   = ["https://${var.domain}/login"]
+  callback_urls = var.domain != "" ? ["https://${var.domain}/api/auth/callback"] : ["https://localhost/api/auth/callback"]
+  logout_urls   = var.domain != "" ? ["https://${var.domain}/login"] : ["https://localhost/login"]
 
   # Auth flows
   explicit_auth_flows = ["ALLOW_REFRESH_TOKEN_AUTH"]

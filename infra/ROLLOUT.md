@@ -415,7 +415,7 @@ DOMAIN="lauter.provectus.com"  # replace with your domain
 - [ ] **API health:**
   ```bash
   curl -s https://${DOMAIN}/api/health | jq .
-  # Expected: {"status":"healthy"}
+  # Expected: {"status":"ok"}
   ```
 
 - [ ] **SPA loads:**

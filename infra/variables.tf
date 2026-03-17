@@ -11,12 +11,13 @@ variable "project_name" {
 }
 
 variable "domain" {
-  description = "Custom domain for the application (e.g., lauter.provectus.com)"
+  description = "Custom domain for the application (e.g., lauter.provectus.com). Empty string deploys without custom domain using CloudFront default."
   type        = string
+  default     = ""
 
   validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-\\.]*[a-z0-9]$", var.domain))
-    error_message = "Domain must be a valid DNS name"
+    condition     = var.domain == "" || can(regex("^[a-z0-9][a-z0-9-\\.]*[a-z0-9]$", var.domain))
+    error_message = "Domain must be empty or a valid DNS name"
   }
 }
 

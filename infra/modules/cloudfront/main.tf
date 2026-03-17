@@ -62,7 +62,7 @@ resource "aws_cloudfront_distribution" "spa" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
-  aliases             = [var.domain]
+  aliases             = var.domain != "" ? [var.domain] : []
   web_acl_id          = var.web_acl_arn != "" ? var.web_acl_arn : null
 
   origin {
@@ -78,7 +78,7 @@ resource "aws_cloudfront_distribution" "spa" {
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "https-only"
+      origin_protocol_policy = var.certificate_arn != "" ? "https-only" : "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
@@ -133,10 +133,20 @@ resource "aws_cloudfront_distribution" "spa" {
     }
   }
 
-  viewer_certificate {
-    acm_certificate_arn      = var.certificate_arn
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+  dynamic "viewer_certificate" {
+    for_each = var.certificate_arn != "" ? [1] : []
+    content {
+      acm_certificate_arn      = var.certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = var.certificate_arn == "" ? [1] : []
+    content {
+      cloudfront_default_certificate = true
+    }
   }
 
   tags = {
