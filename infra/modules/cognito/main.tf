@@ -105,6 +105,8 @@ resource "aws_cognito_user_pool_client" "web" {
 
   # Prevent resource destruction before plan
   prevent_user_existence_errors = "ENABLED"
+
+  depends_on = [aws_cognito_identity_provider.google]
 }
 
 # Cognito Hosted UI domain
