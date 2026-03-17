@@ -270,8 +270,8 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
 # ─── Lambda Layer: shared code + pip dependencies ────────────────────────────
 
 locals {
-  layer_build_dir = "${path.module}/.terraform/lambda_layer_build"
-  layer_zip_path  = "${path.module}/.terraform/lambda_layers/shared.zip"
+  layer_build_dir = "${abspath(path.module)}/.terraform/lambda_layer_build"
+  layer_zip_path  = "${abspath(path.module)}/.terraform/lambda_layers/shared.zip"
 
   shared_source_hash = sha256(join("", [
     for f in sort(fileset("${var.lambdas_source_path}/shared", "**")) :
@@ -391,6 +391,45 @@ resource "aws_cloudwatch_log_group" "sfn_evaluation_pipeline" {
   }
 }
 
+# CloudWatch Logs resource policy — allows Step Functions to deliver logs
+resource "aws_cloudwatch_log_resource_policy" "sfn_logging" {
+  policy_name     = "${var.project_name}-sfn-logs-policy"
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = [
+          "logs:CreateLogDelivery",
+          "logs:GetLogDelivery",
+          "logs:UpdateLogDelivery",
+          "logs:DeleteLogDelivery",
+          "logs:ListLogDeliveries",
+          "logs:PutResourcePolicy",
+          "logs:DescribeResourcePolicies",
+          "logs:DescribeLogGroups",
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream",
+          "logs:DescribeLogStreams",
+        ]
+        Resource = "${aws_cloudwatch_log_group.sfn_evaluation_pipeline.arn}:*"
+      }
+    ]
+  })
+}
+
 # ─── IAM: Step Functions role ─────────────────────────────────────────────────
 
 resource "aws_iam_role" "sfn_evaluation_pipeline" {
@@ -430,27 +469,21 @@ resource "aws_iam_role_policy" "sfn_evaluation_pipeline" {
         ])
       },
       {
-        Sid    = "CloudWatchLogsDelivery"
+        Sid    = "CloudWatchLogs"
         Effect = "Allow"
         Action = [
           "logs:CreateLogDelivery",
+          "logs:CreateLogStream",
           "logs:GetLogDelivery",
           "logs:UpdateLogDelivery",
           "logs:DeleteLogDelivery",
           "logs:ListLogDeliveries",
+          "logs:PutLogEvents",
+          "logs:PutResourcePolicy",
           "logs:DescribeResourcePolicies",
           "logs:DescribeLogGroups",
         ]
         Resource = "*"
-      },
-      {
-        Sid    = "CloudWatchLogsPut"
-        Effect = "Allow"
-        Action = [
-          "logs:PutLogEvents",
-          "logs:CreateLogStream",
-        ]
-        Resource = "${aws_cloudwatch_log_group.sfn_evaluation_pipeline.arn}:*"
       }
     ]
   })
@@ -707,7 +740,10 @@ resource "aws_sfn_state_machine" "evaluation_pipeline" {
     level                  = "ERROR"
   }
 
-  depends_on = [aws_cloudwatch_log_group.sfn_evaluation_pipeline]
+  depends_on = [
+    aws_cloudwatch_log_group.sfn_evaluation_pipeline,
+    aws_cloudwatch_log_resource_policy.sfn_logging,
+  ]
 
   tags = {
     Name = "${var.project_name}-evaluation-pipeline"
