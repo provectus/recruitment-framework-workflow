@@ -8,10 +8,9 @@ variable "environment" {
   type        = string
 }
 
-variable "domain" {
-  description = "Custom domain for the application (empty = placeholder callbacks, use DEBUG mode)"
+variable "app_url" {
+  description = "Application hostname (custom domain or CloudFront domain) for OAuth callback URLs"
   type        = string
-  default     = ""
 }
 
 variable "google_client_id" {
