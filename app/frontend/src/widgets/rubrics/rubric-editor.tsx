@@ -407,10 +407,10 @@ function CategoryCard({
 
 function toFormValues(structure: RubricStructure): FormValues {
   return {
-    categories: structure.categories.map((cat) => ({
+    categories: (structure.categories ?? []).map((cat) => ({
       ...cat,
       description: cat.description ?? "",
-      criteria: cat.criteria.map((crit) => ({
+      criteria: (cat.criteria ?? []).map((crit) => ({
         ...crit,
         description: crit.description ?? "",
       })),

@@ -292,7 +292,7 @@ function CandidatesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Positions</SelectItem>
-            {positions?.items.map((pos) => (
+            {positions?.items?.map((pos) => (
               <SelectItem key={pos.id} value={pos.id.toString()}>
                 {pos.title}
               </SelectItem>

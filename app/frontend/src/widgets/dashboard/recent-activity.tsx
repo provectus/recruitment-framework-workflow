@@ -28,7 +28,7 @@ export function RecentActivity() {
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </>
-        ) : data && data.recent_candidates.length > 0 ? (
+        ) : data?.recent_candidates?.length ? (
           data.recent_candidates.map((candidate, index) => (
             <div
               key={`${candidate.id}-${index}`}
