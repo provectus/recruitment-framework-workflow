@@ -66,7 +66,8 @@ export function EvaluationStepCard({
     });
   };
 
-  const hasBodyContent = evaluation.error_message || resultContent;
+  const hasBodyContent =
+    (evaluation.status === "failed" && evaluation.error_message) || resultContent;
 
   return (
     <Collapsible open={isOpen} onOpenChange={() => onToggle()}>
@@ -145,7 +146,7 @@ export function EvaluationStepCard({
         {hasBodyContent && (
           <CollapsibleContent>
             <CardContent className="pt-0">
-              {evaluation.error_message && (
+              {evaluation.status === "failed" && evaluation.error_message && (
                 <p className="text-sm text-destructive">
                   {evaluation.error_message}
                 </p>

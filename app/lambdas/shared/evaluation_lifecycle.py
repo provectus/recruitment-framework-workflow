@@ -48,6 +48,7 @@ def complete_evaluation(
 ) -> None:
     evaluation.status = "completed"
     evaluation.result = result
+    evaluation.error_message = None
     evaluation.completed_at = datetime.now(tz=UTC)
     session.add(evaluation)
     session.commit()
