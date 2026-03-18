@@ -28,7 +28,7 @@ export function PositionsOverview() {
               <Skeleton key={i} className="h-10 w-full" />
             ))}
           </>
-        ) : data && data.positions_summary.length > 0 ? (
+        ) : data?.positions_summary?.length ? (
           data.positions_summary.map((position) => (
             <div
               key={position.id}

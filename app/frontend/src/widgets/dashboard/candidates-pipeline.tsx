@@ -36,7 +36,7 @@ export function CandidatesPipeline() {
               <Skeleton key={i} className="h-5 w-full" />
             ))}
           </>
-        ) : data && data.pipeline_counts.length > 0 ? (
+        ) : data?.pipeline_counts?.length ? (
           data.pipeline_counts.map((item) => (
             <div key={item.stage} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
