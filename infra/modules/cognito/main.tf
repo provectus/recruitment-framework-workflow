@@ -39,7 +39,7 @@ resource "aws_cognito_user_pool" "main" {
     name                = "email"
     attribute_data_type = "String"
     required            = true
-    mutable             = false
+    mutable             = true
 
     string_attribute_constraints {
       min_length = 1
@@ -155,7 +155,7 @@ resource "aws_ssm_parameter" "domain" {
 resource "aws_secretsmanager_secret" "client_secret" {
   name                    = "${var.project_name}/cognito/client_secret"
   description             = "Cognito App Client Secret for ${var.project_name}"
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${var.project_name}-cognito-client-secret"
