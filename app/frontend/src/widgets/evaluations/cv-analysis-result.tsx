@@ -46,7 +46,7 @@ export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
     <div className="space-y-6">
       <div>
         <SectionLabel>Overall Fit</SectionLabel>
-        <p className="text-sm leading-relaxed font-medium">{result.overall_fit}</p>
+        <p className="text-sm leading-relaxed font-medium">{result.overall_fit ?? ""}</p>
       </div>
 
       <div>
@@ -60,7 +60,7 @@ export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {result.skills_match.map((item, idx) => (
+            {(result.skills_match ?? []).map((item, idx) => (
               <TableRow key={idx}>
                 <TableCell className="py-2 font-medium">{item.skill}</TableCell>
                 <TableCell className="py-2">
@@ -87,18 +87,18 @@ export function CvAnalysisResult({ result }: { result: CvAnalysisResult }) {
 
       <div>
         <SectionLabel>Experience Relevance</SectionLabel>
-        <p className="text-sm leading-relaxed">{result.experience_relevance}</p>
+        <p className="text-sm leading-relaxed">{result.experience_relevance ?? ""}</p>
       </div>
 
       <div>
         <SectionLabel>Education</SectionLabel>
-        <p className="text-sm leading-relaxed">{result.education}</p>
+        <p className="text-sm leading-relaxed">{result.education ?? ""}</p>
       </div>
 
       <div>
         <SectionLabel>Signals &amp; Red Flags</SectionLabel>
         <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-400">
-          {result.signals_and_red_flags}
+          {result.signals_and_red_flags ?? ""}
         </p>
       </div>
     </div>

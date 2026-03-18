@@ -51,8 +51,14 @@ export function RecommendationResult({
 }: {
   result: RecommendationResult;
 }) {
-  const recConfig = RECOMMENDATION_CONFIG[result.recommendation];
-  const confConfig = CONFIDENCE_CONFIG[result.confidence];
+  const recConfig = RECOMMENDATION_CONFIG[result.recommendation] ?? {
+    label: result.recommendation ?? "Unknown",
+    className: "bg-muted text-foreground border-border hover:bg-muted",
+  };
+  const confConfig = CONFIDENCE_CONFIG[result.confidence] ?? {
+    label: result.confidence ?? "Unknown",
+    className: "border-border text-foreground",
+  };
 
   return (
     <div className="space-y-6">
@@ -78,7 +84,7 @@ export function RecommendationResult({
         <p className="text-sm leading-relaxed">{result.reasoning}</p>
       </div>
 
-      {result.missing_inputs.length > 0 && (
+      {(result.missing_inputs ?? []).length > 0 && (
         <Alert className="border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-300">
           <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
           <AlertTitle className="text-amber-900 dark:text-amber-300">
@@ -89,7 +95,7 @@ export function RecommendationResult({
               This recommendation was made without the following inputs:
             </p>
             <ul className="list-disc list-inside space-y-0.5">
-              {result.missing_inputs.map((input, idx) => (
+              {(result.missing_inputs ?? []).map((input, idx) => (
                 <li key={idx}>{input}</li>
               ))}
             </ul>
