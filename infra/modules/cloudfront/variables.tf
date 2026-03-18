@@ -9,8 +9,9 @@ variable "environment" {
 }
 
 variable "domain" {
-  description = "Custom domain for CloudFront distribution"
+  description = "Custom domain for CloudFront distribution (empty = use default CloudFront domain)"
   type        = string
+  default     = ""
 }
 
 variable "spa_bucket_id" {
@@ -24,8 +25,9 @@ variable "spa_bucket_regional_domain_name" {
 }
 
 variable "certificate_arn" {
-  description = "ACM certificate ARN for HTTPS"
+  description = "ACM certificate ARN for HTTPS (empty = use default CloudFront certificate)"
   type        = string
+  default     = ""
 }
 
 variable "web_acl_arn" {

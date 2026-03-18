@@ -89,15 +89,15 @@ output "alb_dns_name" {
   value       = module.ecs.alb_dns_name
 }
 
-# Certificate outputs
+# Certificate outputs (empty when no custom domain)
 output "certificate_arn" {
   description = "ARN of the ACM certificate"
-  value       = module.acm.certificate_arn
+  value       = try(module.acm[0].certificate_arn, "")
 }
 
 output "domain_validation_records" {
   description = "DNS validation records to create for ACM certificate"
-  value       = module.acm.domain_validation_options
+  value       = try(module.acm[0].domain_validation_options, [])
 }
 
 # IAM outputs

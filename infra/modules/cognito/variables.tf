@@ -9,8 +9,9 @@ variable "environment" {
 }
 
 variable "domain" {
-  description = "Custom domain for the application (e.g., lauter.provectus.com)"
+  description = "Custom domain for the application (empty = placeholder callbacks, use DEBUG mode)"
   type        = string
+  default     = ""
 }
 
 variable "google_client_id" {

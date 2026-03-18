@@ -15,24 +15,25 @@ environment = "poc"
 owner = "recruitment-team"
 
 # Custom domain for the application (e.g., lauter.provectus.com)
+# Leave empty to deploy without custom domain (uses CloudFront default *.cloudfront.net)
 # Required DNS records will need to be created after terraform apply:
 # - your-domain.com → CloudFront (serves both SPA and /api/* via path routing)
 # - ACM validation CNAME records (output by Terraform)
-domain = "your-domain.com"
+domain = ""
 
 # GitHub repository in format org/repo for OIDC trust policy
 # Used for GitHub Actions CI/CD pipeline authentication
 github_repo = "your-org/your-repo"
 
-# Google OAuth 2.0 credentials (from Google Cloud Console)
-# Create at: https://console.cloud.google.com/ → APIs & Services → Credentials
-# Authorized redirect URI: https://lauter-auth.auth.us-east-1.amazoncognito.com/oauth2/idpresponse
-google_client_id     = "your-google-client-id.apps.googleusercontent.com"
-google_client_secret = "your-google-client-secret"
-
 # ARN of the JWT secret key in AWS Secrets Manager
 # Create with: aws secretsmanager create-secret --name lauter/jwt-secret-key --secret-string "$(openssl rand -base64 64)"
 jwt_secret_key_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:lauter/jwt-secret-key-AbCdEf"
+
+# Google OAuth credentials are stored in Secrets Manager (not in tfvars):
+#   lauter/google-oauth/client-id
+#   lauter/google-oauth/client-secret
+# Create at: https://console.cloud.google.com/ → APIs & Services → Credentials
+# Update with: aws secretsmanager put-secret-value --secret-id lauter/google-oauth/client-id --secret-string "your-id"
 
 # Enable Bedrock AI model access for ECS tasks (set true after enabling model access in console)
 enable_bedrock = false

@@ -52,7 +52,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "spa" {
 }
 
 resource "aws_s3_bucket_policy" "spa_cloudfront_oac" {
-  count  = var.cloudfront_distribution_arn != "" ? 1 : 0
   bucket = aws_s3_bucket.spa.id
 
   policy = jsonencode({

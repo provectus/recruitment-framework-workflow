@@ -54,8 +54,9 @@ variable "ecr_repository_url" {
 }
 
 variable "certificate_arn" {
-  description = "ARN of the ACM certificate for HTTPS"
+  description = "ARN of the ACM certificate for HTTPS (empty = skip HTTPS listener)"
   type        = string
+  default     = ""
 }
 
 variable "db_secret_arn" {
@@ -139,6 +140,12 @@ variable "evaluation_event_bus_name" {
   description = "Name of the EventBridge custom bus for evaluation events (empty disables publishing)"
   type        = string
   default     = ""
+}
+
+variable "debug" {
+  description = "Enable debug mode (dev-login, skip Cognito auth). Auto-enabled when no custom domain."
+  type        = bool
+  default     = false
 }
 
 variable "task_cpu" {

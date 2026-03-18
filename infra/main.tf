@@ -1,3 +1,16 @@
+locals {
+  use_custom_domain = var.domain != ""
+}
+
+# Google OAuth credentials from Secrets Manager
+data "aws_secretsmanager_secret_version" "google_client_id" {
+  secret_id = "${var.project_name}/google-oauth/client-id"
+}
+
+data "aws_secretsmanager_secret_version" "google_client_secret" {
+  secret_id = "${var.project_name}/google-oauth/client-secret"
+}
+
 provider "aws" {
   region = var.region
 
@@ -40,8 +53,9 @@ module "s3" {
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
 
-# ACM Module - SSL/TLS certificate for the domain
+# ACM Module - SSL/TLS certificate for the domain (skipped when no custom domain)
 module "acm" {
+  count  = local.use_custom_domain ? 1 : 0
   source = "./modules/acm"
 
   project_name = var.project_name
@@ -58,7 +72,7 @@ module "cloudfront" {
   domain                          = var.domain
   spa_bucket_id                   = module.s3.spa_bucket_id
   spa_bucket_regional_domain_name = module.s3.spa_bucket_regional_domain_name
-  certificate_arn                 = module.acm.certificate_arn
+  certificate_arn                 = local.use_custom_domain ? module.acm[0].certificate_arn : ""
   web_acl_arn                     = module.waf.cloudfront_web_acl_arn
   alb_domain_name                 = module.ecs.alb_dns_name
   access_logs_bucket_domain_name  = module.s3.cloudfront_logs_bucket_domain_name
@@ -115,8 +129,8 @@ module "cognito" {
   project_name         = var.project_name
   environment          = var.environment
   domain               = var.domain
-  google_client_id     = var.google_client_id
-  google_client_secret = var.google_client_secret
+  google_client_id     = data.aws_secretsmanager_secret_version.google_client_id.secret_string
+  google_client_secret = data.aws_secretsmanager_secret_version.google_client_secret.secret_string
 }
 
 # WAF Module - Web Application Firewall ACLs for CloudFront and ALB
@@ -133,6 +147,7 @@ module "ecs" {
 
   project_name                 = var.project_name
   environment                  = var.environment
+  debug                        = !local.use_custom_domain
   domain                       = var.domain
   vpc_id                       = module.networking.vpc_id
   public_subnet_ids            = module.networking.public_subnet_ids
@@ -142,7 +157,7 @@ module "ecs" {
   ecs_execution_role_arn       = module.iam.ecs_execution_role_arn
   ecs_task_role_arn            = module.iam.ecs_task_role_arn
   ecr_repository_url           = module.iam.ecr_repository_url
-  certificate_arn              = module.acm.certificate_arn
+  certificate_arn              = local.use_custom_domain ? module.acm[0].certificate_arn : ""
   db_secret_arn                = module.rds.db_master_secret_arn
   db_host                      = module.rds.db_instance_address
   db_port                      = module.rds.db_instance_port
@@ -153,7 +168,7 @@ module "ecs" {
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
   cognito_client_secret_arn    = module.cognito.client_secret_arn
   jwt_secret_key_arn           = var.jwt_secret_key_arn
-  cognito_redirect_uri         = "https://${var.domain}/api/auth/callback"
+  cognito_redirect_uri         = local.use_custom_domain ? "https://${var.domain}/api/auth/callback" : "https://localhost/api/auth/callback"
   files_bucket_name            = module.s3.files_bucket_id
   allowed_email_domain         = var.allowed_email_domain
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id

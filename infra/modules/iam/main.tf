@@ -351,6 +351,30 @@ resource "aws_iam_role_policy" "github_actions_s3" {
   })
 }
 
+resource "aws_iam_role_policy" "github_actions_lambda" {
+  name = "${var.project_name}-github-actions-lambda-policy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:UpdateFunctionCode",
+          "lambda:UpdateFunctionConfiguration",
+          "lambda:GetFunctionConfiguration",
+          "lambda:PublishLayerVersion"
+        ]
+        Resource = [
+          "arn:aws:lambda:${var.region}:*:function:${var.project_name}-*",
+          "arn:aws:lambda:${var.region}:*:layer:${var.project_name}-*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy" "github_actions_cloudfront" {
   name = "${var.project_name}-github-actions-cloudfront-policy"
   role = aws_iam_role.github_actions.id
