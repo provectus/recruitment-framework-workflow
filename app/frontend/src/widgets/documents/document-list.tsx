@@ -74,7 +74,7 @@ export function DocumentList({
   }
 
   const cvVersionsByPosition = new Map<number, DocumentResponse[]>();
-  documents.forEach((doc) => {
+  documents?.forEach((doc) => {
     if (doc.type === "cv") {
       const existing = cvVersionsByPosition.get(doc.candidate_position_id) || [];
       cvVersionsByPosition.set(doc.candidate_position_id, [...existing, doc]);
@@ -99,7 +99,7 @@ export function DocumentList({
   });
 
   const documentsByPosition = new Map<number, DocumentResponse[]>();
-  documents.forEach((doc) => {
+  documents?.forEach((doc) => {
     const existing = documentsByPosition.get(doc.candidate_position_id) || [];
     documentsByPosition.set(doc.candidate_position_id, [...existing, doc]);
   });
@@ -234,7 +234,7 @@ export function DocumentList({
   const shouldGroupByPosition = !positionId && sortedPositionIds.length > 0;
 
   if (!shouldGroupByPosition) {
-    const flatTranscriptDocs = documents.filter((d) => d.type === "transcript");
+    const flatTranscriptDocs = documents?.filter((d) => d.type === "transcript");
     return (
       <div className="space-y-4">
         <div className="border border-border rounded-lg overflow-hidden">
@@ -248,7 +248,7 @@ export function DocumentList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {documents.map((document) => (
+              {documents?.map((document) => (
                 <TableRow
                   key={document.id}
                   onClick={() => document.type !== "transcript" && onDocumentClick?.(document.id)}
