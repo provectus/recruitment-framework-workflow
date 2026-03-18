@@ -235,7 +235,7 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Resource = [
           "arn:aws:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_id_heavy}",
           "arn:aws:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_id_light}",
-          "arn:aws:bedrock:*::foundation-model/*",
+          "arn:aws:bedrock:*::foundation-model/anthropic.*",
         ]
       },
       {
