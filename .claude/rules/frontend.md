@@ -15,3 +15,4 @@ globs:
 - Type imports must use `import type` — `verbatimModuleSyntax: true` enforced
 - Unused vars/params break the build — `noUnusedLocals` + `noUnusedParameters` are `true`
 - Tailwind v4 CSS-only config — no `tailwind.config.ts`; theme customization in `src/index.css` via `@theme inline {}`
+- API client gotcha: the generated axios client returns `{}` (not `undefined`) for empty/null responses — truthiness checks like `!data` pass but `.map()` / `.forEach()` crash. Always use `Array.isArray()` for arrays and optional chaining for nested access on API response data.

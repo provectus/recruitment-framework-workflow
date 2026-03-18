@@ -19,3 +19,5 @@ globs:
 - `infra/ROLLOUT.md` — cloud environment rollout runbook (state backend, Bedrock enablement, domain config)
 - `infra/REVIEW.md` — summary of infrastructure review changes (25 commits, 3 phases)
 - Environment values: `poc`, `dev`, `staging`, `prod` — deletion protection and final snapshots are prod-only
+- When changing AWS resource identifiers (model IDs, ARNs, API parameters), verify the exact value from AWS docs or console — never infer formats by analogy with other resources
+- OAuth/Cognito: callback endpoints must handle IdP error parameters (`error`, `error_description`) — always make `code`/`state` optional and check for `error` first

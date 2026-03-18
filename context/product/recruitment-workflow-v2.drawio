@@ -1,0 +1,244 @@
+<mxfile host="65bd71144e">
+    <diagram name="Recruitment Workflow v2" id="recruitment-flow-v2">
+        <mxGraphModel dx="1175" dy="778" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Recruitment Workflow v2 — Candidate Profiling" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="20" width="700" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="problem" value="Problem: HMs spend too much time reviewing raw materials and still end up in technical interviews with mismatched candidates" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=2;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="55" width="700" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-lever" value="Lever (ATS) / Lauter" style="swimlane;horizontal=0;startSize=30;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="100" width="1520" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step1" value="Candidate&#10;enters pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="lane-lever" vertex="1">
+                    <mxGeometry x="40" y="20" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-pos" value="Position&#10;requirements" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;" parent="lane-lever" vertex="1">
+                    <mxGeometry x="170" y="20" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-system" value="System (Lauter AI)" style="swimlane;horizontal=0;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="180" width="1520" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-cv-profile" value="Generate&#10;CV Brief Profile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" parent="lane-system" vertex="1">
+                    <mxGeometry x="300" y="15" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="cv-profile-detail" value="• Map skills vs requirements&#10;• Flag gaps &amp; red flags&#10;• Suggest screening questions" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;" parent="lane-system" vertex="1">
+                    <mxGeometry x="280" y="68" width="160" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-enriched-profile" value="Generate&#10;Enriched Profile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" parent="lane-system" vertex="1">
+                    <mxGeometry x="770" y="15" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="enriched-detail" value="• Update with screening findings&#10;• Highlight remaining unknowns&#10;• Recommend technical focus areas" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;" parent="lane-system" vertex="1">
+                    <mxGeometry x="745" y="68" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-hr" value="HR Recruiter" style="swimlane;horizontal=0;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="310" width="1520" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-review-cv-profile" value="Review CV profile&#10;+ screening questions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="lane-hr" vertex="1">
+                    <mxGeometry x="460" y="25" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-screening" value="Conduct&#10;screening call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="lane-hr" vertex="1">
+                    <mxGeometry x="610" y="25" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-upload-screening" value="Upload&#10;transcript" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="lane-hr" vertex="1">
+                    <mxGeometry x="735" y="25" width="80" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="lane-hm" value="Hiring Manager" style="swimlane;horizontal=0;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="410" width="1520" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-hm-review" value="Review&#10;Enriched Profile&#10;(2 min read)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" parent="lane-hm" vertex="1">
+                    <mxGeometry x="930" y="20" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision1" value="Proceed to&#10;technical?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="lane-hm" vertex="1">
+                    <mxGeometry x="1080" y="15" width="100" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-technical" value="Conduct&#10;technical interview&#10;(focused on AI&#10;recommended areas)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="lane-hm" vertex="1">
+                    <mxGeometry x="1220" y="15" width="130" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="step-decision" value="Hiring&#10;decision" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="lane-hm" vertex="1">
+                    <mxGeometry x="1390" y="25" width="90" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="reject-end" value="Reject" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#b85450;fontColor=#b85450;" parent="lane-hm" vertex="1">
+                    <mxGeometry x="1100" y="90" width="60" height="25" as="geometry"/>
+                </mxCell>
+                <!-- Arrows -->
+                <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step1" target="step-pos" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step1" target="step-cv-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="130" y="170"/>
+                            <mxPoint x="130" y="170"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a2b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;dashed=1;" parent="1" source="step-pos" target="step-cv-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-cv-profile" target="step-review-cv-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-review-cv-profile" target="step-screening" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-screening" target="step-upload-screening" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-upload-screening" target="step-enriched-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="815" y="310"/>
+                            <mxPoint x="815" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-enriched-profile" target="step-hm-review" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-hm-review" target="decision1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;" parent="1" source="decision1" target="step-technical" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a9-label" value="Yes" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="1190" y="430" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="a9-no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;dashed=1;" parent="1" source="decision1" target="reject-end" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a9-no-label" value="No" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="485" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" parent="1" source="step-technical" target="step-decision" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <!-- Phase labels -->
+                <mxCell id="p1-label" value="Phase 1: Intake" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="540" width="120" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2-label" value="Phase 2: CV Profiling" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="290" y="540" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3-label" value="Phase 3: Screening" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="570" y="540" width="150" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p4-label" value="Phase 4: Enriched Profile" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="540" width="170" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p5-label" value="Phase 5: HM Review" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="540" width="140" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p6-label" value="Phase 6: Technical" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="1220" y="540" width="130" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="p7-label" value="Phase 7: Decision" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="1380" y="540" width="120" height="20" as="geometry"/>
+                </mxCell>
+                <!-- Legend -->
+                <mxCell id="legend-box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="570" width="350" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-title" value="Legend" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="575" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-ats" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="600" width="20" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-ats-text" value="Lever / Lauter" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="597" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-sys" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="600" width="20" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-sys-text" value="AI Profiling" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="597" width="70" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-hr" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="625" width="20" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-hr-text" value="HR Action" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="622" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-hm" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="625" width="20" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-hm-text" value="HM Action" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="185" y="622" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-reject" value="" style="endArrow=classic;html=1;strokeColor=#b85450;dashed=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="260" y="610" as="sourcePoint"/>
+                        <mxPoint x="310" y="610" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend-reject-text" value="Rejection path" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="617" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <!-- HiTL label on decision -->
+                <mxCell id="hitl-label" value="HiTL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontStyle=1;fontColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="1120" y="415" width="30" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Feedback loop: outcome feeds back into system -->
+                <mxCell id="step-process-feedback" value="Process&#10;Feedback Analysis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" parent="lane-system" vertex="1">
+                    <mxGeometry x="1200" y="15" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="feedback-detail" value="• Did screening probe CV gaps?&#10;• Did technical cover flagged areas?&#10;• Outcome vs AI assessment&#10;• Refine next interview approach" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;" parent="lane-system" vertex="1">
+                    <mxGeometry x="1170" y="68" width="180" height="55" as="geometry"/>
+                </mxCell>
+                <!-- Arrow: decision → feedback -->
+                <mxCell id="a-feedback-in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d6b656;dashed=1;" parent="1" source="step-decision" target="step-process-feedback" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1475" y="370"/>
+                            <mxPoint x="1475" y="170"/>
+                            <mxPoint x="1300" y="170"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a-feedback-in-label" value="outcome" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontColor=#d6b656;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="1475" y="270" width="50" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Feedback loop back arrows -->
+                <mxCell id="a-feedback-to-cv" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d6b656;dashed=1;" parent="1" source="step-process-feedback" target="step-cv-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1300" y="300"/>
+                            <mxPoint x="400" y="300"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a-feedback-to-cv-label" value="refine screening questions for next candidate" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontColor=#d6b656;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="290" width="230" height="15" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-feedback-to-enriched" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d6b656;dashed=1;" parent="1" source="step-process-feedback" target="step-enriched-profile" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1140" y="240"/>
+                            <mxPoint x="1140" y="170"/>
+                            <mxPoint x="870" y="170"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a-feedback-to-enriched-label" value="refine technical focus for next candidate" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontColor=#d6b656;fontStyle=2;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="158" width="210" height="15" as="geometry"/>
+                </mxCell>
+                <!-- Value callout -->
+                <mxCell id="value-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=30;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="180" width="310" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="value-label" value="Value zone: HM reads 2-min profile&#10;instead of 30-min raw review" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=3;fontColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="165" width="210" height="40" as="geometry"/>
+                </mxCell>
+                <!-- Feedback loop callout -->
+                <mxCell id="feedback-callout" value="Living process: each outcome&#10;improves the next interview" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=3;fontColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="1180" y="305" width="190" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
