@@ -86,8 +86,8 @@ resource "aws_cognito_user_pool_client" "web" {
   allowed_oauth_scopes                 = ["openid", "email", "profile"]
 
   # Callback and logout URLs
-  callback_urls = var.domain != "" ? ["https://${var.domain}/api/auth/callback"] : ["https://localhost/api/auth/callback"]
-  logout_urls   = var.domain != "" ? ["https://${var.domain}/login"] : ["https://localhost/login"]
+  callback_urls = ["https://${var.app_url}/api/auth/callback"]
+  logout_urls   = ["https://${var.app_url}/login"]
 
   # Auth flows
   explicit_auth_flows = ["ALLOW_REFRESH_TOKEN_AUTH"]

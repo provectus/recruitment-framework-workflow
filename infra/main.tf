@@ -128,7 +128,7 @@ module "cognito" {
 
   project_name         = var.project_name
   environment          = var.environment
-  domain               = var.domain
+  app_url              = local.use_custom_domain ? var.domain : module.cloudfront.distribution_domain_name
   google_client_id     = data.aws_secretsmanager_secret_version.google_client_id.secret_string
   google_client_secret = data.aws_secretsmanager_secret_version.google_client_secret.secret_string
 }
@@ -168,7 +168,7 @@ module "ecs" {
   cognito_domain_ssm_arn       = module.cognito.ssm_domain_arn
   cognito_client_secret_arn    = module.cognito.client_secret_arn
   jwt_secret_key_arn           = var.jwt_secret_key_arn
-  cognito_redirect_uri         = local.use_custom_domain ? "https://${var.domain}/api/auth/callback" : "https://localhost/api/auth/callback"
+  cognito_redirect_uri         = "https://${local.use_custom_domain ? var.domain : module.cloudfront.distribution_domain_name}/api/auth/callback"
   files_bucket_name            = module.s3.files_bucket_id
   allowed_email_domain         = var.allowed_email_domain
   alb_access_logs_bucket_id    = module.monitoring.alb_access_logs_bucket_id
