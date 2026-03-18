@@ -291,7 +291,7 @@ resource "aws_ecs_service" "backend" {
   depends_on = [aws_lb_listener.https]
 
   lifecycle {
-    ignore_changes = [desired_count]
+    ignore_changes = [desired_count, task_definition]
   }
 
   tags = {

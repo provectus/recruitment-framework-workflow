@@ -51,7 +51,7 @@ DB_PASSWORD: str = _resolve_db_password()
 
 S3_BUCKET_NAME: str = os.environ.get("S3_BUCKET_NAME", "lauter-files")
 BEDROCK_MODEL_ID: str = os.environ.get(
-    "BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-6"
+    "BEDROCK_MODEL_ID", "us.anthropic.claude-sonnet-4-6-v1:0"
 )
 AWS_REGION: str = os.environ.get("AWS_REGION", "us-east-1")
 
