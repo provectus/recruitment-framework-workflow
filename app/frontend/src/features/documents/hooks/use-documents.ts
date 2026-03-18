@@ -14,5 +14,6 @@ export function useDocuments(
       path: { candidate_id: candidateId },
       query: options,
     }),
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 }
