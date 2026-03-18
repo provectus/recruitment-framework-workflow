@@ -121,7 +121,25 @@ jobs:
 
           echo "task_def_arn=$NEW_TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
+      - name: Check for new migrations
+        id: check-migrations
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "has_migrations=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::workflow_dispatch — running migrations unconditionally"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "has_migrations=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::New branch push — running migrations unconditionally"
+          elif git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- app/backend/migrations/versions/ | grep -q .; then
+            echo "has_migrations=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Migration changes detected"
+          else
+            echo "has_migrations=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No migration changes detected — skipping migration task"
+          fi
+
       - name: Run database migrations
+        if: steps.check-migrations.outputs.has_migrations == 'true'
         run: |
           set -euo pipefail
 
