@@ -74,8 +74,8 @@ jobs:
           cp -r $LAMBDAS_DIR/shared/* "$LAYER_DIR/python/shared/"
           find "$LAYER_DIR" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-          pip install --target "$LAYER_DIR/python" --platform manylinux2014_x86_64 --only-binary=:all: --no-deps \
-            -r $LAMBDAS_DIR/requirements-layer.txt
+          pip install --target "$LAYER_DIR/python" --platform manylinux2014_x86_64 --implementation cp --python-version 3.12 \
+            --only-binary=:all: --no-deps -r $LAMBDAS_DIR/requirements-layer.txt
 
           cd "$LAYER_DIR"
           zip -r "$GITHUB_WORKSPACE/shared-layer.zip" python/
