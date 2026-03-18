@@ -4,5 +4,6 @@ import { listTeamsApiTeamsGetOptions } from "@/shared/api/@tanstack/react-query.
 export function useTeams() {
   return useQuery({
     ...listTeamsApiTeamsGetOptions(),
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 }

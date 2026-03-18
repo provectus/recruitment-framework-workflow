@@ -4,5 +4,6 @@ import { listUsersApiUsersGetOptions } from "@/shared/api/@tanstack/react-query.
 export function useUsers() {
   return useQuery({
     ...listUsersApiUsersGetOptions(),
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 }
