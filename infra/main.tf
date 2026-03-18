@@ -51,6 +51,10 @@ module "s3" {
   project_name                = var.project_name
   environment                 = var.environment
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
+  files_cors_allowed_origins = compact([
+    local.use_custom_domain ? "https://${var.domain}" : "",
+    "https://${module.cloudfront.distribution_domain_name}",
+  ])
 }
 
 # ACM Module - SSL/TLS certificate for the domain (skipped when no custom domain)
