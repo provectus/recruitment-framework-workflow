@@ -58,7 +58,7 @@ export function DocumentList({
     );
   }
 
-  if (!documents || documents.length === 0) {
+  if (!Array.isArray(documents) || documents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
         <div className="relative inline-flex items-center justify-center">
