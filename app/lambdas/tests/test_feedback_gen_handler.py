@@ -8,7 +8,7 @@ os.environ.setdefault("DB_NAME", "test")
 os.environ.setdefault("DB_USERNAME", "test")
 os.environ.setdefault("DB_PASSWORD", "test")
 os.environ.setdefault("S3_BUCKET_NAME", "test-bucket")
-os.environ.setdefault("BEDROCK_MODEL_ID", "anthropic.claude-haiku-4-5-20251001-v1:0")
+os.environ.setdefault("BEDROCK_MODEL_ID", "us.anthropic.claude-haiku-4-5-20251001-v1:0")
 os.environ.setdefault("AWS_REGION", "us-east-1")
 
 SAMPLE_SCREENING_RESULT = {

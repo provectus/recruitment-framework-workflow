@@ -160,8 +160,8 @@ Edit `terraform.tfvars` with actual values:
 | `jwt_secret_key_arn` | `"arn:aws:secretsmanager:us-east-1:..."` | From Step 4 |
 | `enable_bedrock` | `false` | Set `true` after Step 2 when ready |
 | `alert_email` | `"team@provectus.com"` | CloudWatch alarm notifications (optional) |
-| `bedrock_model_id_heavy` | `"anthropic.claude-sonnet-4-6"` | Heavy eval tasks (default works) |
-| `bedrock_model_id_light` | `"anthropic.claude-haiku-4-5-20251001-v1:0"` | Light eval tasks (default works) |
+| `bedrock_model_id_heavy` | `"us.anthropic.claude-sonnet-4-6-v1:0"` | Heavy eval tasks (default works) |
+| `bedrock_model_id_light` | `"us.anthropic.claude-haiku-4-5-20251001-v1:0"` | Light eval tasks (default works) |
 
 Sensitive variables can also be passed via env vars:
 

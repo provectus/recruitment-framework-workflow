@@ -1,4 +1,5 @@
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 locals {
   db_ssm_prefix = "/${var.project_name}/db"
@@ -232,8 +233,9 @@ resource "aws_iam_role_policy" "lambda_evaluation" {
         Effect = "Allow"
         Action = ["bedrock:InvokeModel"]
         Resource = [
-          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.bedrock_model_id_heavy}",
-          "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.bedrock_model_id_light}",
+          "arn:aws:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_id_heavy}",
+          "arn:aws:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/${var.bedrock_model_id_light}",
+          "arn:aws:bedrock:*::foundation-model/*",
         ]
       },
       {
