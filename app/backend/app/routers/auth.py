@@ -115,10 +115,23 @@ async def login(redirect: str | None = Query(default=None)) -> RedirectResponse:
 @router.get("/callback", include_in_schema=False)
 async def callback(
     request: Request,
-    code: str = Query(),
-    state: str = Query(),
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+    error_description: str | None = Query(default=None),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
+    if error:
+        error_param = "access_denied" if error == "access_denied" else "auth_failed"
+        return RedirectResponse(
+            url=f"/login?error={error_param}", status_code=status.HTTP_302_FOUND
+        )
+
+    if not code or not state:
+        return RedirectResponse(
+            url="/login?error=auth_failed", status_code=status.HTTP_302_FOUND
+        )
+
     auth_state_cookie = request.cookies.get("auth_state")
     auth_state = None
 
