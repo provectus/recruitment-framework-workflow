@@ -5,6 +5,17 @@ import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useAuth, useDevLogin } from "@/features/auth";
 
+const authErrorMessages: Record<string, string> = {
+  domain_restricted:
+    "Access is restricted to Provectus employees. Please sign in with your Provectus Google account.",
+  access_denied:
+    "Sign-in was cancelled or denied. Please try again.",
+  auth_failed:
+    "Authentication failed. Please try signing in again.",
+  invalid_state:
+    "Your sign-in session expired. Please try again.",
+};
+
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>) => ({
     redirect: (search.redirect as string) || undefined,
@@ -36,11 +47,11 @@ function Login() {
           </p>
         </div>
 
-        {error === "domain_restricted" && (
+        {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Access is restricted to Provectus employees. Please sign in with your Provectus Google account.
+              {authErrorMessages[error] ?? "An unexpected error occurred. Please try again."}
             </AlertDescription>
           </Alert>
         )}
