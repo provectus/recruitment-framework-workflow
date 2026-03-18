@@ -68,6 +68,10 @@ resource "aws_cognito_identity_provider" "google" {
     email    = "email"
     username = "sub"
   }
+
+  lifecycle {
+    ignore_changes = [provider_details]
+  }
 }
 
 # User Pool App Client for web application

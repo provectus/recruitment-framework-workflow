@@ -377,6 +377,10 @@ resource "aws_lambda_function" "evaluation" {
     aws_iam_role_policy_attachment.lambda_evaluation_vpc,
   ]
 
+  lifecycle {
+    ignore_changes = [layers, source_code_hash, filename]
+  }
+
   tags = {
     Name = "${var.project_name}-${each.key}"
     Type = "evaluation-lambda"
