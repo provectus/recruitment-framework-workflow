@@ -108,7 +108,7 @@ export function TechnicalEvalResult({
   result: TechnicalEvalResult;
 }) {
   const maxPossible = 5;
-  const totalPercent = (result.weighted_total / maxPossible) * 100;
+  const totalPercent = ((result.weighted_total ?? 0) / maxPossible) * 100;
 
   return (
     <div className="space-y-6">
@@ -118,7 +118,7 @@ export function TechnicalEvalResult({
         </p>
         <div className="flex items-end gap-3 mb-2">
           <span className="text-3xl font-bold tabular-nums">
-            {result.weighted_total.toFixed(1)}
+            {(result.weighted_total ?? 0).toFixed(1)}
           </span>
           <span className="text-lg text-muted-foreground mb-0.5">
             / {maxPossible.toFixed(1)}
@@ -131,14 +131,14 @@ export function TechnicalEvalResult({
         <div className="bg-green-50/50 rounded-lg p-3">
           <SectionLabel>Strengths</SectionLabel>
           <BulletList
-            items={result.strengths_summary}
+            items={result.strengths_summary ?? []}
             className="text-green-800 dark:text-green-400"
           />
         </div>
         <div className="bg-amber-50/50 rounded-lg p-3">
           <SectionLabel>Improvement Areas</SectionLabel>
           <BulletList
-            items={result.improvement_areas}
+            items={result.improvement_areas ?? []}
             className="text-amber-800 dark:text-amber-400"
           />
         </div>
@@ -158,10 +158,10 @@ export function TechnicalEvalResult({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {result.criteria_scores.map((row, idx) => {
+            {(result.criteria_scores ?? []).map((row, idx) => {
               const prevCategory =
                 idx > 0
-                  ? result.criteria_scores[idx - 1].category_name
+                  ? (result.criteria_scores ?? [])[idx - 1].category_name
                   : null;
               const isNewGroup =
                 prevCategory !== null && row.category_name !== prevCategory;

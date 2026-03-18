@@ -234,7 +234,7 @@ export function DocumentList({
   const shouldGroupByPosition = !positionId && sortedPositionIds.length > 0;
 
   if (!shouldGroupByPosition) {
-    const flatTranscriptDocs = documents?.filter((d) => d.type === "transcript");
+    const flatTranscriptDocs = documents?.filter((d) => d.type === "transcript") ?? [];
     return (
       <div className="space-y-4">
         <div className="border border-border rounded-lg overflow-hidden">

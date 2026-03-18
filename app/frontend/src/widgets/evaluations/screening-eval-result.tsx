@@ -69,12 +69,12 @@ export function ScreeningEvalResult({
 }) {
   return (
     <div className="space-y-6">
-      <CollapsibleSection label="Key Topics" items={result.key_topics} />
+      <CollapsibleSection label="Key Topics" items={result.key_topics ?? []} />
 
       <div className="bg-green-50/50 rounded-lg p-3">
         <CollapsibleSection
           label="Strengths"
-          items={result.strengths}
+          items={result.strengths ?? []}
           listClassName="text-green-800 dark:text-green-400"
         />
       </div>
@@ -82,19 +82,19 @@ export function ScreeningEvalResult({
       <div className="bg-amber-50/50 rounded-lg p-3">
         <CollapsibleSection
           label="Concerns"
-          items={result.concerns}
+          items={result.concerns ?? []}
           listClassName="text-amber-800 dark:text-amber-400"
         />
       </div>
 
       <div>
         <SectionLabel>Communication Quality</SectionLabel>
-        <p className="text-sm leading-relaxed">{result.communication_quality}</p>
+        <p className="text-sm leading-relaxed">{result.communication_quality ?? ""}</p>
       </div>
 
       <div>
         <SectionLabel>Motivation &amp; Culture Fit</SectionLabel>
-        <p className="text-sm leading-relaxed">{result.motivation_culture_fit}</p>
+        <p className="text-sm leading-relaxed">{result.motivation_culture_fit ?? ""}</p>
       </div>
     </div>
   );
