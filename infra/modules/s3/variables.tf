@@ -13,3 +13,9 @@ variable "cloudfront_distribution_arn" {
   type        = string
   default     = ""
 }
+
+variable "files_cors_allowed_origins" {
+  description = "Allowed origins for CORS on the files bucket (e.g., CloudFront domain or custom domain)"
+  type        = list(string)
+  default     = []
+}

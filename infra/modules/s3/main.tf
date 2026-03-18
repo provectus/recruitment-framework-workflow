@@ -176,6 +176,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "cloudfront_logs" {
   }
 }
 
+resource "aws_s3_bucket_cors_configuration" "files" {
+  count  = length(var.files_cors_allowed_origins) > 0 ? 1 : 0
+  bucket = aws_s3_bucket.files.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "HEAD"]
+    allowed_origins = var.files_cors_allowed_origins
+    expose_headers  = ["ETag", "Content-Length"]
+    max_age_seconds = 3600
+  }
+}
+
 resource "aws_s3_bucket_policy" "files_deny_insecure" {
   bucket = aws_s3_bucket.files.id
 
