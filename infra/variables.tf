@@ -87,7 +87,7 @@ variable "alert_email" {
 variable "bedrock_model_id_heavy" {
   description = "Bedrock model for complex evaluation tasks (screening, technical, recommendation)"
   type        = string
-  default     = "us.anthropic.claude-sonnet-4-6-v1:0"
+  default     = "us.anthropic.claude-sonnet-4-6"
 }
 
 variable "bedrock_model_id_light" {
